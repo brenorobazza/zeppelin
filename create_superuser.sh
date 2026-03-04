@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Para evitar problemas de conversão de caminho no Windows, desabilitamos a conversão automática de caminhos do MSYS2
+export MSYS_NO_PATHCONV=1
+
 # Nome do container Django
 CONTAINER_NAME="zeppelin"
 
