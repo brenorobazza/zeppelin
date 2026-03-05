@@ -65,6 +65,8 @@ INSTALLED_APPS = [
     'apps.employee',
     'apps.practitionerseye',
     'apps.questionnaire',
+    'apps.authentication', 
+
 ]
 
 MIDDLEWARE = [
