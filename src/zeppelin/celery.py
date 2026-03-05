@@ -3,15 +3,16 @@ from celery import Celery
 
 # Define o settings padrão do Django
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'zeppelin.settings.local')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "zeppelin.settings.local")
 
 # Cria a aplicação Celery
-app = Celery('zeppelin')
+app = Celery("zeppelin")
 
 # Carrega configurações do Django e das tasks dos apps
-app.config_from_object('django.conf:settings', namespace='CELERY')
+app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
+
 
 @app.task(bind=True)
 def debug_task(self):
-    print(f'Request: {self.request!r}')
+    print(f"Request: {self.request!r}")

@@ -1,10 +1,9 @@
 import os
 import django
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'zeppelin.settings.local')
-django.setup()
-
 from django.contrib.auth import get_user_model
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "zeppelin.settings.local")
+django.setup()
 
 User = get_user_model()
 

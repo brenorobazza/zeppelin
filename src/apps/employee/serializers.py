@@ -13,10 +13,12 @@ from .models import (
     Team,
 )
 
+
 class AcademicDegreeCategoryWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = AcademicDegreeCategory
         exclude = ("polymorphic_ctype",)
+
 
 class AcademicDegreeCategoryReadSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,6 +32,7 @@ class AcademicDegreeWriteSerializer(serializers.ModelSerializer):
         model = AcademicDegree
         exclude = ("polymorphic_ctype",)
 
+
 class AcademicDegreeReadSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
@@ -41,6 +44,7 @@ class AcademicDegreeStatusWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = AcademicDegreeStatus
         exclude = ("polymorphic_ctype",)
+
 
 class AcademicDegreeStatusReadSerializer(serializers.ModelSerializer):
     class Meta:
@@ -54,6 +58,7 @@ class KnwoledgeLevelWriteSerializer(serializers.ModelSerializer):
         model = KnwoledgeLevel
         exclude = ("polymorphic_ctype",)
 
+
 class KnwoledgeLevelReadSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
@@ -65,6 +70,7 @@ class ExperienceLevelWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExperienceLevel
         exclude = ("polymorphic_ctype",)
+
 
 class ExperienceLevelReadSerializer(serializers.ModelSerializer):
     class Meta:
@@ -78,6 +84,7 @@ class PositionWriteSerializer(serializers.ModelSerializer):
         model = Position
         exclude = ("polymorphic_ctype",)
 
+
 class PositionReadSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
@@ -89,6 +96,7 @@ class EmployeeWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         exclude = ("polymorphic_ctype",)
+
 
 class EmployeeReadSerializer(serializers.ModelSerializer):
     class Meta:
@@ -102,6 +110,7 @@ class EmployeeKnowledgeWriteSerializer(serializers.ModelSerializer):
         model = EmployeeKnowledge
         exclude = ("polymorphic_ctype",)
 
+
 class EmployeeKnowledgeReadSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
@@ -113,6 +122,7 @@ class SthStageKnwoledgeLevelWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = SthStageKnwoledgeLevel
         exclude = ("polymorphic_ctype",)
+
 
 class SthStageKnwoledgeLevelReadSerializer(serializers.ModelSerializer):
     class Meta:
@@ -126,6 +136,7 @@ class SthStageExperienceLevelWriteSerializer(serializers.ModelSerializer):
         model = SthStageExperienceLevel
         exclude = ("polymorphic_ctype",)
 
+
 class SthStageExperienceLevelReadSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
@@ -138,9 +149,9 @@ class TeamWriteSerializer(serializers.ModelSerializer):
         model = Team
         exclude = ("polymorphic_ctype",)
 
+
 class TeamReadSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
         model = Team
         exclude = ("polymorphic_ctype",)
-

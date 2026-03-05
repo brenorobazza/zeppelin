@@ -3,8 +3,10 @@ from django.conf import settings
 
 hashids = Hashids(settings.HASHIDS_SALT, min_length=8)
 
+
 def h_encode(id):
     return hashids.encode(id)
+
 
 def h_decode(h):
     if z := hashids.decode(h):
@@ -12,7 +14,7 @@ def h_decode(h):
 
 
 class HashIdConverter:
-    regex = '[a-zA-Z0-9]{8,}'
+    regex = "[a-zA-Z0-9]{8,}"
 
     def to_python(self, value):
         return h_decode(value)
