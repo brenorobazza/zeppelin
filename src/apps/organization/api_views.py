@@ -142,6 +142,15 @@ class OrganizationViewSet(ModelViewSet):
     ordering_fields = '__all__'
     ordering = ["id"]
 
+    """
+    get_authenticators e get_permissions são sobrescritos para permitir
+    acesso anônimo às operações de listagem e recuperação, enquanto exigem
+    autenticação e permissões adequadas para operações de criação,
+    atualização e exclusão.
+    
+    Removê-los fará com que todas as operações exijam autenticação e permissões,
+    o que pode aumentar a segurança, mas reduzirá a acessibilidade para usuários não autenticados.
+    """
     def get_authenticators(self):
         if self.request.method in ['GET']:
             return []

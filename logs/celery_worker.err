@@ -794,3 +794,15 @@ setting. In Celery 5.1 it is set to False by default. The setting will be set to
 [2026-03-04 21:50:31,967: ERROR/MainProcess] consumer: Cannot connect to redis://redis:6379/0: Error 111 connecting to redis:6379. Connection refused..
 Trying again in 2.00 seconds... (1/100)
 
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-04 21:50:43,838: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-04 21:50:43,846: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-04 21:50:44,859: INFO/MainProcess] mingle: all alone
+[2026-03-04 21:50:44,872: INFO/MainProcess] celery@201f725aa417 ready.
