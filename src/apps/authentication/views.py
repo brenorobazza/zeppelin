@@ -1,10 +1,44 @@
+from django.contrib import messages
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
+from django.shortcuts import redirect, render
+from django.views import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from apps.employee.models import Employee
 from apps.organization.models import Organization
 from django.db import transaction
+
+
+class LoginPageView(View):
+    template_name = "authentication/login.html"
+
+    def get(self, request):
+        return render(request, self.template_name, {"next_url": request.GET.get("next", "/")})
+
+    def post(self, request):
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password", "")
+        next_url = request.POST.get("next", "/")
+
+        if not email or not password:
+            messages.error(request, "Email e senha sao obrigatorios.")
+            return render(request, self.template_name, {"next_url": next_url})
+
+        try:
+            username = User.objects.get(email__iexact=email).username
+        except User.DoesNotExist:
+            username = email
+
+        user = authenticate(request, username=username, password=password)
+        if not user:
+            messages.error(request, "Credenciais invalidas.")
+            return render(request, self.template_name, {"next_url": next_url})
+
+        login(request, user)
+        return redirect(next_url or "/")
+
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -69,3 +103,33 @@ class RegisterView(APIView):
             'employee_id': employee.id,
             'organization_id': organization.id
         }, status=201)
+
+
+class LoginApiView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = (request.data.get("email") or "").strip()
+        password = request.data.get("password") or ""
+
+        if not email or not password:
+            return Response({"error": "email and password are required"}, status=400)
+
+        try:
+            username = User.objects.get(email__iexact=email).username
+        except User.DoesNotExist:
+            username = email
+
+        user = authenticate(request, username=username, password=password)
+        if not user:
+            return Response({"error": "Invalid credentials"}, status=401)
+
+        login(request, user)
+        return Response(
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            },
+            status=200,
+        )

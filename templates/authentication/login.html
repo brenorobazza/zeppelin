@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zeppelin | Login</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'authentication/favicon.ico' %}?v=8">
+    <link rel="stylesheet" href="{% static 'authentication/login.css' %}">
+</head>
+<body>
+    <main class="page">
+        <section class="brand">
+            <img class="brand-logo" src="{% static 'authentication/logo-zeppelin.png' %}" alt="Zeppelin CI/CD">
+        </section>
+
+        <section class="card">
+            <header>
+                <h2>Welcome to Zeppelin</h2>
+                <p>Log in to access and improve your CI/CD practices.</p>
+            </header>
+
+            {% if messages %}
+                <ul class="alerts">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <form method="post" class="login-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next_url }}">
+
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="you@company.com" required>
+
+                <label for="password">Password</label>
+                <div class="password-row">
+                    <input type="password" id="password" name="password" placeholder="********" required>
+                    <a href="#" class="forgot">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn-primary">Log In</button>
+                <button type="button" class="btn-secondary">Create Account</button>
+            </form>
+
+            <footer>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </footer>
+        </section>
+    </main>
+</body>
+</html>
