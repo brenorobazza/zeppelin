@@ -2,7 +2,7 @@ import { useState } from "react";
 import { loginWithEmail } from "../services/auth";
 import "./login-page.css";
 
-export function LoginPage() {
+export function LoginPage({ onCreateAccountClick }) {
   // Estado local para campos do formulario e mensagens de feedback.
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -13,6 +13,15 @@ export function LoginPage() {
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleCreateAccount() {
+    if (typeof onCreateAccountClick === "function") {
+      onCreateAccountClick();
+      return;
+    }
+
+    window.location.hash = "create-account";
   }
 
   // Faz o login via API e controla estados de loading, sucesso e erro.
@@ -95,7 +104,7 @@ export function LoginPage() {
                 <span>Don't have an account?</span>
               </div>
 
-              <button className="btn-secondary" type="button">
+              <button className="btn-secondary" type="button" onClick={handleCreateAccount}>
                 Create Account
               </button>
             </form>
