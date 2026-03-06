@@ -11,3 +11,11 @@ destroy:
 superuser:
 	sh ./create_superuser.sh
 
+frontend-install:
+	cd frontend && npm install
+frontend-dev:
+	cd frontend && npm run dev
+frontend-build:
+	cd frontend && npm run build
+frontend-test:
+	cd frontend && npm test -- --watchAll=false
