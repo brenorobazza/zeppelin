@@ -3104,3 +3104,8 @@ order (MRO) for bases Model, PolymorphicModel
 [2025-09-30 11:15:23 -0300] [14] [INFO] Worker exiting (pid: 14)
 [2025-09-30 14:15:23 +0000] [34] [INFO] Booting worker with pid: 34
 [2025-09-30 14:15:23 +0000] [35] [INFO] Booting worker with pid: 35
+[2026-03-06 00:32:30 +0000] [12] [INFO] Starting gunicorn 20.1.0
+[2026-03-06 00:32:30 +0000] [12] [INFO] Listening at: http://0.0.0.0:8000 (12)
+[2026-03-06 00:32:30 +0000] [12] [INFO] Using worker: sync
+[2026-03-06 00:32:30 +0000] [13] [INFO] Booting worker with pid: 13
+[2026-03-06 00:32:30 +0000] [14] [INFO] Booting worker with pid: 14
