@@ -21,6 +21,7 @@ urlpatterns = [
     path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')), 
+    path('auth/', include('apps.authentication.urls')),
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('', include('apps.sth.api_urls')),
     path('', include('apps.continuousstar.api_urls')),

@@ -1,0 +1,356 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap");
+
+/* Variaveis de tema para manter consistencia visual da tela de entrada */
+:root {
+  --bg-main: #f0f2f5;
+  --bg-secondary: #f0f2f5;
+  --panel: #ffffff;
+  --line: #ccd0d5;
+  --text: #1c1e21;
+  --muted: #606770;
+  --blue: #1877f2;
+  --blue-dark: #166fe5;
+  --layout-max: 1700px;
+  --card-max: 560px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Container principal da pagina */
+.login-shell {
+  min-height: 100svh;
+  margin: 0;
+  padding: clamp(0.9rem, 1.8vw, 2rem);
+  overflow-x: hidden;
+  font-family: "Manrope", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 15% 10%, rgba(24, 119, 242, 0.08), transparent 30%),
+    linear-gradient(180deg, var(--bg-main), var(--bg-secondary));
+}
+
+/* Grid de duas colunas: comunicacao (esquerda) + formulario (direita) */
+.login-layout {
+  min-height: calc(100svh - clamp(1.8rem, 3.6vw, 4rem));
+  width: min(var(--layout-max), 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: clamp(2rem, 4vw, 5.5rem);
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, var(--card-max));
+  align-items: center;
+}
+
+/* Bloco de identidade e mensagem principal */
+.promo-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.4rem, 4vw, 4rem) clamp(1rem, 4vw, 3rem);
+}
+
+.promo-content {
+  max-width: min(700px, 100%);
+}
+
+.brand-logo {
+  width: clamp(250px, 19vw, 340px);
+  height: auto;
+  display: block;
+  margin-bottom: clamp(0.7rem, 1.4vw, 1.4rem);
+}
+
+.promo-content h1 {
+  margin: 0;
+  font-size: clamp(2.7rem, 6vw, 5.8rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: #0f1720;
+}
+
+.promo-content h1 span {
+  color: var(--blue);
+}
+
+.promo-content p {
+  margin: clamp(0.8rem, 1.2vw, 1.1rem) 0 0;
+  max-width: 40ch;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.25vw, 1.15rem);
+}
+
+/* Area da direita onde fica o card de autenticacao */
+.login-panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.2rem, 2vw, 2.2rem) clamp(0.6rem, 2.6vw, 2.5rem);
+  background: #ffffff;
+  border-left: 1px solid #d8dde6;
+}
+
+.login-panel::before {
+  display: none;
+}
+
+.login-card {
+  width: min(100%, var(--card-max));
+  padding: clamp(1.3rem, 2vw, 2.1rem);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.login-card h2 {
+  margin: 0;
+  font-size: clamp(1.9rem, 3vw, 3rem);
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.login-card header p {
+  margin: clamp(0.5rem, 1vw, 0.9rem) 0 clamp(1rem, 1.7vw, 1.5rem);
+  color: var(--muted);
+  font-size: clamp(1rem, 1.1vw, 1.06rem);
+}
+
+/* Formulario com espacos fluidos para manter proporcao em diferentes telas */
+.login-form {
+  display: grid;
+  gap: clamp(0.6rem, 1vw, 0.82rem);
+}
+
+.login-form label {
+  color: var(--muted);
+  font-size: clamp(0.95rem, 1vw, 1.06rem);
+  font-weight: 600;
+}
+
+.login-form input {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: #1c1e21;
+  font-size: clamp(0.98rem, 1vw, 1.08rem);
+  padding: clamp(0.82rem, 1.15vw, 1rem) 1rem;
+}
+
+.login-form textarea {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: #1c1e21;
+  font-size: clamp(0.98rem, 1vw, 1.08rem);
+  padding: 0.82rem 1rem;
+  resize: vertical;
+  min-height: 90px;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.18);
+}
+
+.login-form textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.18);
+}
+
+.btn-primary,
+.btn-secondary {
+  width: 100%;
+  border-radius: 999px;
+  font-size: clamp(1.16rem, 1.4vw, 1.5rem);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-primary {
+  margin-top: 0.35rem;
+  border: 0;
+  padding: clamp(0.8rem, 1.15vw, 1rem) 1rem;
+  color: #ffffff;
+  background: linear-gradient(180deg, #1f7bf2, var(--blue));
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, #1f78e5, var(--blue-dark));
+}
+
+.btn-primary:disabled {
+  opacity: 0.72;
+  cursor: wait;
+}
+
+.text-link {
+  justify-self: center;
+  margin-top: 0.3rem;
+  border: 0;
+  background: transparent;
+  color: #1c1e21;
+  font-size: clamp(1rem, 1.03vw, 1.08rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.separator {
+  margin: 0.2rem 0 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 1.04rem;
+}
+
+.separator span {
+  padding: 0 0.7rem;
+  position: relative;
+}
+
+.separator span::before,
+.separator span::after {
+  content: "";
+  position: absolute;
+  top: 55%;
+  width: clamp(78px, 8vw, 122px);
+  height: 1px;
+  background: #d7dbe3;
+}
+
+.separator span::before {
+  right: 100%;
+}
+
+.separator span::after {
+  left: 100%;
+}
+
+.btn-secondary {
+  margin-top: 0.05rem;
+  border: 1px solid var(--blue);
+  padding: clamp(0.76rem, 1.1vw, 0.94rem) 1rem;
+  color: var(--blue);
+  background: #ffffff;
+}
+
+/* Feedback de erro/sucesso retornado pelo login */
+.feedback {
+  border-radius: 10px;
+  margin: 0.1rem 0 0.9rem;
+  padding: 0.65rem 0.8rem;
+  font-weight: 700;
+}
+
+.feedback.error {
+  border: 1px solid #f7c7cc;
+  background: #fdecef;
+  color: #9e1c24;
+}
+
+.feedback.success {
+  border: 1px solid #bfe7c8;
+  background: #eaf8ee;
+  color: #0a6d2f;
+}
+
+.login-card footer {
+  margin-top: clamp(1rem, 1.8vw, 1.6rem);
+  padding-top: clamp(0.8rem, 1.3vw, 1.1rem);
+  border-top: 1px solid rgba(145, 173, 230, 0.25);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem 1.3rem;
+}
+
+.login-card footer a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+/* Ajustes para notebooks menores */
+@media (max-width: 1280px) {
+  .login-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 520px);
+    gap: clamp(1.5rem, 3vw, 2.8rem);
+  }
+
+  .brand-logo {
+    width: clamp(230px, 20vw, 340px);
+  }
+
+  .promo-content h1 {
+    font-size: clamp(2.3rem, 5.5vw, 4.9rem);
+  }
+}
+
+/* Em largura menor, empilha o layout para melhorar leitura e usabilidade */
+@media (max-width: 1080px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    gap: 0.6rem;
+  }
+
+  .promo-panel {
+    padding: 1.8rem 1.2rem 0.5rem;
+    text-align: center;
+  }
+
+  .brand-logo {
+    margin: 0 auto 1.1rem;
+    width: clamp(210px, 44vw, 300px);
+  }
+
+  .promo-content p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .login-panel {
+    background: transparent;
+    border-left: 0;
+    padding: 0.2rem 1rem 2rem;
+  }
+
+  .login-panel::before {
+    display: none;
+  }
+
+  .login-card {
+    background: #ffffff;
+    border: 1px solid #d8dde6;
+    border-radius: 18px;
+    box-shadow: 0 14px 26px rgba(17, 24, 39, 0.08);
+  }
+}
+
+/* Ajustes finais para celular */
+@media (max-width: 700px) {
+  .promo-content h1 {
+    font-size: clamp(1.95rem, 10vw, 3rem);
+  }
+
+  .login-card {
+    width: 100%;
+    padding: 1.2rem 0.95rem;
+    border-radius: 14px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    font-size: 1.08rem;
+  }
+
+  .separator span::before,
+  .separator span::after {
+    width: clamp(48px, 14vw, 78px);
+  }
+}

@@ -1,0 +1,201 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap");
+
+:root {
+    --bg-deep: #040a1f;
+    --bg-mid: #08173a;
+    --card: rgba(18, 45, 103, 0.78);
+    --line: rgba(136, 168, 228, 0.3);
+    --text-main: #f6f2e8;
+    --text-muted: #c4d0e6;
+    --orange: #f49a32;
+    --orange-strong: #e86f1a;
+    --cta-dark: #19366f;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Manrope", sans-serif;
+    color: var(--text-main);
+    background:
+        radial-gradient(circle at 50% -15%, rgba(57, 95, 176, 0.3), transparent 42%),
+        radial-gradient(circle at 5% 100%, rgba(12, 34, 82, 0.45), transparent 45%),
+        linear-gradient(180deg, var(--bg-mid), var(--bg-deep));
+}
+
+.page {
+    width: min(92%, 860px);
+    margin: 0 auto;
+    padding: 48px 0 64px;
+}
+
+.brand {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.brand-logo {
+    width: clamp(190px, 23vw, 290px);
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.24));
+}
+
+.card {
+    width: min(100%, 820px);
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 26px 56px rgba(0, 0, 0, 0.34);
+    padding: 40px 48px 28px;
+    backdrop-filter: blur(3px);
+}
+
+.card header h2 {
+    margin: 0;
+    text-align: center;
+    font-size: clamp(2rem, 3.2vw, 3rem);
+}
+
+.card header p {
+    margin: 10px 0 30px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 1.08rem;
+}
+
+.alerts {
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+}
+
+.alerts li {
+    border: 1px solid rgba(255, 131, 102, 0.5);
+    background: rgba(140, 29, 29, 0.35);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 700;
+    color: #ffe0db;
+}
+
+.login-form {
+    display: grid;
+    gap: 12px;
+}
+
+label {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid rgba(145, 173, 230, 0.42);
+    border-radius: 12px;
+    background: rgba(9, 29, 74, 0.7);
+    color: var(--text-main);
+    font-size: 1.05rem;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+input:focus {
+    border-color: rgba(253, 174, 92, 0.9);
+    box-shadow: 0 0 0 3px rgba(253, 174, 92, 0.2);
+}
+
+.password-row {
+    position: relative;
+}
+
+.password-row .forgot {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--orange);
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+button {
+    margin-top: 8px;
+    width: 100%;
+    border: 0;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 1.72rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, var(--orange-strong), #f9a336);
+    color: #fff7ec;
+}
+
+.btn-secondary {
+    color: var(--text-main);
+    border: 1px solid rgba(145, 173, 230, 0.42);
+    background: rgba(13, 34, 78, 0.38);
+    margin-top: 6px;
+    font-size: 1.52rem;
+}
+
+.card footer {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(145, 173, 230, 0.23);
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+}
+
+.card footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+@media (max-width: 700px) {
+    .page {
+        width: min(94%, 860px);
+        padding-top: 24px;
+    }
+
+    .brand-logo {
+        width: clamp(150px, 46vw, 210px);
+    }
+
+    .card {
+        padding: 26px 20px 20px;
+    }
+
+    .card header h2 {
+        font-size: 2rem;
+    }
+
+    button {
+        font-size: 1.32rem;
+    }
+
+    .btn-secondary {
+        font-size: 1.22rem;
+    }
+
+    .password-row .forgot {
+        position: static;
+        display: block;
+        transform: none;
+        margin-top: 10px;
+        text-align: right;
+    }
+}

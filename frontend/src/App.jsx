@@ -1,35 +1,37 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import { CreateAccountPage } from "./pages/CreateAccountPage";
+import { LoginPage } from "./pages/LoginPage";
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+function getScreenFromHash() {
+  return window.location.hash === "#create-account" ? "create-account" : "login";
 }
 
-export default App
+export default function App() {
+  // Controla navegacao entre login e cadastro via hash, sem router externo.
+  const [screen, setScreen] = useState(getScreenFromHash);
+
+  useEffect(() => {
+    function handleHashChange() {
+      setScreen(getScreenFromHash());
+    }
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  function goToCreateAccount() {
+    window.location.hash = "create-account";
+    setScreen("create-account");
+  }
+
+  function goToLogin() {
+    window.location.hash = "";
+    setScreen("login");
+  }
+
+  if (screen === "create-account") {
+    return <CreateAccountPage onBackToLogin={goToLogin} />;
+  }
+
+  return <LoginPage onCreateAccountClick={goToCreateAccount} />;
+}

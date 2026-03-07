@@ -65,6 +65,8 @@ INSTALLED_APPS = [
     'apps.employee',
     'apps.practitionerseye',
     'apps.questionnaire',
+    'apps.authentication', 
+
 ]
 
 MIDDLEWARE = [
@@ -129,11 +131,11 @@ STATICFILES_DIRS = (os.path.join('static'), )
 
 DATE_INPUT_FORMATS = ['%d/%m/%Y']
 
-LOGIN_URL = "/accounts/login/"
+LOGIN_URL = "/auth/login/"
 
 LOGIN_REDIRECT_URL = '/'
 
-LOGOUT_REDIRECT_URL = '/accounts/login'
+LOGOUT_REDIRECT_URL = '/auth/login/'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 

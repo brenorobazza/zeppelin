@@ -457,7 +457,364 @@ Please specify a different user using the --uid option.
 User information: uid=0 euid=0 gid=0 egid=0
 
   warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
-[2026-03-05 21:32:32,703: INFO/MainProcess] Connected to redis://redis:6379/0
-[2026-03-05 21:32:32,706: INFO/MainProcess] mingle: searching for neighbors
-[2026-03-05 21:32:33,715: INFO/MainProcess] mingle: all alone
-[2026-03-05 21:32:33,731: INFO/MainProcess] celery@39c377684783 ready.
+[2026-03-04 20:13:19,789: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-04 20:13:19,795: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-04 20:13:20,806: INFO/MainProcess] mingle: all alone
+[2026-03-04 20:13:20,819: INFO/MainProcess] celery@e1ef1820fd2d ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-04 20:16:34,591: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-04 20:16:34,594: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-04 20:16:35,604: INFO/MainProcess] mingle: all alone
+[2026-03-04 20:16:35,621: INFO/MainProcess] celery@de383072d49c ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-04 20:20:52,988: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-04 20:20:52,994: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-04 20:20:54,057: INFO/MainProcess] mingle: all alone
+[2026-03-04 20:20:54,074: INFO/MainProcess] celery@201f725aa417 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-04 20:22:37,589: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-04 20:22:37,594: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-04 20:22:38,608: INFO/MainProcess] mingle: all alone
+[2026-03-04 20:22:38,624: INFO/MainProcess] celery@201f725aa417 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-04 21:13:09,922: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-04 21:13:09,931: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-04 21:13:10,942: INFO/MainProcess] mingle: all alone
+[2026-03-04 21:13:10,953: INFO/MainProcess] celery@201f725aa417 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-04 21:46:53,549: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-04 21:46:53,553: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-04 21:46:54,562: INFO/MainProcess] mingle: all alone
+[2026-03-04 21:46:54,575: INFO/MainProcess] celery@201f725aa417 ready.
+[2026-03-04 21:47:16,486: WARNING/MainProcess] consumer: Connection to broker lost. Trying to re-establish the connection...
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/redis/retry.py", line 116, in call_with_retry
+    return do()
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 973, in <lambda>
+    lambda: command(*args, **kwargs),
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 996, in try_read
+    return conn.read_response(disconnect_on_error=False, push_request=True)
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 1133, in read_response
+    response = self._parser.read_response(disable_decoding=disable_decoding)
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/resp2.py", line 15, in read_response
+    result = self._read_response(disable_decoding=disable_decoding)
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/resp2.py", line 25, in _read_response
+    raw = self._buffer.readline()
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/socket.py", line 115, in readline
+    self._read_from_socket()
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/socket.py", line 68, in _read_from_socket
+    raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+redis.exceptions.ConnectionError: Connection closed by server.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 855, in connect_check_health
+    sock = self.retry.call_with_retry(
+  File "/usr/local/lib/python3.10/site-packages/redis/retry.py", line 116, in call_with_retry
+    return do()
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 856, in <lambda>
+    lambda: self._connect(), lambda error: self.disconnect(error)
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 1306, in _connect
+    raise err
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 1290, in _connect
+    sock.connect(socket_address)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/celery/worker/consumer/consumer.py", line 346, in start
+    blueprint.start(self)
+  File "/usr/local/lib/python3.10/site-packages/celery/bootsteps.py", line 116, in start
+    step.start(parent)
+  File "/usr/local/lib/python3.10/site-packages/celery/worker/consumer/consumer.py", line 790, in start
+    c.loop(*c.loop_args())
+  File "/usr/local/lib/python3.10/site-packages/celery/worker/loops.py", line 97, in asynloop
+    next(loop)
+  File "/usr/local/lib/python3.10/site-packages/kombu/asynchronous/hub.py", line 377, in create_loop
+    cb(*cbargs)
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 1395, in on_readable
+    self.cycle.on_readable(fileno)
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 579, in on_readable
+    chan.handlers[type]()
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 931, in _receive
+    ret.append(self._receive_one(c))
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 941, in _receive_one
+    response = c.parse_response()
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 998, in parse_response
+    response = self._execute(conn, try_read)
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 972, in _execute
+    response = conn.retry.call_with_retry(
+  File "/usr/local/lib/python3.10/site-packages/redis/retry.py", line 121, in call_with_retry
+    fail(error)
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 974, in <lambda>
+    lambda _: self._reconnect(conn),
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 958, in _reconnect
+    conn.connect()
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 846, in connect
+    self.connect_check_health(check_health=True)
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 863, in connect_check_health
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error 111 connecting to redis:6379. Connection refused.
+[2026-03-04 21:47:16,495: WARNING/MainProcess] /usr/local/lib/python3.10/site-packages/celery/worker/consumer/consumer.py:397: CPendingDeprecationWarning: 
+In Celery 5.1 we introduced an optional breaking change which
+on connection loss cancels all currently executed tasks with late acknowledgement enabled.
+These tasks cannot be acknowledged as the connection is gone, and the tasks are automatically redelivered
+back to the queue. You can enable this behavior using the worker_cancel_long_running_tasks_on_connection_loss
+setting. In Celery 5.1 it is set to False by default. The setting will be set to True by default in Celery 6.0.
+
+  warnings.warn(CANCEL_TASKS_BY_DEFAULT, CPendingDeprecationWarning)
+
+[2026-03-04 21:47:16,500: ERROR/MainProcess] consumer: Cannot connect to redis://redis:6379/0: Error 111 connecting to redis:6379. Connection refused..
+Trying again in 2.00 seconds... (1/100)
+
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-04 21:47:28,324: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-04 21:47:28,328: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-04 21:47:29,339: INFO/MainProcess] mingle: all alone
+[2026-03-04 21:47:29,352: INFO/MainProcess] celery@201f725aa417 ready.
+[2026-03-04 21:48:27,771: WARNING/MainProcess] consumer: Connection to broker lost. Trying to re-establish the connection...
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/redis/retry.py", line 116, in call_with_retry
+    return do()
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 973, in <lambda>
+    lambda: command(*args, **kwargs),
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 996, in try_read
+    return conn.read_response(disconnect_on_error=False, push_request=True)
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 1133, in read_response
+    response = self._parser.read_response(disable_decoding=disable_decoding)
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/resp2.py", line 15, in read_response
+    result = self._read_response(disable_decoding=disable_decoding)
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/resp2.py", line 25, in _read_response
+    raw = self._buffer.readline()
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/socket.py", line 115, in readline
+    self._read_from_socket()
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/socket.py", line 68, in _read_from_socket
+    raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+redis.exceptions.ConnectionError: Connection closed by server.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 855, in connect_check_health
+    sock = self.retry.call_with_retry(
+  File "/usr/local/lib/python3.10/site-packages/redis/retry.py", line 116, in call_with_retry
+    return do()
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 856, in <lambda>
+    lambda: self._connect(), lambda error: self.disconnect(error)
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 1306, in _connect
+    raise err
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 1290, in _connect
+    sock.connect(socket_address)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/celery/worker/consumer/consumer.py", line 346, in start
+    blueprint.start(self)
+  File "/usr/local/lib/python3.10/site-packages/celery/bootsteps.py", line 116, in start
+    step.start(parent)
+  File "/usr/local/lib/python3.10/site-packages/celery/worker/consumer/consumer.py", line 790, in start
+    c.loop(*c.loop_args())
+  File "/usr/local/lib/python3.10/site-packages/celery/worker/loops.py", line 97, in asynloop
+    next(loop)
+  File "/usr/local/lib/python3.10/site-packages/kombu/asynchronous/hub.py", line 377, in create_loop
+    cb(*cbargs)
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 1395, in on_readable
+    self.cycle.on_readable(fileno)
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 579, in on_readable
+    chan.handlers[type]()
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 931, in _receive
+    ret.append(self._receive_one(c))
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 941, in _receive_one
+    response = c.parse_response()
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 998, in parse_response
+    response = self._execute(conn, try_read)
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 972, in _execute
+    response = conn.retry.call_with_retry(
+  File "/usr/local/lib/python3.10/site-packages/redis/retry.py", line 121, in call_with_retry
+    fail(error)
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 974, in <lambda>
+    lambda _: self._reconnect(conn),
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 958, in _reconnect
+    conn.connect()
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 846, in connect
+    self.connect_check_health(check_health=True)
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 863, in connect_check_health
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error 111 connecting to redis:6379. Connection refused.
+[2026-03-04 21:48:27,778: WARNING/MainProcess] /usr/local/lib/python3.10/site-packages/celery/worker/consumer/consumer.py:397: CPendingDeprecationWarning: 
+In Celery 5.1 we introduced an optional breaking change which
+on connection loss cancels all currently executed tasks with late acknowledgement enabled.
+These tasks cannot be acknowledged as the connection is gone, and the tasks are automatically redelivered
+back to the queue. You can enable this behavior using the worker_cancel_long_running_tasks_on_connection_loss
+setting. In Celery 5.1 it is set to False by default. The setting will be set to True by default in Celery 6.0.
+
+  warnings.warn(CANCEL_TASKS_BY_DEFAULT, CPendingDeprecationWarning)
+
+[2026-03-04 21:48:27,783: ERROR/MainProcess] consumer: Cannot connect to redis://redis:6379/0: Error 111 connecting to redis:6379. Connection refused..
+Trying again in 2.00 seconds... (1/100)
+
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-04 21:48:41,736: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-04 21:48:41,739: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-04 21:48:42,749: INFO/MainProcess] mingle: all alone
+[2026-03-04 21:48:42,762: INFO/MainProcess] celery@201f725aa417 ready.
+[2026-03-04 21:50:31,958: WARNING/MainProcess] consumer: Connection to broker lost. Trying to re-establish the connection...
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/redis/retry.py", line 116, in call_with_retry
+    return do()
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 973, in <lambda>
+    lambda: command(*args, **kwargs),
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 996, in try_read
+    return conn.read_response(disconnect_on_error=False, push_request=True)
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 1133, in read_response
+    response = self._parser.read_response(disable_decoding=disable_decoding)
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/resp2.py", line 15, in read_response
+    result = self._read_response(disable_decoding=disable_decoding)
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/resp2.py", line 25, in _read_response
+    raw = self._buffer.readline()
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/socket.py", line 115, in readline
+    self._read_from_socket()
+  File "/usr/local/lib/python3.10/site-packages/redis/_parsers/socket.py", line 68, in _read_from_socket
+    raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+redis.exceptions.ConnectionError: Connection closed by server.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 855, in connect_check_health
+    sock = self.retry.call_with_retry(
+  File "/usr/local/lib/python3.10/site-packages/redis/retry.py", line 116, in call_with_retry
+    return do()
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 856, in <lambda>
+    lambda: self._connect(), lambda error: self.disconnect(error)
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 1306, in _connect
+    raise err
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 1290, in _connect
+    sock.connect(socket_address)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/celery/worker/consumer/consumer.py", line 346, in start
+    blueprint.start(self)
+  File "/usr/local/lib/python3.10/site-packages/celery/bootsteps.py", line 116, in start
+    step.start(parent)
+  File "/usr/local/lib/python3.10/site-packages/celery/worker/consumer/consumer.py", line 790, in start
+    c.loop(*c.loop_args())
+  File "/usr/local/lib/python3.10/site-packages/celery/worker/loops.py", line 97, in asynloop
+    next(loop)
+  File "/usr/local/lib/python3.10/site-packages/kombu/asynchronous/hub.py", line 377, in create_loop
+    cb(*cbargs)
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 1395, in on_readable
+    self.cycle.on_readable(fileno)
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 579, in on_readable
+    chan.handlers[type]()
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 931, in _receive
+    ret.append(self._receive_one(c))
+  File "/usr/local/lib/python3.10/site-packages/kombu/transport/redis.py", line 941, in _receive_one
+    response = c.parse_response()
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 998, in parse_response
+    response = self._execute(conn, try_read)
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 972, in _execute
+    response = conn.retry.call_with_retry(
+  File "/usr/local/lib/python3.10/site-packages/redis/retry.py", line 121, in call_with_retry
+    fail(error)
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 974, in <lambda>
+    lambda _: self._reconnect(conn),
+  File "/usr/local/lib/python3.10/site-packages/redis/client.py", line 958, in _reconnect
+    conn.connect()
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 846, in connect
+    self.connect_check_health(check_health=True)
+  File "/usr/local/lib/python3.10/site-packages/redis/connection.py", line 863, in connect_check_health
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error 111 connecting to redis:6379. Connection refused.
+[2026-03-04 21:50:31,962: WARNING/MainProcess] /usr/local/lib/python3.10/site-packages/celery/worker/consumer/consumer.py:397: CPendingDeprecationWarning: 
+In Celery 5.1 we introduced an optional breaking change which
+on connection loss cancels all currently executed tasks with late acknowledgement enabled.
+These tasks cannot be acknowledged as the connection is gone, and the tasks are automatically redelivered
+back to the queue. You can enable this behavior using the worker_cancel_long_running_tasks_on_connection_loss
+setting. In Celery 5.1 it is set to False by default. The setting will be set to True by default in Celery 6.0.
+
+  warnings.warn(CANCEL_TASKS_BY_DEFAULT, CPendingDeprecationWarning)
+
+[2026-03-04 21:50:31,967: ERROR/MainProcess] consumer: Cannot connect to redis://redis:6379/0: Error 111 connecting to redis:6379. Connection refused..
+Trying again in 2.00 seconds... (1/100)
+
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-04 21:50:43,838: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-04 21:50:43,846: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-04 21:50:44,859: INFO/MainProcess] mingle: all alone
+[2026-03-04 21:50:44,872: INFO/MainProcess] celery@201f725aa417 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-07 17:29:46,511: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-07 17:29:46,515: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-07 17:29:47,524: INFO/MainProcess] mingle: all alone
+[2026-03-07 17:29:47,537: INFO/MainProcess] celery@39c377684783 ready.
