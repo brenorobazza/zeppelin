@@ -1,21 +1,13 @@
 [flake8]
 max-line-length = 88
-extend-ignore = E203, W503, E501, F403, F405
+extend-ignore = E203,W503,E501
 exclude =
     .git,
-    __pycache__,
     .venv,
-    .env,
-    venv,
-    migrations,
-    .tox,
-    .pytest_cache,
-    .eggs,
-    *.egg,
-    build,
-    dist
+    __pycache__,
+    */migrations/*,
+    node_modules
 
 per-file-ignores =
-    **/migrations/*.py:F403,F405,E501
-    **/settings/*.py:F403,F405
-    src/apps/organization/services.py:F821
+    backend/zeppelin/settings/*.py:F403,F405,F401
+    backend/apps/organization/services.py:F821

@@ -8,10 +8,12 @@ from .models import (
     Answer,
 )
 
+
 class AdoptedLevelWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdoptedLevel
         exclude = ("polymorphic_ctype",)
+
 
 class AdoptedLevelReadSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,6 +27,7 @@ class StatementWriteSerializer(serializers.ModelSerializer):
         model = Statement
         exclude = ("polymorphic_ctype",)
 
+
 class StatementReadSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
@@ -36,6 +39,7 @@ class FeedbackQuestionnaireWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeedbackQuestionnaire
         exclude = ("polymorphic_ctype",)
+
 
 class FeedbackQuestionnaireReadSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,6 +53,7 @@ class QuestionnaireWriteSerializer(serializers.ModelSerializer):
         model = Questionnaire
         exclude = ("polymorphic_ctype",)
 
+
 class QuestionnaireReadSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
@@ -60,6 +65,7 @@ class QuestionnaireExcelWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionnaireExcel
         exclude = ("polymorphic_ctype",)
+
 
 class QuestionnaireExcelReadSerializer(serializers.ModelSerializer):
     class Meta:
@@ -73,9 +79,9 @@ class AnswerWriteSerializer(serializers.ModelSerializer):
         model = Answer
         exclude = ("polymorphic_ctype",)
 
+
 class AnswerReadSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
         model = Answer
         exclude = ("polymorphic_ctype",)
-

@@ -4,10 +4,12 @@ from .models import (
     Element,
 )
 
+
 class DimensionWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         exclude = ("polymorphic_ctype",)
+
 
 class DimensionReadSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,9 +23,9 @@ class ElementWriteSerializer(serializers.ModelSerializer):
         model = Element
         exclude = ("polymorphic_ctype",)
 
+
 class ElementReadSerializer(serializers.ModelSerializer):
     class Meta:
         depth = 1
         model = Element
         exclude = ("polymorphic_ctype",)
-
