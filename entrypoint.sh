@@ -7,6 +7,7 @@ while ! nc -z db_zeppelin 5432; do
 done
 echo "PostgreSQL está pronto!"
 
+mkdir -p /app/backend/logs /app/logs
 
 echo "Executando make migrations..."
 python manage.py makemigrations

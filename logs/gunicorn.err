@@ -3213,3 +3213,12 @@ order (MRO) for bases Model, PolymorphicModel
 [2026-03-07 20:29:44 +0000] [12] [INFO] Using worker: sync
 [2026-03-07 20:29:44 +0000] [13] [INFO] Booting worker with pid: 13
 [2026-03-07 20:29:44 +0000] [14] [INFO] Booting worker with pid: 14
+[2026-03-08 18:20:10 +0000] [13] [INFO] Starting gunicorn 20.1.0
+[2026-03-08 18:20:10 +0000] [13] [INFO] Listening at: http://0.0.0.0:8000 (13)
+[2026-03-08 18:20:10 +0000] [13] [INFO] Using worker: sync
+[2026-03-08 18:20:10 +0000] [14] [INFO] Booting worker with pid: 14
+[2026-03-08 18:20:10 +0000] [15] [INFO] Booting worker with pid: 15
+[2026-03-08 18:23:58 +0000] [13] [INFO] Handling signal: term
+[2026-03-08 15:23:58 -0300] [14] [INFO] Worker exiting (pid: 14)
+[2026-03-08 15:23:58 -0300] [15] [INFO] Worker exiting (pid: 15)
+[2026-03-08 18:23:58 +0000] [13] [INFO] Shutting down: Master

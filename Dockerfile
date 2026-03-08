@@ -13,6 +13,8 @@ WORKDIR /app
 COPY ./backend/ .
 COPY .env .
 COPY supervisord.conf .
+# Copy requirements.txt
+COPY requirements.txt .
 # Instala dependências do sistema
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -27,14 +29,14 @@ RUN apt-get update && apt-get install -y \
 
 # Instala dependências Python
 RUN pip install -r requirements.txt
-
+# Cria diretórios de logs após copiar backend
+RUN mkdir -p /app/logs /app/backend/logs
 RUN python manage.py collectstatic --noinput --no-post-process
-RUN mkdir -p /app/logs
 
 COPY supervisord.conf /etc/supervisord.conf
 
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN apt-get update && apt-get install -y dos2unix && dos2unix /entrypoint.sh && chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["supervisord", "-c", "/etc/supervisord.conf"]
