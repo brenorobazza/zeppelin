@@ -1,35 +1,52 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
+
+async function parseResponse(response, fallbackMessage) {
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message =
+      data.error || data.detail || data.message || `${fallbackMessage} (status ${response.status})`;
+    throw new Error(message);
+  }
+
+  return data;
+}
 
 export async function loginWithEmail({ email, password }) {
   const response = await fetch(`${API_BASE}/auth/login-api/`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ email, password })
   });
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data.error || "Falha ao autenticar.");
-  }
-
-  return data;
+  return parseResponse(response, "Falha ao autenticar.");
 }
 
 export async function registerAccount(payload) {
   const response = await fetch(`${API_BASE}/auth/register/`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify(payload)
   });
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data.error || "Falha ao criar conta.");
-  }
+  return parseResponse(response, "Falha ao criar conta.");
+}
 
-  return data;
+export async function requestPasswordReset(email) {
+  const response = await fetch(`${API_BASE}/auth/forgot-password/`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email })
+  });
+
+  return parseResponse(response, "Falha ao solicitar recuperacao de senha.");
 }
