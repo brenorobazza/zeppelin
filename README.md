@@ -129,6 +129,42 @@ Used by the PostgreSQL container in `docker-compose.yml`:
 
 ---
 
+## 🛠️ Development Environment Setup
+
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- Docker and Docker Compose
+
+### Setup
+
+```bash
+# Clone the repository
+git clone <repo-url>
+cd zeppelin-backend
+
+# Create the virtual environment
+python3.11 -m venv .venv
+source .venv/bin/activate
+
+# Install all dependencies (Python, pre-commit hooks and frontend)
+./setup-dev.sh
+```
+
+### Pre-commit
+
+The project uses [pre-commit](https://pre-commit.com/) to ensure code quality. After running `setup-dev.sh`, the hook is automatically installed and will run **Black** and **Flake8** on every `git commit`.
+
+> ⚠️ If the lint check fails, the commit is blocked until the errors are fixed.
+
+To run manually across all files:
+
+```bash
+pre-commit run --all-files
+```
+
+---
+
 ## 🚀 Quick Start
 
 Follow these steps to get Zeppelin running in under 5 minutes:
