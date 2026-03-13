@@ -1,80 +1,165 @@
 import { useMemo, useState } from "react";
-import { recommendations } from "../mock/zeppelinData";
+import {
+  maturitySnapshot,
+  recommendations,
+  recommendationTracks
+} from "../mock/zeppelinData";
+
+function getPriorityClass(priority) {
+  if (priority === "High") return "high";
+  if (priority === "Medium") return "medium";
+  return "low";
+}
 
 export function RecommendationsPage() {
-  const [pillar, setPillar] = useState("All");
+  const [stage, setStage] = useState("All");
+  const [track, setTrack] = useState("All");
   const [priority, setPriority] = useState("All");
-  const [status, setStatus] = useState("All");
 
   const filtered = useMemo(
     () =>
       recommendations.filter((item) => {
-        const okPillar = pillar === "All" || item.pillar === pillar;
-        const okPriority = priority === "All" || item.priority === priority;
-        const okStatus = status === "All" || item.status === status;
-        return okPillar && okPriority && okStatus;
+        const matchesStage = stage === "All" || item.stage === stage;
+        const matchesTrack = track === "All" || item.track === track;
+        const matchesPriority = priority === "All" || item.priority === priority;
+        return matchesStage && matchesTrack && matchesPriority;
       }),
-    [pillar, priority, status]
+    [stage, track, priority]
   );
+
+  const groupedTracks = recommendationTracks.map((lane) => ({
+    ...lane,
+    items: filtered.filter((item) => item.track === lane.key)
+  }));
+
+  const adoptNowCount = recommendations.filter((item) => item.track === "Adopt now").length;
+  const consolidateCount = recommendations.filter((item) => item.track === "Consolidate").length;
 
   return (
     <>
-      <section className="panel">
-        <h3>Filters</h3>
-        <div className="btn-row">
-          <select value={pillar} onChange={(event) => setPillar(event.target.value)}>
-            <option>All</option>
-            <option>CI</option>
-            <option>CD</option>
-          </select>
-          <select value={priority} onChange={(event) => setPriority(event.target.value)}>
-            <option>All</option>
-            <option>High</option>
-            <option>Medium</option>
-            <option>Low</option>
-          </select>
-          <select value={status} onChange={(event) => setStatus(event.target.value)}>
-            <option>All</option>
-            <option>Planned</option>
-            <option>In progress</option>
-            <option>Completed</option>
-          </select>
-        </div>
+      <section className="grid-3">
+        <article className="metric-card">
+          <p>Triggered recommendations</p>
+          <h2>{maturitySnapshot.recommendationCount}</h2>
+          <small>Generated only for practices below process level</small>
+        </article>
+
+        <article className="metric-card">
+          <p>Adopt-first items</p>
+          <h2>{adoptNowCount}</h2>
+          <small>Practices still absent or abandoned</small>
+        </article>
+
+        <article className="metric-card">
+          <p>Consolidation items</p>
+          <h2>{consolidateCount}</h2>
+          <small>Practices that exist locally and should scale to process level</small>
+        </article>
       </section>
 
-      <section className="panel">
-        <h3>Recommendation Backlog</h3>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Practice</th>
-              <th>Current Level</th>
-              <th>Impact</th>
-              <th>Effort</th>
-              <th>Priority</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((item) => (
-              <tr key={item.id}>
-                <td>
-                  <strong>{item.practice}</strong>
-                  <div>{item.suggestion}</div>
-                </td>
-                <td>{item.currentLevel}</td>
-                <td>{item.expectedImpact}</td>
-                <td>{item.estimatedEffort}</td>
-                <td>
-                  <span className={`pill ${item.priority === "High" ? "high" : "medium"}`}>
-                    {item.priority}
-                  </span>
-                </td>
-                <td>{item.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <section className="two-column-grid">
+        <article className="panel">
+          <h3>How this roadmap is generated</h3>
+          <p>
+            The dissertation defines a deterministic gap-analysis rule so the system recommends only
+            what still needs adoption or consolidation.
+          </p>
+
+          <ul className="insight-list">
+            <li className="insight-item">
+              <small>Gap analysis rule</small>
+              <h4>Not adopted or Abandoned</h4>
+              <p>Trigger adoption-oriented recommendations focused on establishing the practice.</p>
+            </li>
+            <li className="insight-item">
+              <small>Gap analysis rule</small>
+              <h4>Project/Product level</h4>
+              <p>Trigger consolidation-oriented recommendations to scale the practice to process level.</p>
+            </li>
+            <li className="insight-item">
+              <small>Gap analysis rule</small>
+              <h4>Process level or Institutionalized</h4>
+              <p>No recommendation is triggered, because the practice is treated as already mature.</p>
+            </li>
+          </ul>
+        </article>
+
+        <article className="panel support-panel">
+          <h3>Filters</h3>
+          <p>Use the filters below to read the roadmap by stage, recommendation track and priority.</p>
+
+          <div className="btn-row">
+            <select value={stage} onChange={(event) => setStage(event.target.value)}>
+              <option>All</option>
+              <option>CI</option>
+              <option>CD</option>
+            </select>
+
+            <select value={track} onChange={(event) => setTrack(event.target.value)}>
+              <option>All</option>
+              {recommendationTracks.map((item) => (
+                <option key={item.key}>{item.key}</option>
+              ))}
+            </select>
+
+            <select value={priority} onChange={(event) => setPriority(event.target.value)}>
+              <option>All</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+          </div>
+        </article>
+      </section>
+
+      <section className="roadmap-grid roadmap-grid--two">
+        {groupedTracks.map((lane) => (
+          <article key={lane.key} className="panel roadmap-lane">
+            <div>
+              <h3>{lane.title}</h3>
+              <p>{lane.description}</p>
+            </div>
+
+            {lane.items.length === 0 ? (
+              <div className="empty-state">No recommendations match the current filters.</div>
+            ) : (
+              lane.items.map((item) => (
+                <div key={item.id} className="roadmap-card">
+                  <div className="roadmap-card__meta">
+                    <span className="tag">
+                      {item.stage} · {item.questionId}
+                    </span>
+                    <span className={`pill ${getPriorityClass(item.priority)}`}>{item.priority}</span>
+                  </div>
+
+                  <h4>{item.title}</h4>
+                  <p>{item.recommendation}</p>
+
+                  <dl className="roadmap-card__details">
+                    <div>
+                      <dt>Current level</dt>
+                      <dd>{item.currentLevel}</dd>
+                    </div>
+                    <div>
+                      <dt>Expected impact</dt>
+                      <dd>{item.expectedImpact}</dd>
+                    </div>
+                    <div>
+                      <dt>Next step</dt>
+                      <dd>{item.nextStep}</dd>
+                    </div>
+                    <div>
+                      <dt>Status</dt>
+                      <dd>{item.status}</dd>
+                    </div>
+                  </dl>
+
+                  {item.contextNote ? <p className="roadmap-card__note">{item.contextNote}</p> : null}
+                </div>
+              ))
+            )}
+          </article>
+        ))}
       </section>
     </>
   );

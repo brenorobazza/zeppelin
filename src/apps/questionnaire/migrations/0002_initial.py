@@ -5,71 +5,125 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
-        ('apps_sth', '0001_initial'),
-        ('apps_employee', '0003_initial'),
-        ('apps_organization', '0001_initial'),
-        ('apps_questionnaire', '0001_initial'),
+        ("contenttypes", "0002_remove_content_type_name"),
+        ("apps_sth", "0001_initial"),
+        ("apps_employee", "0003_initial"),
+        ("apps_organization", "0001_initial"),
+        ("apps_questionnaire", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='statement',
-            name='sth_stage',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='questionnarie_sth_stage%(class)s', to='apps_sth.stage'),
+            model_name="statement",
+            name="sth_stage",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="questionnarie_sth_stage%(class)s",
+                to="apps_sth.stage",
+            ),
         ),
         migrations.AddField(
-            model_name='questionnaire',
-            name='employee_questionnaire',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='questionnaire_questionnaire_%(class)s', to='apps_employee.employee'),
+            model_name="questionnaire",
+            name="employee_questionnaire",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="questionnaire_questionnaire_%(class)s",
+                to="apps_employee.employee",
+            ),
         ),
         migrations.AddField(
-            model_name='questionnaire',
-            name='polymorphic_ctype',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_%(app_label)s.%(class)s_set+', to='contenttypes.contenttype'),
+            model_name="questionnaire",
+            name="polymorphic_ctype",
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="polymorphic_%(app_label)s.%(class)s_set+",
+                to="contenttypes.contenttype",
+            ),
         ),
         migrations.AddField(
-            model_name='feedbackquestionnaire',
-            name='polymorphic_ctype',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_%(app_label)s.%(class)s_set+', to='contenttypes.contenttype'),
+            model_name="feedbackquestionnaire",
+            name="polymorphic_ctype",
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="polymorphic_%(app_label)s.%(class)s_set+",
+                to="contenttypes.contenttype",
+            ),
         ),
         migrations.AddField(
-            model_name='answer',
-            name='adopted_level_answer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='apps_questionnaire.adoptedlevel'),
+            model_name="answer",
+            name="adopted_level_answer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="apps_questionnaire.adoptedlevel",
+            ),
         ),
         migrations.AddField(
-            model_name='answer',
-            name='organization_answer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='apps_organization.organization'),
+            model_name="answer",
+            name="organization_answer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="apps_organization.organization",
+            ),
         ),
         migrations.AddField(
-            model_name='answer',
-            name='polymorphic_ctype',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_%(app_label)s.%(class)s_set+', to='contenttypes.contenttype'),
+            model_name="answer",
+            name="polymorphic_ctype",
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="polymorphic_%(app_label)s.%(class)s_set+",
+                to="contenttypes.contenttype",
+            ),
         ),
         migrations.AddField(
-            model_name='answer',
-            name='questionnaire_answer',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='apps_questionnaire.questionnaire'),
+            model_name="answer",
+            name="questionnaire_answer",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="apps_questionnaire.questionnaire",
+            ),
         ),
         migrations.AddField(
-            model_name='answer',
-            name='statement_answer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='apps_questionnaire.statement'),
+            model_name="answer",
+            name="statement_answer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="apps_questionnaire.statement",
+            ),
         ),
         migrations.AddField(
-            model_name='adoptedlevel',
-            name='polymorphic_ctype',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_%(app_label)s.%(class)s_set+', to='contenttypes.contenttype'),
+            model_name="adoptedlevel",
+            name="polymorphic_ctype",
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="polymorphic_%(app_label)s.%(class)s_set+",
+                to="contenttypes.contenttype",
+            ),
         ),
         migrations.AddField(
-            model_name='questionnaireexcel',
-            name='feedback_questionnaire',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='apps_questionnaire.feedbackquestionnaire'),
+            model_name="questionnaireexcel",
+            name="feedback_questionnaire",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="apps_questionnaire.feedbackquestionnaire",
+            ),
         ),
     ]

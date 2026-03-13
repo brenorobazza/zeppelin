@@ -5,113 +5,214 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('apps_continuousstar', '0001_initial'),
-        ('apps_practitionerseye', '0001_initial'),
-        ('apps_cseframework', '0001_initial'),
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("apps_continuousstar", "0001_initial"),
+        ("apps_practitionerseye", "0001_initial"),
+        ("apps_cseframework", "0001_initial"),
+        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AdoptedLevel',
+            name="AdoptedLevel",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('modified_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(help_text='name', max_length=200)),
-                ('description', models.TextField(help_text='description')),
-                ('percentage', models.IntegerField(help_text='percentage')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("modified_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(help_text="name", max_length=200)),
+                ("description", models.TextField(help_text="description")),
+                ("percentage", models.IntegerField(help_text="percentage")),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Answer',
+            name="Answer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(blank=True, max_length=300, null=True)),
-                ('description', models.CharField(blank=True, max_length=300, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('modified_at', models.DateTimeField(auto_now=True)),
-                ('comment_answer', models.TextField()),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(blank=True, max_length=300, null=True)),
+                (
+                    "description",
+                    models.CharField(blank=True, max_length=300, null=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("modified_at", models.DateTimeField(auto_now=True)),
+                ("comment_answer", models.TextField()),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='FeedbackQuestionnaire',
+            name="FeedbackQuestionnaire",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(blank=True, max_length=300, null=True)),
-                ('description', models.CharField(blank=True, max_length=300, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('modified_at', models.DateTimeField(auto_now=True)),
-                ('collected_date', models.DateTimeField(auto_now_add=True)),
-                ('feedback_date', models.DateTimeField(blank=True, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(blank=True, max_length=300, null=True)),
+                (
+                    "description",
+                    models.CharField(blank=True, max_length=300, null=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("modified_at", models.DateTimeField(auto_now=True)),
+                ("collected_date", models.DateTimeField(auto_now_add=True)),
+                ("feedback_date", models.DateTimeField(blank=True, null=True)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Questionnaire',
+            name="Questionnaire",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(blank=True, max_length=300, null=True)),
-                ('description', models.CharField(blank=True, max_length=300, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('modified_at', models.DateTimeField(auto_now=True)),
-                ('applied_date', models.DateTimeField(blank=True, null=True)),
-                ('document', models.FileField(upload_to='documents/%Y/%m/%d/')),
-                ('uploaded_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(blank=True, max_length=300, null=True)),
+                (
+                    "description",
+                    models.CharField(blank=True, max_length=300, null=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("modified_at", models.DateTimeField(auto_now=True)),
+                ("applied_date", models.DateTimeField(blank=True, null=True)),
+                ("document", models.FileField(upload_to="documents/%Y/%m/%d/")),
+                ("uploaded_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='QuestionnaireExcel',
+            name="QuestionnaireExcel",
             fields=[
-                ('questionnaire_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='apps_questionnaire.questionnaire')),
+                (
+                    "questionnaire_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="apps_questionnaire.questionnaire",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
-            bases=('apps_questionnaire.questionnaire',),
+            bases=("apps_questionnaire.questionnaire",),
         ),
         migrations.CreateModel(
-            name='QuestionnaireGoogleForms',
+            name="QuestionnaireGoogleForms",
             fields=[
-                ('questionnaire_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='apps_questionnaire.questionnaire')),
+                (
+                    "questionnaire_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="apps_questionnaire.questionnaire",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
-            bases=('apps_questionnaire.questionnaire',),
+            bases=("apps_questionnaire.questionnaire",),
         ),
         migrations.CreateModel(
-            name='Statement',
+            name="Statement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(blank=True, max_length=300, null=True)),
-                ('description', models.CharField(blank=True, max_length=300, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('modified_at', models.DateTimeField(auto_now=True)),
-                ('code', models.CharField(blank=True, max_length=200, null=True)),
-                ('text', models.TextField()),
-                ('continuous_activity', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='continuous_activity_%(class)s', to='apps_continuousstar.continuousactivity')),
-                ('fcse_processes', models.ManyToManyField(to='apps_cseframework.process')),
-                ('pe_element', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='questionnarie_pe_element%(class)s', to='apps_practitionerseye.element')),
-                ('polymorphic_ctype', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_%(app_label)s.%(class)s_set+', to='contenttypes.contenttype')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(blank=True, max_length=300, null=True)),
+                (
+                    "description",
+                    models.CharField(blank=True, max_length=300, null=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("modified_at", models.DateTimeField(auto_now=True)),
+                ("code", models.CharField(blank=True, max_length=200, null=True)),
+                ("text", models.TextField()),
+                (
+                    "continuous_activity",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="continuous_activity_%(class)s",
+                        to="apps_continuousstar.continuousactivity",
+                    ),
+                ),
+                (
+                    "fcse_processes",
+                    models.ManyToManyField(to="apps_cseframework.process"),
+                ),
+                (
+                    "pe_element",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="questionnarie_pe_element%(class)s",
+                        to="apps_practitionerseye.element",
+                    ),
+                ),
+                (
+                    "polymorphic_ctype",
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="polymorphic_%(app_label)s.%(class)s_set+",
+                        to="contenttypes.contenttype",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

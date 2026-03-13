@@ -66,8 +66,8 @@ export default function App() {
 
   const pageMap = {
     dashboard: {
-      title: "Dashboard Overview",
-      subtitle: "Executive maturity view with key scores, strengths and bottlenecks.",
+      title: "Executive Dashboard",
+      subtitle: "What is the overall result of the calibrated Zeppelin diagnosis for this cycle?",
       component: <DashboardPage onNavigate={goToScreen} />
     },
     assessment: {
@@ -76,18 +76,18 @@ export default function App() {
       component: <AssessmentPage />
     },
     results: {
-      title: "Assessment Results",
-      subtitle: "Strategic diagnosis of your current CI/CD maturity state.",
+      title: "Diagnosis Results",
+      subtitle: "Where are the main strengths and bottlenecks across CI and CD practices?",
       component: <ResultsPage />
     },
     recommendations: {
-      title: "Recommendations",
-      subtitle: "Prioritized action backlog to accelerate maturity improvement.",
+      title: "Improvement Roadmap",
+      subtitle: "What should the organization do next based on the rule-based recommendations?",
       component: <RecommendationsPage />
     },
     history: {
-      title: "History & Evolution",
-      subtitle: "Track score progression across past assessment cycles.",
+      title: "Evolution by Cycle",
+      subtitle: "What changed across assessment cycles in CI, CD and recommendation load?",
       component: <HistoryPage />
     },
     settings: {

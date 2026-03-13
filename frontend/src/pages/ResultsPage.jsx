@@ -1,62 +1,148 @@
-import { dimensionScores, maturitySnapshot } from "../mock/zeppelinData";
+import {
+  maturitySnapshot,
+  practiceThemes,
+  recommendations,
+  stageScores
+} from "../mock/zeppelinData";
 
 export function ResultsPage() {
+  const stageGap = Math.abs(maturitySnapshot.ciScore - maturitySnapshot.cdScore);
+
   return (
     <>
       <section className="grid-3">
         <article className="metric-card">
-          <p>Organization Diagnosis</p>
-          <h2>{maturitySnapshot.overallScore}/100</h2>
+          <p>Assessed practices</p>
+          <h2>{maturitySnapshot.answeredPractices}</h2>
+          <small>CI and CD practices from the Zeppelin instrument subset</small>
         </article>
+
         <article className="metric-card">
-          <p>CI vs CD Gap</p>
-          <h2>{Math.abs(maturitySnapshot.ciScore - maturitySnapshot.cdScore)} pts</h2>
+          <p>CI vs CD gap</p>
+          <h2>{stageGap}</h2>
+          <small>Difference between the two maturity stages</small>
         </article>
+
         <article className="metric-card">
-          <p>Assessment Cycle</p>
-          <h2>{maturitySnapshot.cycle}</h2>
+          <p>Calibration profile</p>
+          <h2>{maturitySnapshot.calibratedProfile.replace(" calibration profile", "")}</h2>
+          <small>Selected to keep the diagnosis coherent with the organization type</small>
         </article>
       </section>
 
       <section className="panel">
-        <h3>Maturity by Practice Dimension</h3>
-        <p>Comparative view of maturity pillars used for decision-making.</p>
-        {dimensionScores.map((item) => (
-          <div key={item.name} style={{ marginBottom: "0.62rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.22rem" }}>
-              <span>{item.name}</span>
-              <strong>{item.score}</strong>
-            </div>
-            <div className="progress">
-              <span style={{ width: `${item.score}%` }} />
-            </div>
+        <div className="section-head">
+          <div>
+            <h3>Where are the main strengths and bottlenecks?</h3>
+            <p>
+              The diagnosis below combines stage scores with the main practice themes used to
+              interpret the CI/CD subset of Zeppelin.
+            </p>
           </div>
-        ))}
+        </div>
+
+        <div className="stage-grid">
+          {stageScores.map((item) => (
+            <article key={item.key} className="stage-card">
+              <div className="stage-card__head">
+                <div>
+                  <h4>{item.name}</h4>
+                  <span>{item.currentLevel}</span>
+                </div>
+                <strong>{item.score}</strong>
+              </div>
+
+              <div className="progress">
+                <span style={{ width: `${item.score}%` }} />
+              </div>
+
+              <p>{item.diagnosis}</p>
+              <p className="support-copy">{item.whyItMatters}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel">
+        <h3>Diagnosis by practice theme</h3>
+        <p>
+          These themes summarize the most relevant clusters of CI/CD questions discussed in the
+          dissertation and make the results easier to interpret in the TCC.
+        </p>
+
+        <div className="dimension-grid">
+          {practiceThemes.map((item) => (
+            <article key={item.key} className="dimension-card dimension-card--detailed">
+              <div className="dimension-card__head">
+                <div>
+                  <h4>{item.name}</h4>
+                  <span>{item.focus}</span>
+                </div>
+                <strong>{item.score}</strong>
+              </div>
+
+              <div className="progress">
+                <span style={{ width: `${item.score}%` }} />
+              </div>
+
+              <div className="dimension-card__evidence">
+                <div>
+                  <span>Strength</span>
+                  <strong>{item.strength}</strong>
+                </div>
+                <div>
+                  <span>Bottleneck</span>
+                  <strong>{item.bottleneck}</strong>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="grid-3">
         <article className="panel">
-          <h3>Top Strengths</h3>
-          <ul>
+          <h3>What is already mature?</h3>
+          <ul className="insight-list">
             {maturitySnapshot.strengths.map((item) => (
-              <li key={item}>{item}</li>
+              <li key={item.id} className="insight-item">
+                <small>
+                  {item.stage} · {item.questionId}
+                </small>
+                <h4>{item.title}</h4>
+                <p>{item.evidence}</p>
+              </li>
             ))}
           </ul>
         </article>
+
         <article className="panel">
-          <h3>Top Bottlenecks</h3>
-          <ul>
+          <h3>What is still blocking maturity?</h3>
+          <ul className="insight-list">
             {maturitySnapshot.bottlenecks.map((item) => (
-              <li key={item}>{item}</li>
+              <li key={item.id} className="insight-item">
+                <small>
+                  {item.stage} · {item.questionId}
+                </small>
+                <h4>{item.title}</h4>
+                <p>{item.evidence}</p>
+              </li>
             ))}
           </ul>
         </article>
+
         <article className="panel">
-          <h3>Main Opportunities</h3>
-          <ul>
-            <li>Automate approval gates to reduce deploy lead time.</li>
-            <li>Increase integration test baseline in critical services.</li>
-            <li>Move security checks to early pipeline stages.</li>
+          <h3>Improvement opportunities that follow from the diagnosis</h3>
+          <ul className="insight-list">
+            {recommendations.slice(0, 3).map((item) => (
+              <li key={item.id} className="insight-item">
+                <small>
+                  {item.stage} · {item.questionId}
+                </small>
+                <h4>{item.title}</h4>
+                <p>{item.expectedImpact}</p>
+              </li>
+            ))}
           </ul>
         </article>
       </section>
