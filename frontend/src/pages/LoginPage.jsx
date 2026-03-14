@@ -3,23 +3,34 @@ import { loginWithEmail, requestPasswordReset } from "../services/auth";
 import "./login-page.css";
 
 export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
-  // Estado local para campos do formulario e mensagens de feedback.
+  // Estado local para os campos do formulario principal de login.
+  // Esses valores sao controlados pelo React para que a interface saiba sempre
+  // o que o usuario digitou.
   const [form, setForm] = useState({ email: "", password: "" });
+
+  // Estados visuais de feedback da tela.
+  // Eles servem para mostrar sucesso, erro e carregamento sem depender do backend renderizar HTML.
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState("");
+
+  // Estados do fluxo "Forgot password?".
+  // Esse bloco foi separado do login principal para nao poluir o formulario inicial.
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
   const [recoveryError, setRecoveryError] = useState("");
   const [recoverySuccess, setRecoverySuccess] = useState("");
   const [isRecoveryLoading, setIsRecoveryLoading] = useState(false);
 
-  // Atualiza dinamicamente o campo alterado (email/password).
+  // Atualiza dinamicamente o campo alterado (email ou password) sem precisar
+  // criar uma funcao separada para cada input.
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
+  // Encaminha o usuario para a tela de criacao de conta.
+  // Se a navegacao vier do App, usamos o callback; se nao vier, usamos o hash como fallback.
   function handleCreateAccount() {
     if (typeof onCreateAccountClick === "function") {
       onCreateAccountClick();
@@ -29,6 +40,9 @@ export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
     window.location.hash = "create-account";
   }
 
+  // Dispara o fluxo de recuperacao de senha.
+  // Primeiro tenta usar o email digitado no bloco de recuperacao; se ele estiver vazio,
+  // reaproveita o email ja preenchido no formulario principal.
   async function handleForgotPassword(event) {
     event.preventDefault();
     setRecoveryError("");
@@ -42,13 +56,16 @@ export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
         data.message || "If the account exists, password recovery instructions were sent."
       );
     } catch (err) {
+      // Se o backend rejeitar a operacao, mostramos o erro logo abaixo do campo.
       setRecoveryError(err.message);
     } finally {
       setIsRecoveryLoading(false);
     }
   }
 
-  // Faz o login via API e controla estados de loading, sucesso e erro.
+  // Faz o login via API e controla loading, sucesso e erro.
+  // Se o backend autenticar o usuario, devolvemos esse resultado para o App decidir
+  // qual sera a proxima tela do fluxo.
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -71,7 +88,9 @@ export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
   return (
     <main className="login-shell">
       <section className="login-layout">
-        {/* Coluna de apresentacao da marca */}
+        {/* Coluna de apresentacao da marca.
+            Essa area contextualiza o produto antes mesmo do login,
+            reforcando o objetivo da plataforma para quem esta entrando. */}
         <aside className="promo-panel">
           <div className="promo-content">
             <img className="brand-logo" src="/branding/logo-zeppelin.png" alt="Zeppelin CI/CD" />
@@ -85,7 +104,8 @@ export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
           </div>
         </aside>
 
-        {/* Coluna com o formulario de autenticacao */}
+        {/* Coluna principal de autenticacao.
+            Aqui fica toda a interacao de entrada do usuario: login, erro, sucesso e recuperacao. */}
         <section className="login-panel">
           <section className="login-card">
             <header>
@@ -97,6 +117,7 @@ export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
             {success ? <p className="feedback success">{success}</p> : null}
 
             <form onSubmit={handleSubmit} className="login-form">
+              {/* Campos principais de autenticacao. */}
               <label htmlFor="email">Email</label>
               <input
                 id="email"
@@ -123,6 +144,8 @@ export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
                 {isLoading ? "Signing in..." : "Log In"}
               </button>
 
+              {/* O botao apenas expande ou recolhe o bloco de recuperacao.
+                  Isso evita criar outra tela separada para uma interacao curta. */}
               <button
                 className="text-link"
                 type="button"
@@ -139,6 +162,8 @@ export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
               </button>
 
               {showForgotPassword ? (
+                // Bloco auxiliar para recuperacao de senha.
+                // Ele aparece somente quando o usuario pede essa acao explicitamente.
                 <div className="forgot-box">
                   <label htmlFor="recovery-email">Recovery email</label>
                   <input
@@ -163,6 +188,8 @@ export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
                 </div>
               ) : null}
 
+              {/* Separador visual para deixar claro que o fluxo alternativo abaixo
+                  nao faz parte do login em si, mas sim do cadastro. */}
               <div className="separator">
                 <span>Don't have an account?</span>
               </div>
@@ -173,6 +200,8 @@ export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
             </form>
 
             <footer>
+              {/* Links institucionais de rodape.
+                  Hoje sao apenas placeholders visuais para compor a interface. */}
               <a href="#">Privacy Policy</a>
               <a href="#">Terms of Service</a>
             </footer>

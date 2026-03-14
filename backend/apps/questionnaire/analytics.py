@@ -9,20 +9,30 @@ from django.utils.text import slugify
 from .models import AdoptedLevel, Answer, Questionnaire
 
 
+# Este servico concentra a camada analitica criada para o TCC.
+# Ele recebe respostas ja persistidas e monta estruturas prontas
+# para as telas principais: dashboard, results, recommendations e history.
 class QuestionnaireAnalyticsService:
+    # Estagios usados como recorte principal da analise do frontend atual.
     CI_CD_STAGE_NAMES = ("Integração Contínua", "Entrega Contínua")
+
+    # Converte nomes completos do banco em siglas amigaveis para a interface.
     STAGE_SHORT_NAMES = {
         "Desenvolvimento Ágil": "Agile",
         "Integração Contínua": "CI",
         "Entrega Contínua": "CD",
         "P&D como Sistema de Inovação": "Experimentation",
     }
+
+    # Mantem uma ordem previsivel de exibicao dos estagios.
     STAGE_ORDER = {
         "Desenvolvimento Ágil": 1,
         "Integração Contínua": 2,
         "Entrega Contínua": 3,
         "P&D como Sistema de Inovação": 4,
     }
+
+    # Agrupa as recomendacoes em trilhas simples de roadmap.
     RECOMMENDATION_TRACKS = (
         {
             "key": "Adopt now",
@@ -41,9 +51,11 @@ class QuestionnaireAnalyticsService:
         },
     )
 
+    # Carrega os niveis de adocao uma unica vez para reutilizacao ao longo dos calculos.
     def __init__(self):
         self.adopted_levels = list(AdoptedLevel.objects.order_by("percentage"))
 
+    # Monta a resposta resumida do dashboard, focada em resultado geral do ciclo atual.
     def get_dashboard_payload(self, request):
         context = self._resolve_context(request)
         answers = context["current_answers"]
@@ -78,6 +90,7 @@ class QuestionnaireAnalyticsService:
             "recommendations_preview": recommendations[:3],
         }
 
+    # Monta a resposta detalhada da tela de resultados, com foco em forcas e gargalos.
     def get_results_payload(self, request):
         context = self._resolve_context(request)
         answers = context["current_answers"]
@@ -110,6 +123,7 @@ class QuestionnaireAnalyticsService:
             "opportunities": recommendations[:5],
         }
 
+    # Gera o roadmap acionavel a partir das praticas com menor maturidade.
     def get_recommendations_payload(self, request):
         context = self._resolve_context(request)
         answers = context["current_answers"]
@@ -153,6 +167,7 @@ class QuestionnaireAnalyticsService:
             "items": recommendations,
         }
 
+    # Resume a evolucao entre ciclos para responder o que mudou ao longo do tempo.
     def get_history_payload(self, request):
         context = self._resolve_context(request)
         cycles = self._build_history_cycles(context["all_answers"])
@@ -179,6 +194,7 @@ class QuestionnaireAnalyticsService:
             "cycles": cycles,
         }
 
+    # Resolve todo o contexto necessario: organizacao, escopo, ciclo escolhido e respostas filtradas.
     def _resolve_context(self, request):
         organization = self._resolve_organization(request)
         stage_scope = request.query_params.get("stage_scope", "ci_cd")
@@ -204,6 +220,7 @@ class QuestionnaireAnalyticsService:
             "current_answers": current_answers,
         }
 
+    # Descobre a organizacao a partir da URL ou do usuario autenticado.
     def _resolve_organization(self, request):
         organization_id = request.query_params.get("organization_id")
         if organization_id:
@@ -234,6 +251,7 @@ class QuestionnaireAnalyticsService:
             "could not resolve the organization for the authenticated user"
         )
 
+    # Consulta base com relacionamentos carregados para evitar excesso de queries.
     def _base_answers_queryset(self, organization_id, stage_scope):
         queryset = (
             Answer.objects.filter(organization_answer_id=organization_id)
@@ -258,6 +276,7 @@ class QuestionnaireAnalyticsService:
 
         return queryset
 
+    # Resolve qual ciclo/questionario deve ser usado na analise atual.
     def _resolve_questionnaire(self, request, organization_id, answers):
         questionnaire_id = request.query_params.get("questionnaire_id")
         if questionnaire_id:
@@ -287,6 +306,7 @@ class QuestionnaireAnalyticsService:
             .first()
         )
 
+    # Filtra apenas as respostas do ciclo selecionado.
     def _answers_for_questionnaire(self, answers, questionnaire):
         if questionnaire is None:
             return list(answers)
@@ -298,6 +318,7 @@ class QuestionnaireAnalyticsService:
         ]
         return filtered
 
+    # Converte a organizacao para um formato simples e estavel para o frontend.
     def _serialize_organization(self, organization):
         return {
             "id": organization.id,
@@ -307,6 +328,7 @@ class QuestionnaireAnalyticsService:
             "age_months": organization.age,
         }
 
+    # Converte o ciclo para um resumo legivel usado no topo das telas.
     def _serialize_cycle(self, questionnaire, answers):
         if questionnaire is None:
             return {
@@ -328,6 +350,7 @@ class QuestionnaireAnalyticsService:
             "answered_practices": len(answers),
         }
 
+    # Calcula a pontuacao media do conjunto de respostas.
     def _score_for_answers(self, answers):
         percentages = [
             answer.adopted_level_answer.percentage
@@ -338,6 +361,7 @@ class QuestionnaireAnalyticsService:
             return 0
         return round(mean(percentages))
 
+    # Traduz um score numerico para o nivel de adocao mais proximo.
     def _resolve_average_level(self, score):
         if not self.adopted_levels:
             return None
@@ -348,6 +372,7 @@ class QuestionnaireAnalyticsService:
         )
         return closest.name
 
+    # Agrupa as respostas por estagio e calcula os indicadores de cada grupo.
     def _build_stage_scores(self, answers):
         grouped = defaultdict(list)
         for answer in answers:
@@ -391,6 +416,7 @@ class QuestionnaireAnalyticsService:
             key=lambda item: self.STAGE_ORDER.get(item["name"], 999),
         )
 
+    # Conta quantas praticas caem em cada nivel de adocao.
     def _build_adoption_distribution(self, answers):
         total = len(answers) or 1
         grouped = defaultdict(list)
@@ -414,6 +440,7 @@ class QuestionnaireAnalyticsService:
 
         return items
 
+    # Seleciona as praticas mais maduras para a secao de pontos fortes.
     def _build_strengths(self, answers, limit=3):
         candidates = [
             answer for answer in answers if answer.adopted_level_answer.percentage >= 60
@@ -426,6 +453,7 @@ class QuestionnaireAnalyticsService:
         )
         return [self._serialize_insight(answer) for answer in candidates[:limit]]
 
+    # Seleciona as praticas mais criticas para a secao de gargalos.
     def _build_bottlenecks(self, answers, limit=3):
         candidates = [
             answer for answer in answers if answer.adopted_level_answer.percentage < 60
@@ -438,6 +466,7 @@ class QuestionnaireAnalyticsService:
         )
         return [self._serialize_insight(answer) for answer in candidates[:limit]]
 
+    # Agrupa resultados por tema/dimensao para facilitar a leitura do diagnostico.
     def _build_dimension_results(self, answers):
         grouped = defaultdict(list)
         for answer in answers:
@@ -492,6 +521,7 @@ class QuestionnaireAnalyticsService:
             key=lambda item: (-item["score"], item["name"]),
         )
 
+    # Gera recomendacoes para praticas abaixo do limiar de 60 por cento.
     def _build_recommendations(self, answers):
         items = []
         candidates = [
@@ -566,6 +596,7 @@ class QuestionnaireAnalyticsService:
 
         return items
 
+    # Reconstroi a linha do tempo dos ciclos da organizacao.
     def _build_history_cycles(self, answers):
         grouped = defaultdict(list)
         questionnaires = {}
@@ -641,11 +672,13 @@ class QuestionnaireAnalyticsService:
 
         return cycles
 
+    # Calcula a diferenca entre o ultimo e o penultimo ciclo para um campo especifico.
     def _history_delta(self, cycles, field_name):
         if len(cycles) < 2:
             return 0
         return cycles[-1][field_name] - cycles[-2][field_name]
 
+    # Padroniza o formato de forcas e gargalos para o frontend.
     def _serialize_insight(self, answer):
         stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
         return {
@@ -662,6 +695,7 @@ class QuestionnaireAnalyticsService:
             "evidence": self._insight_evidence(answer),
         }
 
+    # Define qual texto de evidencia sera mostrado para cada insight.
     def _insight_evidence(self, answer):
         if answer.comment_answer:
             return answer.comment_answer.strip()
@@ -679,12 +713,14 @@ class QuestionnaireAnalyticsService:
             return f"{answer.adopted_level_answer.name} in {dimension_name}."
         return answer.adopted_level_answer.name
 
+    # Encurta textos longos para caber melhor nos cards e listas.
     def _compact_statement(self, text, limit=110):
         compact = " ".join((text or "").split())
         if len(compact) <= limit:
             return compact
         return f"{compact[: limit - 3].rstrip()}..."
 
+    # Gera a frase-resumo exibida no topo do dashboard.
     def _build_executive_summary(self, stage_scores):
         if not stage_scores:
             return "No answered practices were found for the selected organization."
@@ -698,10 +734,12 @@ class QuestionnaireAnalyticsService:
             f"with score {weakest['score']}."
         )
 
+    # Cria um titulo curto para cada recomendacao do roadmap.
     def _recommendation_title(self, answer):
         code = answer.statement_answer.code or "Practice"
         return f"{code} - strengthen this practice"
 
+    # Gera a explicacao principal da recomendacao em linguagem natural.
     def _recommendation_copy(self, answer, track):
         statement = self._compact_statement(
             answer.statement_answer.text,
@@ -720,6 +758,7 @@ class QuestionnaireAnalyticsService:
             "with documented expectations and wider team adoption."
         )
 
+    # Resume o impacto esperado caso a recomendacao seja executada.
     def _expected_impact(self, answer, track):
         stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
         short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
@@ -733,6 +772,7 @@ class QuestionnaireAnalyticsService:
             "consistent process-level capability."
         )
 
+    # Sugere a primeira acao concreta para colocar a recomendacao em pratica.
     def _next_step(self, answer, track):
         code = answer.statement_answer.code or "the selected practice"
         if track == "Adopt now":

@@ -1,6 +1,7 @@
 import { fallbackHistoryData } from "../mock/analyticsFallback";
 
 export function HistoryPage({ data, loading }) {
+  // O historico compara ciclos para mostrar progressao real de maturidade ao longo do tempo.
   const view = data || fallbackHistoryData;
   const baselineCycle = view.historySeries[0];
   const currentCycle = view.historySeries[view.historySeries.length - 1];
@@ -11,6 +12,7 @@ export function HistoryPage({ data, loading }) {
 
   return (
     <>
+      {/* Resumo rapido da evolucao desde o ciclo base. */}
       <section className="grid-4">
         <article className="metric-card">
           <p>Overall evolution</p>
@@ -37,6 +39,7 @@ export function HistoryPage({ data, loading }) {
         </article>
       </section>
 
+      {/* Cards comparativos por ciclo. */}
       <section className="panel">
         <div className="section-head">
           <div>
@@ -89,6 +92,7 @@ export function HistoryPage({ data, loading }) {
         </div>
       </section>
 
+      {/* Tabela que explicita a migracao das praticas entre niveis de adocao. */}
       <section className="panel">
         <h3>Adoption-level shift across cycles</h3>
         <p>
@@ -125,6 +129,7 @@ export function HistoryPage({ data, loading }) {
         </table>
       </section>
 
+      {/* Interpretacao final em linguagem mais humana para apresentacao do TCC. */}
       <section className="grid-3">
         <article className="panel">
           <h3>Main improvements</h3>

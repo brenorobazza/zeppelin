@@ -8,6 +8,9 @@ import {
   stageScores
 } from "./zeppelinData";
 
+// Este arquivo simula a estrutura do backend analitico.
+// Ele permite que as telas do TCC continuem navegaveis mesmo sem API real.
+
 function resolveLevelFromScore(score) {
   if (score >= 100) return "Institutionalized";
   if (score >= 60) return "Realized at process level";
@@ -16,6 +19,7 @@ function resolveLevelFromScore(score) {
   return "Not adopted";
 }
 
+// Converte os dados mockados para o mesmo formato usado na interface real.
 function mapInsight(item) {
   return {
     id: item.id,
@@ -26,6 +30,7 @@ function mapInsight(item) {
   };
 }
 
+// Faz a mesma conversao para recomendacoes.
 function mapRecommendation(item) {
   return {
     id: item.id,
@@ -43,6 +48,7 @@ function mapRecommendation(item) {
   };
 }
 
+// Dashboard em modo demonstracao.
 export const fallbackDashboardData = {
   maturitySnapshot,
   stageScores,
@@ -51,6 +57,7 @@ export const fallbackDashboardData = {
   overallDelta: historySeries[historySeries.length - 1].overall - historySeries[historySeries.length - 2].overall
 };
 
+// Results em modo demonstracao.
 export const fallbackResultsData = {
   summary: {
     answeredPractices: maturitySnapshot.answeredPractices,
@@ -64,6 +71,7 @@ export const fallbackResultsData = {
   opportunities: recommendations.slice(0, 3).map(mapRecommendation)
 };
 
+// Recommendations em modo demonstracao.
 export const fallbackRecommendationsData = {
   summary: {
     triggeredRecommendations: maturitySnapshot.recommendationCount,
@@ -82,6 +90,7 @@ export const fallbackRecommendationsData = {
   availablePriorities: ["High", "Medium", "Low"]
 };
 
+// History em modo demonstracao.
 export const fallbackHistoryData = {
   summary: {
     overallDelta: historySeries[historySeries.length - 1].overall - historySeries[0].overall,
@@ -108,6 +117,7 @@ export const fallbackHistoryData = {
   }))
 };
 
+// Metadados minimos para o layout principal em fallback.
 export const fallbackAnalyticsMeta = {
   organizationName: maturitySnapshot.organization,
   organizationType: maturitySnapshot.organizationType,

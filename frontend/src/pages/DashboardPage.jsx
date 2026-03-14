@@ -7,6 +7,8 @@ function getPriorityClass(priority) {
 }
 
 export function DashboardPage({ onNavigate, data, loading }) {
+  // O dashboard tenta sempre usar dados reais do backend.
+  // Se eles nao estiverem disponiveis, a tela cai para um modelo de demonstracao.
   const view = data || fallbackDashboardData;
   const {
     adoptionLevels,
@@ -21,6 +23,8 @@ export function DashboardPage({ onNavigate, data, loading }) {
     strengths: view?.strengths || view?.maturitySnapshot?.strengths || [],
     bottlenecks: view?.bottlenecks || view?.maturitySnapshot?.bottlenecks || []
   };
+
+  // Resume quantas praticas ainda estao em situacao mais critica.
   const adoptFirstCount = adoptionLevels
     .filter((item) => ["Not adopted", "Abandoned"].includes(item.label))
     .reduce((sum, item) => sum + item.count, 0);
@@ -31,6 +35,7 @@ export function DashboardPage({ onNavigate, data, loading }) {
 
   return (
     <>
+      {/* Visao executiva inicial do ciclo atual. */}
       <section className="panel executive-hero">
         <div>
           <p className="eyebrow">Calibrated Zeppelin diagnosis</p>
@@ -52,6 +57,7 @@ export function DashboardPage({ onNavigate, data, loading }) {
         </aside>
       </section>
 
+      {/* Indicadores rapidos para leitura geral do resultado. */}
       <section className="grid-4">
         <article className="metric-card">
           <p>Continuous Integration</p>
@@ -78,6 +84,7 @@ export function DashboardPage({ onNavigate, data, loading }) {
         </article>
       </section>
 
+      {/* Bloco central com score por estagio e distribuicao dos niveis de adocao. */}
       <section className="two-column-grid">
         <article className="panel">
           <div className="section-head">
@@ -137,6 +144,7 @@ export function DashboardPage({ onNavigate, data, loading }) {
         </article>
       </section>
 
+      {/* Fechamento do dashboard conectando resultado atual com proximos passos. */}
       <section className="grid-3">
         <article className="panel">
           <h3>Current strengths</h3>

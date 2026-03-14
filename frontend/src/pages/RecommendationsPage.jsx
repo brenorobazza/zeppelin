@@ -8,11 +8,13 @@ function getPriorityClass(priority) {
 }
 
 export function RecommendationsPage({ data, loading }) {
+  // Esta e a tela que transforma o diagnostico em um roadmap acionavel.
   const view = data || fallbackRecommendationsData;
   const [stage, setStage] = useState("All");
   const [track, setTrack] = useState("All");
   const [priority, setPriority] = useState("All");
 
+  // Os filtros apenas mudam a leitura visual; os dados originais continuam intactos.
   const filtered = useMemo(
     () =>
       view.recommendations.filter((item) => {
@@ -24,6 +26,7 @@ export function RecommendationsPage({ data, loading }) {
     [view.recommendations, stage, track, priority]
   );
 
+  // Depois do filtro, reorganizamos os itens dentro das trilhas do roadmap.
   const groupedTracks = view.recommendationTracks.map((lane) => ({
     ...lane,
     items: filtered.filter((item) => item.track === lane.key)
@@ -35,6 +38,7 @@ export function RecommendationsPage({ data, loading }) {
 
   return (
     <>
+      {/* Resumo executivo das recomendacoes geradas para o ciclo atual. */}
       <section className="grid-3">
         <article className="metric-card">
           <p>Triggered recommendations</p>
@@ -55,6 +59,7 @@ export function RecommendationsPage({ data, loading }) {
         </article>
       </section>
 
+      {/* Explica a regra de geracao das recomendacoes e oferece filtros de leitura. */}
       <section className="two-column-grid">
         <article className="panel">
           <h3>How this roadmap is generated</h3>
@@ -111,6 +116,7 @@ export function RecommendationsPage({ data, loading }) {
         </article>
       </section>
 
+      {/* Cada trilha concentra um tipo de acao priorizada para a organizacao. */}
       <section className="roadmap-grid roadmap-grid--two">
         {groupedTracks.map((lane) => (
           <article key={lane.key} className="panel roadmap-lane">

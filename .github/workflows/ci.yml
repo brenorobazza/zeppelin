@@ -24,12 +24,15 @@ jobs:
 
     - name: Install Python dependencies
       run: |
-        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --upgrade pip wheel
+        pip install "setuptools<81"
         pip install -r requirements-dev.txt
 
     - name: Run pre-commit
       run: pre-commit run --all-files
 
+    # Esta etapa protege especificamente a camada analitica criada para o TCC.
+    # Ela cobre os endpoints de dashboard, results, recommendations e history.
     - name: Run Django analytics tests
       env:
         SECRET_KEY: zeppelin-ci-secret
@@ -64,6 +67,7 @@ jobs:
         npm install
       if: hashFiles('frontend/package.json') != ''
 
+    # O build do frontend garante que as telas do TCC continuam compilando.
     - name: Build frontend
       run: |
         cd frontend

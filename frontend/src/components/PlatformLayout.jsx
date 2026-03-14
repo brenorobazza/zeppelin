@@ -1,5 +1,6 @@
 import "./platform-layout.css";
 
+// Itens fixos da navegacao principal. Eles refletem a ordem de leitura pensada para o TCC.
 const navItems = [
   { key: "dashboard", label: "Dashboard" },
   { key: "assessment", label: "Assessment" },
@@ -26,6 +27,7 @@ export function PlatformLayout({
 }) {
   return (
     <div className="platform-shell">
+      {/* Sidebar com identidade visual e acesso rapido as paginas centrais. */}
       <aside className="platform-sidebar">
         <div className="platform-logo">
           <img src="/branding/logo-zeppelin.png" alt="Zeppelin" />
@@ -51,6 +53,7 @@ export function PlatformLayout({
       </aside>
 
       <section className="platform-main">
+        {/* Topo com contexto da analise atual: empresa, pagina e ciclo selecionado. */}
         <header className="platform-topbar">
           <div>
             <p>{organization}</p>
@@ -59,6 +62,7 @@ export function PlatformLayout({
           </div>
           <div className="topbar-actions">
             {cycleOptions.length > 0 && onCycleChange ? (
+              // Permite trocar o ciclo avaliado sem sair da mesma pagina.
               <label className="topbar-control">
                 <span>Assessment cycle</span>
                 <select value={selectedCycleId} onChange={(event) => onCycleChange(event.target.value)}>
@@ -73,6 +77,7 @@ export function PlatformLayout({
             ) : null}
 
             <div className="topbar-status">
+              {/* Mostra explicitamente se a tela esta usando backend real ou dados de fallback. */}
               <span className={`topbar-badge ${usingMockData ? "mock" : "live"}`}>
                 {usingMockData ? "Demo data" : "Backend data"}
               </span>
@@ -84,11 +89,13 @@ export function PlatformLayout({
         </header>
 
         {analyticsError && usingMockData ? (
+          // Se a API falhar, deixamos claro para o usuario o motivo da troca para dados demo.
           <div className="platform-banner">
             Showing fallback data because analytics could not be loaded from backend: {analyticsError}
           </div>
         ) : null}
 
+        {/* Cada pagina do TCC e renderizada dentro desta area principal. */}
         <div className="platform-content">{children}</div>
       </section>
     </div>

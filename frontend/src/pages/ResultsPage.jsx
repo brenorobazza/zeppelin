@@ -1,6 +1,7 @@
 import { fallbackResultsData } from "../mock/analyticsFallback";
 
 export function ResultsPage({ data, loading }) {
+  // Esta tela aprofunda o diagnostico exibido no dashboard.
   const view = data || fallbackResultsData;
 
   if (loading && !data) {
@@ -9,6 +10,7 @@ export function ResultsPage({ data, loading }) {
 
   return (
     <>
+      {/* Resumo quantitativo inicial do diagnostico. */}
       <section className="grid-3">
         <article className="metric-card">
           <p>Assessed practices</p>
@@ -29,6 +31,7 @@ export function ResultsPage({ data, loading }) {
         </article>
       </section>
 
+      {/* Comparacao por estagio para evidenciar onde CI e CD estao mais maduros ou mais atrasados. */}
       <section className="panel">
         <div className="section-head">
           <div>
@@ -64,6 +67,7 @@ export function ResultsPage({ data, loading }) {
         </div>
       </section>
 
+      {/* Agrupamento por tema de pratica para facilitar a leitura dos resultados. */}
       <section className="panel">
         <h3>Diagnosis by practice theme</h3>
         <p>
@@ -101,6 +105,7 @@ export function ResultsPage({ data, loading }) {
         </div>
       </section>
 
+      {/* Fechamento analitico: forcas, gargalos e oportunidades de melhoria. */}
       <section className="grid-3">
         <article className="panel">
           <h3>What is already mature?</h3>

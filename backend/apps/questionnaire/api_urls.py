@@ -15,6 +15,8 @@ from .api_views import (
 
 router = routers.DefaultRouter()
 
+# Rotas CRUD ja existentes do modulo questionnaire.
+
 router.register(r"adoptedlevel", AdoptedLevelViewSet, basename="adoptedlevel")
 router.register(r"statement", StatementViewSet, basename="statement")
 router.register(
@@ -28,6 +30,8 @@ router.register(
 )
 router.register(r"answer", AnswerViewSet, basename="answer")
 
+# A partir daqui entram as rotas analiticas criadas para o TCC.
+# Cada rota atende uma tela principal do frontend.
 urlpatterns = [
     path("questionnaire/", include(router.urls)),
     path(

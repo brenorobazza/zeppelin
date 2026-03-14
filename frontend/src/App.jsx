@@ -15,6 +15,8 @@ import {
   updateAnalyticsFiltersInUrl
 } from "./services/analytics";
 
+// Le o hash da URL e traduz isso para a "tela atual" da aplicacao.
+// A ideia aqui e manter uma navegacao simples, facil de seguir e suficiente para o TCC.
 function getScreenFromHash() {
   const hash = window.location.hash.replace("#", "");
   if (hash === "create-account") return "create-account";
@@ -28,9 +30,17 @@ function getScreenFromHash() {
 }
 
 export default function App() {
+  // Define qual pagina esta visivel neste momento.
   const [screen, setScreen] = useState(getScreenFromHash);
+
+  // Guarda apenas o dado minimo do usuario para apresentacao no layout.
   const [user, setUser] = useState({ username: "Alex Silva" });
+
+  // Reune os filtros que controlam a analise: empresa, ciclo e escopo.
   const [analyticsFilters, setAnalyticsFilters] = useState(getAnalyticsFiltersFromUrl);
+
+  // Centraliza todos os dados usados pelas telas principais do TCC.
+  // Tambem informa se a tela esta carregando, se esta usando mock e se ocorreu erro.
   const [analytics, setAnalytics] = useState(() => ({
     ...getFallbackAnalyticsBundle(),
     loading: false,
@@ -39,6 +49,7 @@ export default function App() {
   }));
 
   useEffect(() => {
+    // Sincroniza a interface com a URL sempre que o usuario navega manualmente.
     function syncNavigationState() {
       setScreen(getScreenFromHash());
       setAnalyticsFilters(getAnalyticsFiltersFromUrl());
@@ -52,6 +63,7 @@ export default function App() {
     };
   }, []);
 
+  // Apenas estas telas dependem do backend analitico do TCC.
   const isPlatformScreen = [
     "dashboard",
     "assessment",
@@ -64,9 +76,11 @@ export default function App() {
   useEffect(() => {
     if (!isPlatformScreen) return;
 
+    // Evita atualizar estado quando o usuario troca de tela antes da resposta terminar.
     let ignore = false;
 
     async function syncAnalytics() {
+      // Mantem o que ja estava em tela e apenas marca que uma nova busca esta em andamento.
       setAnalytics((current) => ({
         ...current,
         loading: true,
@@ -74,6 +88,7 @@ export default function App() {
       }));
 
       try {
+        // Busca todas as secoes em paralelo para manter a consistencia entre as telas.
         const bundle = await loadAnalyticsBundle(analyticsFilters);
 
         if (ignore) return;
@@ -87,6 +102,7 @@ export default function App() {
       } catch (error) {
         if (ignore) return;
 
+        // Sessao invalida: volta para o login.
         if (error.status === 401) {
           setUser({ username: "Alex Silva" });
           window.location.hash = "login";
@@ -94,6 +110,7 @@ export default function App() {
           return;
         }
 
+        // Falha de backend: entra em modo demonstracao para a interface continuar utilizavel.
         setAnalytics({
           ...getFallbackAnalyticsBundle(),
           loading: false,
@@ -110,6 +127,7 @@ export default function App() {
     };
   }, [isPlatformScreen, analyticsFilters.organizationId, analyticsFilters.questionnaireId, analyticsFilters.stageScope]);
 
+  // Funcoes de navegacao pequenas deixam o fluxo mais facil de entender e manter.
   function goToLogin() {
     window.location.hash = "login";
     setScreen("login");
@@ -144,10 +162,12 @@ export default function App() {
     });
   }
 
+  // Cadastro fica fora do layout interno da plataforma.
   if (screen === "create-account") {
     return <CreateAccountPage onBackToLogin={goToLogin} />;
   }
 
+  // Mapeia cada tela principal para titulo, subtitulo e componente.
   const pageMap = {
     dashboard: {
       title: "Executive Dashboard",
@@ -219,6 +239,7 @@ export default function App() {
     );
   }
 
+  // Caso nenhuma tela interna esteja ativa, a porta de entrada continua sendo o login.
   return (
     <LoginPage
       onCreateAccountClick={goToCreateAccount}
