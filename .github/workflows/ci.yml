@@ -37,7 +37,8 @@ jobs:
       env:
         SECRET_KEY: zeppelin-ci-secret
         DB_ENGINE_TEST: django.db.backends.sqlite3
-        DB_NAME_TEST: /tmp/zeppelin-test.sqlite3
+        DB_NAME_TEST: /tmp/zeppelin-base.sqlite3
+        DB_TEST_NAME: /tmp/zeppelin-test.sqlite3
         DB_USER_TEST: ""
         DB_PASSWORD_TEST: ""
         DB_HOST_TEST: ""
@@ -53,6 +54,7 @@ jobs:
         HASHIDS_SALT: zeppelin-ci-salt
       run: |
         cd backend
+        rm -f /tmp/zeppelin-base.sqlite3
         rm -f /tmp/zeppelin-test.sqlite3
         python manage.py test apps.questionnaire.test_analytics --settings=zeppelin.settings.test
 
