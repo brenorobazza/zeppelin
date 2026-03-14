@@ -37,7 +37,7 @@ jobs:
       env:
         SECRET_KEY: zeppelin-ci-secret
         DB_ENGINE_TEST: django.db.backends.sqlite3
-        DB_NAME_TEST: ":memory:"
+        DB_NAME_TEST: /tmp/zeppelin-test.sqlite3
         DB_USER_TEST: ""
         DB_PASSWORD_TEST: ""
         DB_HOST_TEST: ""

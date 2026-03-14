@@ -16,7 +16,7 @@ DATABASES = {
             "DB_ENGINE_TEST",
             default="django.db.backends.sqlite3",
         ),
-        "NAME": config("DB_NAME_TEST", default=":memory:"),
+        "NAME": config("DB_NAME_TEST", default=str(BASE_DIR / "test.sqlite3")),
         "USER": config("DB_USER_TEST", default=""),
         "PASSWORD": config("DB_PASSWORD_TEST", default=""),
         "HOST": config("DB_HOST_TEST", default=""),
