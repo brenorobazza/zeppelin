@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { PlatformLayout } from "./components/PlatformLayout";
-import { maturitySnapshot } from "./mock/zeppelinData";
 import { CreateAccountPage } from "./pages/CreateAccountPage";
 import { AssessmentPage } from "./pages/AssessmentPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -9,6 +8,12 @@ import { LoginPage } from "./pages/LoginPage";
 import { RecommendationsPage } from "./pages/RecommendationsPage";
 import { ResultsPage } from "./pages/ResultsPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import {
+  getAnalyticsFiltersFromUrl,
+  getFallbackAnalyticsBundle,
+  loadAnalyticsBundle,
+  updateAnalyticsFiltersInUrl
+} from "./services/analytics";
 
 function getScreenFromHash() {
   const hash = window.location.hash.replace("#", "");
@@ -25,15 +30,85 @@ function getScreenFromHash() {
 export default function App() {
   const [screen, setScreen] = useState(getScreenFromHash);
   const [user, setUser] = useState({ username: "Alex Silva" });
+  const [analyticsFilters, setAnalyticsFilters] = useState(getAnalyticsFiltersFromUrl);
+  const [analytics, setAnalytics] = useState(() => ({
+    ...getFallbackAnalyticsBundle(),
+    loading: false,
+    usingMockData: true,
+    error: ""
+  }));
 
   useEffect(() => {
-    function syncByHash() {
+    function syncNavigationState() {
       setScreen(getScreenFromHash());
+      setAnalyticsFilters(getAnalyticsFiltersFromUrl());
     }
 
-    window.addEventListener("hashchange", syncByHash);
-    return () => window.removeEventListener("hashchange", syncByHash);
+    window.addEventListener("hashchange", syncNavigationState);
+    window.addEventListener("popstate", syncNavigationState);
+    return () => {
+      window.removeEventListener("hashchange", syncNavigationState);
+      window.removeEventListener("popstate", syncNavigationState);
+    };
   }, []);
+
+  const isPlatformScreen = [
+    "dashboard",
+    "assessment",
+    "results",
+    "recommendations",
+    "history",
+    "settings"
+  ].includes(screen);
+
+  useEffect(() => {
+    if (!isPlatformScreen) return;
+
+    let ignore = false;
+
+    async function syncAnalytics() {
+      setAnalytics((current) => ({
+        ...current,
+        loading: true,
+        error: ""
+      }));
+
+      try {
+        const bundle = await loadAnalyticsBundle(analyticsFilters);
+
+        if (ignore) return;
+
+        setAnalytics({
+          ...bundle,
+          loading: false,
+          usingMockData: false,
+          error: ""
+        });
+      } catch (error) {
+        if (ignore) return;
+
+        if (error.status === 401) {
+          setUser({ username: "Alex Silva" });
+          window.location.hash = "login";
+          setScreen("login");
+          return;
+        }
+
+        setAnalytics({
+          ...getFallbackAnalyticsBundle(),
+          loading: false,
+          usingMockData: true,
+          error: error.message || "Failed to load analytics from backend."
+        });
+      }
+    }
+
+    syncAnalytics();
+
+    return () => {
+      ignore = true;
+    };
+  }, [isPlatformScreen, analyticsFilters.organizationId, analyticsFilters.questionnaireId, analyticsFilters.stageScope]);
 
   function goToLogin() {
     window.location.hash = "login";
@@ -60,6 +135,15 @@ export default function App() {
     goToLogin();
   }
 
+  function updateAnalyticsFilters(nextFilters) {
+    setAnalyticsFilters((current) => {
+      const next = { ...current, ...nextFilters };
+      // Mantem organização e ciclo no URL para suportar histórico por empresa/ciclo.
+      updateAnalyticsFiltersInUrl(next);
+      return next;
+    });
+  }
+
   if (screen === "create-account") {
     return <CreateAccountPage onBackToLogin={goToLogin} />;
   }
@@ -68,7 +152,13 @@ export default function App() {
     dashboard: {
       title: "Executive Dashboard",
       subtitle: "What is the overall result of the calibrated Zeppelin diagnosis for this cycle?",
-      component: <DashboardPage onNavigate={goToScreen} />
+      component: (
+        <DashboardPage
+          onNavigate={goToScreen}
+          data={analytics.dashboard}
+          loading={analytics.loading}
+        />
+      )
     },
     assessment: {
       title: "Assessment Questionnaire",
@@ -78,17 +168,27 @@ export default function App() {
     results: {
       title: "Diagnosis Results",
       subtitle: "Where are the main strengths and bottlenecks across CI and CD practices?",
-      component: <ResultsPage />
+      component: <ResultsPage data={analytics.results} loading={analytics.loading} />
     },
     recommendations: {
       title: "Improvement Roadmap",
       subtitle: "What should the organization do next based on the rule-based recommendations?",
-      component: <RecommendationsPage />
+      component: (
+        <RecommendationsPage
+          data={analytics.recommendations}
+          loading={analytics.loading}
+        />
+      )
     },
     history: {
       title: "Evolution by Cycle",
       subtitle: "What changed across assessment cycles in CI, CD and recommendation load?",
-      component: <HistoryPage />
+      component: (
+        <HistoryPage
+          data={analytics.history}
+          loading={analytics.loading}
+        />
+      )
     },
     settings: {
       title: "Organization Settings",
@@ -104,10 +204,15 @@ export default function App() {
         activePage={screen}
         title={page.title}
         subtitle={page.subtitle}
-        organization={maturitySnapshot.organization}
+        organization={analytics.meta.organizationName}
         userName={user.username}
         onNavigate={goToScreen}
         onLogout={logout}
+        cycleOptions={analytics.meta.cycleOptions}
+        selectedCycleId={analyticsFilters.questionnaireId}
+        onCycleChange={(value) => updateAnalyticsFilters({ questionnaireId: value })}
+        usingMockData={analytics.usingMockData}
+        analyticsError={analytics.error}
       >
         {page.component}
       </PlatformLayout>

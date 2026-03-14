@@ -7,6 +7,10 @@ from .api_views import (
     QuestionnaireViewSet,
     QuestionnaireExcelViewSet,
     AnswerViewSet,
+    QuestionnaireDashboardAnalyticsView,
+    QuestionnaireResultsAnalyticsView,
+    QuestionnaireRecommendationsAnalyticsView,
+    QuestionnaireHistoryAnalyticsView,
 )
 
 router = routers.DefaultRouter()
@@ -24,4 +28,26 @@ router.register(
 )
 router.register(r"answer", AnswerViewSet, basename="answer")
 
-urlpatterns = [path("questionnaire/", include(router.urls))]
+urlpatterns = [
+    path("questionnaire/", include(router.urls)),
+    path(
+        "questionnaire/analytics/dashboard/",
+        QuestionnaireDashboardAnalyticsView.as_view(),
+        name="questionnaire-analytics-dashboard",
+    ),
+    path(
+        "questionnaire/analytics/results/",
+        QuestionnaireResultsAnalyticsView.as_view(),
+        name="questionnaire-analytics-results",
+    ),
+    path(
+        "questionnaire/analytics/recommendations/",
+        QuestionnaireRecommendationsAnalyticsView.as_view(),
+        name="questionnaire-analytics-recommendations",
+    ),
+    path(
+        "questionnaire/analytics/history/",
+        QuestionnaireHistoryAnalyticsView.as_view(),
+        name="questionnaire-analytics-history",
+    ),
+]

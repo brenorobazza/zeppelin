@@ -1,39 +1,38 @@
-import { historySeries } from "../mock/zeppelinData";
+import { fallbackHistoryData } from "../mock/analyticsFallback";
 
-export function HistoryPage() {
-  const baselineCycle = historySeries[0];
-  const currentCycle = historySeries[historySeries.length - 1];
-  const overallDelta = currentCycle.overall - baselineCycle.overall;
-  const ciDelta = currentCycle.ci - baselineCycle.ci;
-  const cdDelta = currentCycle.cd - baselineCycle.cd;
-  const recommendationReduction = baselineCycle.recommendationCount - currentCycle.recommendationCount;
-  const institutionalizedGrowth =
-    currentCycle.adoptionLevels.institutionalized - baselineCycle.adoptionLevels.institutionalized;
+export function HistoryPage({ data, loading }) {
+  const view = data || fallbackHistoryData;
+  const baselineCycle = view.historySeries[0];
+  const currentCycle = view.historySeries[view.historySeries.length - 1];
+
+  if (loading && !data) {
+    return <section className="panel">Loading historical progression from backend...</section>;
+  }
 
   return (
     <>
       <section className="grid-4">
         <article className="metric-card">
           <p>Overall evolution</p>
-          <h2>{overallDelta >= 0 ? `+${overallDelta}` : overallDelta}</h2>
+          <h2>{view.summary.overallDelta >= 0 ? `+${view.summary.overallDelta}` : view.summary.overallDelta}</h2>
           <small>From baseline to current cycle</small>
         </article>
 
         <article className="metric-card">
           <p>CI evolution</p>
-          <h2>{ciDelta >= 0 ? `+${ciDelta}` : ciDelta}</h2>
+          <h2>{view.summary.ciDelta >= 0 ? `+${view.summary.ciDelta}` : view.summary.ciDelta}</h2>
           <small>Continuous Integration gain across cycles</small>
         </article>
 
         <article className="metric-card">
           <p>CD evolution</p>
-          <h2>{cdDelta >= 0 ? `+${cdDelta}` : cdDelta}</h2>
+          <h2>{view.summary.cdDelta >= 0 ? `+${view.summary.cdDelta}` : view.summary.cdDelta}</h2>
           <small>Continuous Deployment gain across cycles</small>
         </article>
 
         <article className="metric-card">
           <p>Recommendations reduced</p>
-          <h2>{recommendationReduction}</h2>
+          <h2>{view.summary.recommendationReduction}</h2>
           <small>Fewer low-maturity practices needing intervention</small>
         </article>
       </section>
@@ -50,48 +49,43 @@ export function HistoryPage() {
         </div>
 
         <div className="history-cycles history-cycles--three">
-          {historySeries.map((item, index) => {
-            const previous = historySeries[index - 1];
-            const delta = previous ? item.overall - previous.overall : 0;
-
-            return (
-              <article key={item.cycle} className="history-cycle-card">
-                <div className="history-cycle-card__head">
-                  <div>
-                    <h4>{item.cycle}</h4>
-                    <p>{item.period}</p>
-                  </div>
-                  <span className={`history-cycle-card__delta ${delta < 0 ? "negative" : ""}`}>
-                    {index === 0 ? "Baseline" : delta >= 0 ? `+${delta}` : `${delta}`}
-                  </span>
+          {view.historySeries.map((item, index) => (
+            <article key={`${item.cycle}-${index}`} className="history-cycle-card">
+              <div className="history-cycle-card__head">
+                <div>
+                  <h4>{item.cycle}</h4>
+                  <p>{item.period}</p>
                 </div>
+                <span className={`history-cycle-card__delta ${item.delta < 0 ? "negative" : ""}`}>
+                  {index === 0 ? "Baseline" : item.delta >= 0 ? `+${item.delta}` : `${item.delta}`}
+                </span>
+              </div>
 
-                <div className="history-cycle-card__score">
-                  <span>Overall Zeppelin score</span>
-                  <strong>{item.overall}</strong>
-                </div>
+              <div className="history-cycle-card__score">
+                <span>Overall Zeppelin score</span>
+                <strong>{item.overall}</strong>
+              </div>
 
-                <div className="progress">
-                  <span style={{ width: `${item.overall}%` }} />
-                </div>
+              <div className="progress">
+                <span style={{ width: `${item.overall}%` }} />
+              </div>
 
-                <ul className="trend-list">
-                  <li>
-                    <span>Continuous Integration</span>
-                    <strong>{item.ci}</strong>
-                  </li>
-                  <li>
-                    <span>Continuous Deployment</span>
-                    <strong>{item.cd}</strong>
-                  </li>
-                  <li>
-                    <span>Triggered recommendations</span>
-                    <strong>{item.recommendationCount}</strong>
-                  </li>
-                </ul>
-              </article>
-            );
-          })}
+              <ul className="trend-list">
+                <li>
+                  <span>Continuous Integration</span>
+                  <strong>{item.ci}</strong>
+                </li>
+                <li>
+                  <span>Continuous Deployment</span>
+                  <strong>{item.cd}</strong>
+                </li>
+                <li>
+                  <span>Triggered recommendations</span>
+                  <strong>{item.recommendationCount}</strong>
+                </li>
+              </ul>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -114,7 +108,7 @@ export function HistoryPage() {
             </tr>
           </thead>
           <tbody>
-            {historySeries.map((item) => (
+            {view.historySeries.map((item) => (
               <tr key={item.cycle}>
                 <td>
                   <strong>{item.cycle}</strong>
@@ -137,7 +131,7 @@ export function HistoryPage() {
           <ul className="insight-list">
             <li className="insight-item">
               <small>Stage evolution</small>
-              <h4>Continuous Integration gained {ciDelta} points</h4>
+              <h4>Continuous Integration gained {view.summary.ciDelta} points</h4>
               <p>
                 CI moved faster than CD across the tracked cycles, reinforcing the thesis finding
                 that stronger integration foundations tend to emerge before more advanced delivery capability.
@@ -145,10 +139,8 @@ export function HistoryPage() {
             </li>
             <li className="insight-item">
               <small>Adoption profile</small>
-              <h4>Institutionalized practices grew by {institutionalizedGrowth}</h4>
-              <p>
-                Mature practices now represent the largest share of the assessed CI/CD subset.
-              </p>
+              <h4>Institutionalized practices grew by {view.summary.institutionalizedGrowth}</h4>
+              <p>Mature practices now represent the largest share of the assessed CI/CD subset.</p>
             </li>
           </ul>
         </article>

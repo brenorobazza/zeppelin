@@ -1,9 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  maturitySnapshot,
-  recommendations,
-  recommendationTracks
-} from "../mock/zeppelinData";
+import { fallbackRecommendationsData } from "../mock/analyticsFallback";
 
 function getPriorityClass(priority) {
   if (priority === "High") return "high";
@@ -11,48 +7,50 @@ function getPriorityClass(priority) {
   return "low";
 }
 
-export function RecommendationsPage() {
+export function RecommendationsPage({ data, loading }) {
+  const view = data || fallbackRecommendationsData;
   const [stage, setStage] = useState("All");
   const [track, setTrack] = useState("All");
   const [priority, setPriority] = useState("All");
 
   const filtered = useMemo(
     () =>
-      recommendations.filter((item) => {
+      view.recommendations.filter((item) => {
         const matchesStage = stage === "All" || item.stage === stage;
         const matchesTrack = track === "All" || item.track === track;
         const matchesPriority = priority === "All" || item.priority === priority;
         return matchesStage && matchesTrack && matchesPriority;
       }),
-    [stage, track, priority]
+    [view.recommendations, stage, track, priority]
   );
 
-  const groupedTracks = recommendationTracks.map((lane) => ({
+  const groupedTracks = view.recommendationTracks.map((lane) => ({
     ...lane,
     items: filtered.filter((item) => item.track === lane.key)
   }));
 
-  const adoptNowCount = recommendations.filter((item) => item.track === "Adopt now").length;
-  const consolidateCount = recommendations.filter((item) => item.track === "Consolidate").length;
+  if (loading && !data) {
+    return <section className="panel">Loading roadmap recommendations from backend...</section>;
+  }
 
   return (
     <>
       <section className="grid-3">
         <article className="metric-card">
           <p>Triggered recommendations</p>
-          <h2>{maturitySnapshot.recommendationCount}</h2>
+          <h2>{view.summary.triggeredRecommendations}</h2>
           <small>Generated only for practices below process level</small>
         </article>
 
         <article className="metric-card">
           <p>Adopt-first items</p>
-          <h2>{adoptNowCount}</h2>
+          <h2>{view.summary.adoptNowCount}</h2>
           <small>Practices still absent or abandoned</small>
         </article>
 
         <article className="metric-card">
           <p>Consolidation items</p>
-          <h2>{consolidateCount}</h2>
+          <h2>{view.summary.consolidateCount}</h2>
           <small>Practices that exist locally and should scale to process level</small>
         </article>
       </section>
@@ -91,22 +89,23 @@ export function RecommendationsPage() {
           <div className="btn-row">
             <select value={stage} onChange={(event) => setStage(event.target.value)}>
               <option>All</option>
-              <option>CI</option>
-              <option>CD</option>
+              {view.availableStages.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
             </select>
 
             <select value={track} onChange={(event) => setTrack(event.target.value)}>
               <option>All</option>
-              {recommendationTracks.map((item) => (
-                <option key={item.key}>{item.key}</option>
+              {view.availableTracks.map((item) => (
+                <option key={item}>{item}</option>
               ))}
             </select>
 
             <select value={priority} onChange={(event) => setPriority(event.target.value)}>
               <option>All</option>
-              <option>High</option>
-              <option>Medium</option>
-              <option>Low</option>
+              {view.availablePriorities.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
             </select>
           </div>
         </article>
@@ -127,7 +126,7 @@ export function RecommendationsPage() {
                 <div key={item.id} className="roadmap-card">
                   <div className="roadmap-card__meta">
                     <span className="tag">
-                      {item.stage} · {item.questionId}
+                      {item.stage} / {item.questionId}
                     </span>
                     <span className={`pill ${getPriorityClass(item.priority)}`}>{item.priority}</span>
                   </div>

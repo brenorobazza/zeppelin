@@ -1,31 +1,30 @@
-import {
-  maturitySnapshot,
-  practiceThemes,
-  recommendations,
-  stageScores
-} from "../mock/zeppelinData";
+import { fallbackResultsData } from "../mock/analyticsFallback";
 
-export function ResultsPage() {
-  const stageGap = Math.abs(maturitySnapshot.ciScore - maturitySnapshot.cdScore);
+export function ResultsPage({ data, loading }) {
+  const view = data || fallbackResultsData;
+
+  if (loading && !data) {
+    return <section className="panel">Loading diagnostic results from backend...</section>;
+  }
 
   return (
     <>
       <section className="grid-3">
         <article className="metric-card">
           <p>Assessed practices</p>
-          <h2>{maturitySnapshot.answeredPractices}</h2>
+          <h2>{view.summary.answeredPractices}</h2>
           <small>CI and CD practices from the Zeppelin instrument subset</small>
         </article>
 
         <article className="metric-card">
           <p>CI vs CD gap</p>
-          <h2>{stageGap}</h2>
+          <h2>{view.summary.stageGap}</h2>
           <small>Difference between the two maturity stages</small>
         </article>
 
         <article className="metric-card">
           <p>Calibration profile</p>
-          <h2>{maturitySnapshot.calibratedProfile.replace(" calibration profile", "")}</h2>
+          <h2>{view.summary.calibratedProfile.replace(" calibration profile", "")}</h2>
           <small>Selected to keep the diagnosis coherent with the organization type</small>
         </article>
       </section>
@@ -42,7 +41,7 @@ export function ResultsPage() {
         </div>
 
         <div className="stage-grid">
-          {stageScores.map((item) => (
+          {view.stageScores.map((item) => (
             <article key={item.key} className="stage-card">
               <div className="stage-card__head">
                 <div>
@@ -56,8 +55,10 @@ export function ResultsPage() {
                 <span style={{ width: `${item.score}%` }} />
               </div>
 
-              <p>{item.diagnosis}</p>
-              <p className="support-copy">{item.whyItMatters}</p>
+              <p>
+                {item.answeredPractices || 0} practices contribute to this score, with{" "}
+                {item.bottleneckCount || 0} items still below process level.
+              </p>
             </article>
           ))}
         </div>
@@ -71,7 +72,7 @@ export function ResultsPage() {
         </p>
 
         <div className="dimension-grid">
-          {practiceThemes.map((item) => (
+          {view.practiceThemes.map((item) => (
             <article key={item.key} className="dimension-card dimension-card--detailed">
               <div className="dimension-card__head">
                 <div>
@@ -104,10 +105,10 @@ export function ResultsPage() {
         <article className="panel">
           <h3>What is already mature?</h3>
           <ul className="insight-list">
-            {maturitySnapshot.strengths.map((item) => (
+            {view.strengths.map((item) => (
               <li key={item.id} className="insight-item">
                 <small>
-                  {item.stage} · {item.questionId}
+                  {item.stage} / {item.questionId}
                 </small>
                 <h4>{item.title}</h4>
                 <p>{item.evidence}</p>
@@ -119,10 +120,10 @@ export function ResultsPage() {
         <article className="panel">
           <h3>What is still blocking maturity?</h3>
           <ul className="insight-list">
-            {maturitySnapshot.bottlenecks.map((item) => (
+            {view.bottlenecks.map((item) => (
               <li key={item.id} className="insight-item">
                 <small>
-                  {item.stage} · {item.questionId}
+                  {item.stage} / {item.questionId}
                 </small>
                 <h4>{item.title}</h4>
                 <p>{item.evidence}</p>
@@ -134,10 +135,10 @@ export function ResultsPage() {
         <article className="panel">
           <h3>Improvement opportunities that follow from the diagnosis</h3>
           <ul className="insight-list">
-            {recommendations.slice(0, 3).map((item) => (
+            {view.opportunities.map((item) => (
               <li key={item.id} className="insight-item">
                 <small>
-                  {item.stage} · {item.questionId}
+                  {item.stage} / {item.questionId}
                 </small>
                 <h4>{item.title}</h4>
                 <p>{item.expectedImpact}</p>

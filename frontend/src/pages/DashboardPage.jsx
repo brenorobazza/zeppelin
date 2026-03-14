@@ -1,10 +1,4 @@
-import {
-  adoptionLevels,
-  historySeries,
-  maturitySnapshot,
-  recommendations,
-  stageScores
-} from "../mock/zeppelinData";
+import { fallbackDashboardData } from "../mock/analyticsFallback";
 
 function getPriorityClass(priority) {
   if (priority === "High") return "high";
@@ -12,11 +6,28 @@ function getPriorityClass(priority) {
   return "low";
 }
 
-export function DashboardPage({ onNavigate }) {
-  const previousCycle = historySeries[historySeries.length - 2];
-  const currentCycle = historySeries[historySeries.length - 1];
-  const overallDelta = currentCycle.overall - previousCycle.overall;
-  const adoptNowCount = recommendations.filter((item) => item.track === "Adopt now").length;
+export function DashboardPage({ onNavigate, data, loading }) {
+  const view = data || fallbackDashboardData;
+  const {
+    adoptionLevels,
+    maturitySnapshot,
+    overallDelta,
+    recommendationsPreview,
+    stageScores,
+    strengths,
+    bottlenecks
+  } = {
+    ...view,
+    strengths: view?.strengths || view?.maturitySnapshot?.strengths || [],
+    bottlenecks: view?.bottlenecks || view?.maturitySnapshot?.bottlenecks || []
+  };
+  const adoptFirstCount = adoptionLevels
+    .filter((item) => ["Not adopted", "Abandoned"].includes(item.label))
+    .reduce((sum, item) => sum + item.count, 0);
+
+  if (loading && !data) {
+    return <section className="panel">Loading diagnosis data from backend...</section>;
+  }
 
   return (
     <>
@@ -27,7 +38,7 @@ export function DashboardPage({ onNavigate }) {
           <p>{maturitySnapshot.executiveSummary}</p>
 
           <div className="hero-meta">
-            <span className="tag">{maturitySnapshot.calibratedProfile}</span>
+            {maturitySnapshot.organizationType ? <span className="tag">{maturitySnapshot.organizationType}</span> : null}
             <span className="tag">{maturitySnapshot.answeredPractices} CI/CD practices</span>
             <span className="tag">{maturitySnapshot.cycleLabel}</span>
           </div>
@@ -62,7 +73,7 @@ export function DashboardPage({ onNavigate }) {
 
         <article className="metric-card">
           <p>Adopt-first actions</p>
-          <h2>{adoptNowCount}</h2>
+          <h2>{adoptFirstCount}</h2>
           <small>Practices still absent or abandoned</small>
         </article>
       </section>
@@ -91,7 +102,10 @@ export function DashboardPage({ onNavigate }) {
                   <span style={{ width: `${item.score}%` }} />
                 </div>
 
-                <p>{item.diagnosis}</p>
+                <p>
+                  {item.answeredPractices} answered practices, {item.strengthCount || 0} mature items and{" "}
+                  {item.bottleneckCount || 0} low-maturity items.
+                </p>
               </article>
             ))}
           </div>
@@ -127,11 +141,11 @@ export function DashboardPage({ onNavigate }) {
         <article className="panel">
           <h3>Current strengths</h3>
           <ul className="insight-list">
-            {maturitySnapshot.strengths.map((item) => (
+            {strengths.map((item) => (
               <li key={item.id} className="insight-item">
                 <div className="insight-item__row">
                   <small>
-                    {item.stage} · {item.questionId}
+                    {item.stage} / {item.questionId}
                   </small>
                 </div>
                 <h4>{item.title}</h4>
@@ -144,11 +158,11 @@ export function DashboardPage({ onNavigate }) {
         <article className="panel">
           <h3>Main bottlenecks</h3>
           <ul className="insight-list">
-            {maturitySnapshot.bottlenecks.map((item) => (
+            {bottlenecks.map((item) => (
               <li key={item.id} className="insight-item">
                 <div className="insight-item__row">
                   <small>
-                    {item.stage} · {item.questionId}
+                    {item.stage} / {item.questionId}
                   </small>
                 </div>
                 <h4>{item.title}</h4>
@@ -161,11 +175,11 @@ export function DashboardPage({ onNavigate }) {
         <article className="panel">
           <h3>What should happen next?</h3>
           <ul className="insight-list">
-            {recommendations.slice(0, 3).map((item) => (
+            {recommendationsPreview.map((item) => (
               <li key={item.id} className="insight-item">
                 <div className="insight-item__row">
                   <small>
-                    {item.stage} · {item.questionId}
+                    {item.stage} / {item.questionId}
                   </small>
                   <span className={`pill ${getPriorityClass(item.priority)}`}>{item.priority}</span>
                 </div>
