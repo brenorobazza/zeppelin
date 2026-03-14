@@ -8,19 +8,23 @@ from decouple import config
 DEBUG = True
 
 SECRET_KEY = config("SECRET_KEY", default="zeppelin-test-secret")
+TEST_DATABASE_NAME = config("DB_NAME_TEST", default=str(BASE_DIR / "test.sqlite3"))
 
-# Por padrao, os testes usam SQLite em memoria para ficarem leves no CI.
+# Por padrao, os testes usam SQLite em arquivo para ficarem leves e previsiveis no CI.
 DATABASES = {
     "default": {
         "ENGINE": config(
             "DB_ENGINE_TEST",
             default="django.db.backends.sqlite3",
         ),
-        "NAME": config("DB_NAME_TEST", default=str(BASE_DIR / "test.sqlite3")),
+        "NAME": TEST_DATABASE_NAME,
         "USER": config("DB_USER_TEST", default=""),
         "PASSWORD": config("DB_PASSWORD_TEST", default=""),
         "HOST": config("DB_HOST_TEST", default=""),
         "PORT": config("DB_PORT_TEST", default=""),
+        "TEST": {
+            "NAME": TEST_DATABASE_NAME,
+        },
     }
 }
 

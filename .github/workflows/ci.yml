@@ -53,6 +53,7 @@ jobs:
         HASHIDS_SALT: zeppelin-ci-salt
       run: |
         cd backend
+        rm -f /tmp/zeppelin-test.sqlite3
         python manage.py test apps.questionnaire.test_analytics --settings=zeppelin.settings.test
 
     - name: Set up Node.js (if frontend exists)
