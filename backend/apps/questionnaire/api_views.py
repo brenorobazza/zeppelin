@@ -181,7 +181,6 @@ class QuestionnaireDashboardAnalyticsView(APIView):
         return Response(payload)
 
 
-
 # Endpoint da tela de resultados detalhados.
 class QuestionnaireResultsAnalyticsView(APIView):
     authentication_classes = [OAuth2Authentication, SessionAuthentication]
@@ -196,7 +195,6 @@ class QuestionnaireResultsAnalyticsView(APIView):
         return Response(payload)
 
 
-
 # Endpoint da tela de recomendacoes/roadmap.
 class QuestionnaireRecommendationsAnalyticsView(APIView):
     authentication_classes = [OAuth2Authentication, SessionAuthentication]
@@ -209,7 +207,6 @@ class QuestionnaireRecommendationsAnalyticsView(APIView):
         except ValidationError as exc:
             return Response({"error": exc.message}, status=400)
         return Response(payload)
-
 
 
 # Endpoint da tela de historico/evolucao.

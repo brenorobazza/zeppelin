@@ -40,7 +40,6 @@ class QuestionnaireAnalyticsFixtureMixin:
             description="Should not leak into analytics payloads",
         )
 
-
         # Usuario autenticado e funcionario vinculado a empresa principal.
         cls.user = cls.user_model.objects.create_user(
             username="alex@example.com",
@@ -52,7 +51,6 @@ class QuestionnaireAnalyticsFixtureMixin:
             role="Engineering Manager",
             employee_organization=cls.organization,
         )
-
 
         # Niveis de adocao que serao usados para score, gargalos e roadmap.
         cls.not_adopted = AdoptedLevel.objects.create(
@@ -81,7 +79,6 @@ class QuestionnaireAnalyticsFixtureMixin:
             percentage=100,
         )
 
-
         # Estagios centrais do recorte CI/CD.
         cls.ci_stage = Stage.objects.create(
             name=QuestionnaireAnalyticsService.CI_CD_STAGE_NAMES[0],
@@ -91,7 +88,6 @@ class QuestionnaireAnalyticsFixtureMixin:
             name=QuestionnaireAnalyticsService.CI_CD_STAGE_NAMES[1],
             description="Continuous delivery stage",
         )
-
 
         # Estruturas auxiliares exigidas pelos modelos relacionados.
         cls.phase = ContinuousPhase.objects.create(
@@ -128,7 +124,6 @@ class QuestionnaireAnalyticsFixtureMixin:
             dimension=cls.cd_category,
         )
 
-
         # Quatro assertivas minimas para representar o recorte de praticas CI/CD.
         cls.statement_ci_1 = cls._create_statement(
             code="CI.01",
@@ -155,11 +150,9 @@ class QuestionnaireAnalyticsFixtureMixin:
             element=cls.cd_element,
         )
 
-
         # Dois ciclos diferentes para validar selecao do mais recente e comparacao historica.
         cls.old_cycle = cls._create_questionnaire(days_ago=180)
         cls.current_cycle = cls._create_questionnaire(days_ago=30)
-
 
         # Respostas do ciclo antigo: quadro mais imaturo.
         cls._create_answer(
@@ -186,7 +179,6 @@ class QuestionnaireAnalyticsFixtureMixin:
             level=cls.project_level,
             comment="Some teams deploy with scripts.",
         )
-
 
         # Respostas do ciclo atual: parte amadureceu, parte ainda gera recomendacao.
         cls._create_answer(
@@ -221,7 +213,6 @@ class QuestionnaireAnalyticsFixtureMixin:
             organization=cls.other_organization,
             comment="Different organization answer.",
         )
-
 
         # Instanciamos o servico por ultimo, quando os niveis de adocao ja existem no banco.
         cls.service = QuestionnaireAnalyticsService()
@@ -275,7 +266,6 @@ class QuestionnaireAnalyticsFixtureMixin:
         return SimpleNamespace(query_params=query_params, user=user or self.user)
 
 
-
 # Testes unitarios do servico de analytics.
 class QuestionnaireAnalyticsServiceTests(
     QuestionnaireAnalyticsFixtureMixin,
@@ -313,7 +303,6 @@ class QuestionnaireAnalyticsServiceTests(
         self.assertEqual(payload["summary"]["overall_delta"], 40)
         self.assertEqual(payload["summary"]["recommendation_reduction"], 2)
         self.assertEqual(len(payload["cycles"]), 2)
-
 
 
 # Testes de integracao dos endpoints usados pelo frontend.
