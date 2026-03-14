@@ -20,9 +20,10 @@ from .serializers import (
     AnswerReadSerializer,
     AnswerWriteSerializer,
 )
+from .analytics import QuestionnaireAnalyticsService
 
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_condition import Or
 from oauth2_provider.contrib.rest_framework import (
     TokenHasReadWriteScope,
@@ -31,12 +32,16 @@ from oauth2_provider.contrib.rest_framework import (
 from rest_framework.authentication import SessionAuthentication
 from .pagination import CustomPagination
 from rest_framework import filters
+from rest_framework.response import Response
+from rest_framework.views import APIView
 import django_filters.rest_framework
+from django.core.exceptions import ValidationError
 
 
 class AdoptedLevelViewSet(ModelViewSet):
     queryset = AdoptedLevel.objects.all()
     pagination_class = CustomPagination
+    # As respostas sao por organizacao, entao exigimos autenticacao.
     authentication_classes = [OAuth2Authentication, SessionAuthentication]
     permission_classes = permission_classes = [Or(IsAdminUser, TokenHasReadWriteScope)]
     filter_backends = (
@@ -158,3 +163,61 @@ class AnswerViewSet(ModelViewSet):
         if self.request.method in ["GET"]:
             return AnswerReadSerializer
         return AnswerWriteSerializer
+
+
+# As views abaixo exp?em a camada analitica do TCC como endpoints REST.
+# Cada endpoint alimenta diretamente uma tela do frontend.
+class QuestionnaireDashboardAnalyticsView(APIView):
+    authentication_classes = [OAuth2Authentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Encaminha a requisicao para o servico de analytics e devolve o payload pronto.
+        service = QuestionnaireAnalyticsService()
+        try:
+            payload = service.get_dashboard_payload(request)
+        except ValidationError as exc:
+            return Response({"error": exc.message}, status=400)
+        return Response(payload)
+
+
+# Endpoint da tela de resultados detalhados.
+class QuestionnaireResultsAnalyticsView(APIView):
+    authentication_classes = [OAuth2Authentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        service = QuestionnaireAnalyticsService()
+        try:
+            payload = service.get_results_payload(request)
+        except ValidationError as exc:
+            return Response({"error": exc.message}, status=400)
+        return Response(payload)
+
+
+# Endpoint da tela de recomendacoes/roadmap.
+class QuestionnaireRecommendationsAnalyticsView(APIView):
+    authentication_classes = [OAuth2Authentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        service = QuestionnaireAnalyticsService()
+        try:
+            payload = service.get_recommendations_payload(request)
+        except ValidationError as exc:
+            return Response({"error": exc.message}, status=400)
+        return Response(payload)
+
+
+# Endpoint da tela de historico/evolucao.
+class QuestionnaireHistoryAnalyticsView(APIView):
+    authentication_classes = [OAuth2Authentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        service = QuestionnaireAnalyticsService()
+        try:
+            payload = service.get_history_payload(request)
+        except ValidationError as exc:
+            return Response({"error": exc.message}, status=400)
+        return Response(payload)

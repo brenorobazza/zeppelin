@@ -1,0 +1,321 @@
+import {
+  fallbackAnalyticsMeta,
+  fallbackDashboardData,
+  fallbackHistoryData,
+  fallbackRecommendationsData,
+  fallbackResultsData
+} from "../mock/analyticsFallback";
+
+// A base da API vem do ambiente para permitir troca de servidor sem editar o codigo.
+const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
+
+// Padroniza a leitura das respostas do backend e transforma falhas em mensagens legiveis.
+async function parseResponse(response, fallbackMessage) {
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message =
+      data.error || data.detail || data.message || `${fallbackMessage} (status ${response.status})`;
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
+// Converte os filtros da interface para query string.
+function buildQuery(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.organizationId) params.set("organization_id", filters.organizationId);
+  if (filters.questionnaireId) params.set("questionnaire_id", filters.questionnaireId);
+  if (filters.stageScope) params.set("stage_scope", filters.stageScope);
+
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+// Busca uma secao especifica da camada analitica.
+async function fetchAnalyticsSection(section, filters) {
+  const query = buildQuery(filters);
+  const response = await fetch(`${API_BASE}/questionnaire/analytics/${section}/${query}`, {
+    credentials: "include"
+  });
+
+  return parseResponse(response, `Failed to load ${section} analytics.`);
+}
+
+// Ajuda a encontrar rapidamente o score de CI ou CD dentro da lista de estagios.
+function findStageScore(stageScores, shortName) {
+  return stageScores.find((item) => item.short_name === shortName)?.score || 0;
+}
+
+// Converte um insight bruto do backend para um formato mais simples para os componentes.
+function mapInsight(item) {
+  return {
+    id: item.id,
+    questionId: item.question_id,
+    stage: item.stage_short_name || item.stage_name || "",
+    title: item.title,
+    evidence: item.evidence,
+    currentLevel: item.current_level,
+    score: item.score
+  };
+}
+
+// Faz a mesma padronizacao para as recomendacoes do roadmap.
+function mapRecommendation(item) {
+  return {
+    id: item.id,
+    questionId: item.question_id,
+    stage: item.stage_short_name || item.stage_name || "",
+    track: item.track,
+    currentLevel: item.current_level,
+    title: item.title,
+    recommendation: item.recommendation,
+    expectedImpact: item.expected_impact,
+    priority: item.priority,
+    nextStep: item.next_step,
+    status: item.status,
+    contextNote: item.context_note || "",
+    dimensionName: item.dimension_name || ""
+  };
+}
+
+// Normaliza os cards de score por estagio.
+function mapStageScore(item) {
+  return {
+    key: item.key,
+    name: item.name,
+    shortName: item.short_name,
+    score: item.score,
+    currentLevel: item.current_level,
+    answeredPractices: item.answered_practices,
+    strengthCount: item.strength_count,
+    bottleneckCount: item.bottleneck_count
+  };
+}
+
+// Prepara o payload bruto do dashboard para o formato que a tela entende.
+function normalizeDashboard(payload) {
+  const stageScores = payload.stage_scores.map(mapStageScore);
+
+  return {
+    maturitySnapshot: {
+      organization: payload.organization.name,
+      organizationType: payload.organization.type || "",
+      cycleLabel: payload.cycle.label,
+      answeredPractices: payload.snapshot.answered_practices,
+      overallScore: payload.snapshot.overall_score,
+      overallLevel: payload.snapshot.overall_level,
+      ciScore: findStageScore(stageScores, "CI"),
+      cdScore: findStageScore(stageScores, "CD"),
+      recommendationCount: payload.snapshot.recommendation_count,
+      executiveSummary: payload.snapshot.executive_summary,
+      overallInterpretation: payload.snapshot.executive_summary
+    },
+    stageScores,
+    adoptionLevels: payload.adoption_levels.map((item) => ({
+      id: item.id,
+      key: item.key,
+      label: item.label,
+      count: item.count,
+      percentage: item.percentage,
+      score: item.score
+    })),
+    strengths: payload.strengths.map(mapInsight),
+    bottlenecks: payload.bottlenecks.map(mapInsight),
+    recommendationsPreview: payload.recommendations_preview.map(mapRecommendation),
+    overallDelta: payload.snapshot.overall_delta
+  };
+}
+
+// Prepara os dados usados pela tela de resultados.
+function normalizeResults(payload) {
+  return {
+    summary: {
+      answeredPractices: payload.summary.answered_practices,
+      stageGap: payload.summary.stage_gap,
+      calibratedProfile: payload.organization.type || "Current organization profile",
+      overallScore: payload.summary.overall_score,
+      overallLevel: payload.summary.overall_level
+    },
+    stageScores: payload.stage_scores.map(mapStageScore),
+    practiceThemes: payload.dimensions.map((item) => ({
+      key: item.key,
+      name: item.name,
+      focus: item.focus,
+      score: item.score,
+      currentLevel: item.current_level,
+      strength: item.strength,
+      bottleneck: item.bottleneck,
+      answeredPractices: item.answered_practices
+    })),
+    strengths: payload.strengths.map(mapInsight),
+    bottlenecks: payload.bottlenecks.map(mapInsight),
+    opportunities: payload.opportunities.map(mapRecommendation)
+  };
+}
+
+// Agrupa recomendacoes nas trilhas do roadmap para leitura mais estrategica.
+function normalizeRecommendations(payload) {
+  const recommendationTracks = payload.tracks.map((lane) => ({
+    key: lane.key,
+    title: lane.title,
+    description: lane.description,
+    count: lane.count,
+    items: lane.items.map(mapRecommendation)
+  }));
+
+  return {
+    summary: {
+      triggeredRecommendations: payload.summary.triggered_recommendations,
+      adoptNowCount: payload.summary.adopt_now_count,
+      consolidateCount: payload.summary.consolidate_count
+    },
+    recommendationTracks,
+    recommendations: payload.items.map(mapRecommendation),
+    availableStages: payload.filters.available_stages || [],
+    availableTracks: payload.filters.available_tracks || [],
+    availablePriorities: payload.filters.available_priorities || []
+  };
+}
+
+// Resolve pequenas variacoes de nome nas chaves de historico.
+function getHistoryCount(cycle, key) {
+  if (cycle.adoption_levels[key] != null) return cycle.adoption_levels[key];
+
+  const aliases = {
+    "not-adopted": ["nao-adotada", "not-adopted"],
+    abandoned: ["abandonada", "abandoned"],
+    project: ["realizada-no-nivel-de-projeto-produto", "project-product-level"],
+    process: ["realizada-no-nivel-de-processo", "process-level"],
+    institutionalized: ["institucionalizada", "institutionalized"]
+  };
+
+  const candidates = aliases[key] || [key];
+  const matchedKey = Object.keys(cycle.adoption_levels || {}).find((itemKey) =>
+    candidates.includes(itemKey)
+  );
+  return matchedKey ? cycle.adoption_levels[matchedKey] : 0;
+}
+
+// Converte o historico bruto em um formato pronto para comparacao entre ciclos.
+function normalizeHistory(payload) {
+  const historySeries = payload.cycles.map((item, index) => {
+    const ci = item.stage_scores.find((stage) => stage.short_name === "CI")?.score || 0;
+    const cd = item.stage_scores.find((stage) => stage.short_name === "CD")?.score || 0;
+
+    return {
+      id: item.id ? String(item.id) : "",
+      cycle: `Cycle ${index + 1}`,
+      period: item.label,
+      overall: item.overall_score,
+      overallLevel: item.overall_level,
+      ci,
+      cd,
+      recommendationCount: item.recommendation_count,
+      delta: index === 0 ? null : item.overall_score - payload.cycles[index - 1].overall_score,
+      adoptionLevels: {
+        notAdopted: getHistoryCount(item, "not-adopted"),
+        abandoned: getHistoryCount(item, "abandoned"),
+        project: getHistoryCount(item, "project"),
+        process: getHistoryCount(item, "process"),
+        institutionalized: getHistoryCount(item, "institutionalized")
+      }
+    };
+  });
+
+  const first = historySeries[0];
+  const last = historySeries[historySeries.length - 1];
+
+  return {
+    summary: {
+      overallDelta: payload.summary.overall_delta,
+      ciDelta: last ? last.ci - first.ci : 0,
+      cdDelta: last ? last.cd - first.cd : 0,
+      recommendationReduction: payload.summary.recommendation_reduction,
+      institutionalizedGrowth: last
+        ? last.adoptionLevels.institutionalized - first.adoptionLevels.institutionalized
+        : 0
+    },
+    historySeries
+  };
+}
+
+// O layout principal precisa de metadados globais, como nome da empresa e lista de ciclos.
+function normalizeMeta(dashboardPayload, historyPayload) {
+  return {
+    organizationName: dashboardPayload.organization.name,
+    organizationType: dashboardPayload.organization.type || "",
+    selectedCycleLabel: dashboardPayload.cycle.label,
+    cycleOptions: historyPayload.cycles
+      .filter((item) => item.id != null)
+      .map((item, index) => ({
+        id: String(item.id),
+        label: item.label,
+        shortLabel: `Cycle ${index + 1}`
+      }))
+  };
+}
+
+// Carrega todas as secoes em paralelo para manter consistencia entre as paginas.
+export async function loadAnalyticsBundle(filters = {}) {
+  const [dashboardPayload, resultsPayload, recommendationsPayload, historyPayload] =
+    await Promise.all([
+      fetchAnalyticsSection("dashboard", filters),
+      fetchAnalyticsSection("results", filters),
+      fetchAnalyticsSection("recommendations", filters),
+      fetchAnalyticsSection("history", filters)
+    ]);
+
+  return {
+    meta: normalizeMeta(dashboardPayload, historyPayload),
+    dashboard: normalizeDashboard(dashboardPayload),
+    results: normalizeResults(resultsPayload),
+    recommendations: normalizeRecommendations(recommendationsPayload),
+    history: normalizeHistory(historyPayload)
+  };
+}
+
+// Entrega um conjunto de dados de demonstracao quando o backend nao estiver disponivel.
+export function getFallbackAnalyticsBundle() {
+  return {
+    meta: fallbackAnalyticsMeta,
+    dashboard: fallbackDashboardData,
+    results: fallbackResultsData,
+    recommendations: fallbackRecommendationsData,
+    history: fallbackHistoryData
+  };
+}
+
+// Le da URL o contexto atual da analise.
+export function getAnalyticsFiltersFromUrl() {
+  const url = new URL(window.location.href);
+  return {
+    organizationId: url.searchParams.get("organization_id") || "",
+    questionnaireId: url.searchParams.get("questionnaire_id") || "",
+    stageScope: url.searchParams.get("stage_scope") || "ci_cd"
+  };
+}
+
+// Atualiza a URL sem recarregar a pagina, preservando o contexto escolhido pelo usuario.
+export function updateAnalyticsFiltersInUrl(filters) {
+  const url = new URL(window.location.href);
+  const values = {
+    organization_id: filters.organizationId,
+    questionnaire_id: filters.questionnaireId,
+    stage_scope: filters.stageScope && filters.stageScope !== "ci_cd" ? filters.stageScope : ""
+  };
+
+  Object.entries(values).forEach(([key, value]) => {
+    if (value) {
+      url.searchParams.set(key, value);
+    } else {
+      url.searchParams.delete(key);
+    }
+  });
+
+  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+}

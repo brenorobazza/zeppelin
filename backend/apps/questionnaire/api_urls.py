@@ -7,9 +7,15 @@ from .api_views import (
     QuestionnaireViewSet,
     QuestionnaireExcelViewSet,
     AnswerViewSet,
+    QuestionnaireDashboardAnalyticsView,
+    QuestionnaireResultsAnalyticsView,
+    QuestionnaireRecommendationsAnalyticsView,
+    QuestionnaireHistoryAnalyticsView,
 )
 
 router = routers.DefaultRouter()
+
+# Rotas CRUD ja existentes do modulo questionnaire.
 
 router.register(r"adoptedlevel", AdoptedLevelViewSet, basename="adoptedlevel")
 router.register(r"statement", StatementViewSet, basename="statement")
@@ -24,4 +30,28 @@ router.register(
 )
 router.register(r"answer", AnswerViewSet, basename="answer")
 
-urlpatterns = [path("questionnaire/", include(router.urls))]
+# A partir daqui entram as rotas analiticas criadas para o TCC.
+# Cada rota atende uma tela principal do frontend.
+urlpatterns = [
+    path("questionnaire/", include(router.urls)),
+    path(
+        "questionnaire/analytics/dashboard/",
+        QuestionnaireDashboardAnalyticsView.as_view(),
+        name="questionnaire-analytics-dashboard",
+    ),
+    path(
+        "questionnaire/analytics/results/",
+        QuestionnaireResultsAnalyticsView.as_view(),
+        name="questionnaire-analytics-results",
+    ),
+    path(
+        "questionnaire/analytics/recommendations/",
+        QuestionnaireRecommendationsAnalyticsView.as_view(),
+        name="questionnaire-analytics-recommendations",
+    ),
+    path(
+        "questionnaire/analytics/history/",
+        QuestionnaireHistoryAnalyticsView.as_view(),
+        name="questionnaire-analytics-history",
+    ),
+]

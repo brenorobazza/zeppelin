@@ -48,6 +48,8 @@
   align-items: center;
   justify-content: center;
   padding: clamp(1.4rem, 4vw, 4rem) clamp(1rem, 4vw, 3rem);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .promo-content {
@@ -59,6 +61,10 @@
   height: auto;
   display: block;
   margin-bottom: clamp(0.7rem, 1.4vw, 1.4rem);
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .promo-content h1 {
@@ -89,7 +95,7 @@
   justify-content: center;
   padding: clamp(1.2rem, 2vw, 2.2rem) clamp(0.6rem, 2.6vw, 2.5rem);
   background: #ffffff;
-  border-left: 1px solid #d8dde6;
+  border-left: 0;
 }
 
 .login-panel::before {
@@ -199,6 +205,20 @@
   font-size: clamp(1rem, 1.03vw, 1.08rem);
   font-weight: 700;
   cursor: pointer;
+}
+
+.forgot-box {
+  margin-top: 0.25rem;
+  display: grid;
+  gap: 0.55rem;
+  border: 1px solid #d7e2f1;
+  border-radius: 14px;
+  background: #f6f9ff;
+  padding: 0.72rem;
+}
+
+.forgot-box .feedback {
+  margin: 0.15rem 0 0;
 }
 
 .separator {

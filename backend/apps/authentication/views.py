@@ -123,3 +123,20 @@ class LoginApiView(APIView):
             },
             status=200,
         )
+
+
+class ForgotPasswordApiView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = (request.data.get("email") or "").strip()
+        if not email:
+            return Response({"error": "email is required"}, status=400)
+
+        # Sempre retorna 200 para evitar enumeracao de usuarios.
+        return Response(
+            {
+                "message": "If the account exists, password recovery instructions were sent."
+            },
+            status=200,
+        )

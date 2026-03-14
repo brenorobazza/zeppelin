@@ -3,7 +3,9 @@ import { registerAccount } from "../services/auth";
 import "./login-page.css";
 
 export function CreateAccountPage({ onBackToLogin }) {
-  // Campos necessarios para o endpoint atual de cadastro.
+  // Campos exigidos pelo endpoint atual de criacao de conta.
+  // O formulario foi mantido simples porque o foco do projeto nao e onboarding,
+  // e sim a camada de visualizacao dos resultados.
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -12,15 +14,20 @@ export function CreateAccountPage({ onBackToLogin }) {
     organization_name: "",
     organization_description: ""
   });
+
+  // Estados visuais de feedback do processo de cadastro.
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Atualiza qualquer campo do formulario de acordo com o "name" do input.
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
+  // Volta para o login.
+  // Se a tela foi aberta pelo App, usamos o callback; caso contrario, usamos o hash como fallback.
   function handleBackToLogin() {
     if (typeof onBackToLogin === "function") {
       onBackToLogin();
@@ -30,6 +37,7 @@ export function CreateAccountPage({ onBackToLogin }) {
     window.location.hash = "";
   }
 
+  // Envia os dados para a API de cadastro e controla o feedback local da tela.
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -49,6 +57,8 @@ export function CreateAccountPage({ onBackToLogin }) {
   return (
     <main className="login-shell">
       <section className="login-layout">
+        {/* Coluna institucional, reaproveitando a mesma linguagem visual do login
+            para manter consistencia na entrada da plataforma. */}
         <aside className="promo-panel">
           <div className="promo-content">
             <img className="brand-logo" src="/branding/logo-zeppelin.png" alt="Zeppelin CI/CD" />
@@ -73,6 +83,7 @@ export function CreateAccountPage({ onBackToLogin }) {
             {success ? <p className="feedback success">{success}</p> : null}
 
             <form onSubmit={handleSubmit} className="login-form">
+              {/* Dados pessoais e organizacionais minimos para criacao da conta. */}
               <label htmlFor="username">Full name</label>
               <input
                 id="username"
@@ -141,6 +152,7 @@ export function CreateAccountPage({ onBackToLogin }) {
                 {isLoading ? "Creating account..." : "Create Account"}
               </button>
 
+              {/* Separador para destacar a acao de retorno ao login. */}
               <div className="separator">
                 <span>Already have an account?</span>
               </div>
@@ -151,6 +163,7 @@ export function CreateAccountPage({ onBackToLogin }) {
             </form>
 
             <footer>
+              {/* Rodape institucional placeholder. */}
               <a href="#">Privacy Policy</a>
               <a href="#">Terms of Service</a>
             </footer>
