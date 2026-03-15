@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DEBUG = True
 
 # load production server from .env
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1,app").split(",")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
