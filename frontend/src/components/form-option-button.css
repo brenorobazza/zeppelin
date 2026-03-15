@@ -1,0 +1,106 @@
+/* Estrutura base */
+.form-option-button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border: 1px solid #cfdbec;
+  border-radius: 12px;
+  padding: 0.95rem 1rem;
+  background: #ffffff;
+  color: #24406a;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+/* Destaca o botão quando o cursor passa sobre uma opção habilitada. */
+.form-option-button:hover:not(:disabled) {
+  border-color: #9dbde6;
+  background: #f7fbff;
+  box-shadow: 0 10px 24px rgba(34, 72, 122, 0.08);
+}
+
+/* Exibe um contorno  quando o foco vem da navegação por teclado. */
+.form-option-button:focus-visible {
+  outline: 3px solid rgba(24, 119, 242, 0.2);
+  outline-offset: 2px;
+}
+
+/* Aplica uma pressão visual suave ao clicar em uma opção habilitada. */
+.form-option-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Reduz o destaque visual e bloqueia interação quando o botão está desabilitado. */
+.form-option-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Define a aparência da opção atualmente selecionada no formulário. */
+.form-option-button.is-selected {
+  border-color: #1877f2;
+  background: linear-gradient(180deg, #2f8df8, #1877f2);
+  color: #ffffff;
+  box-shadow: 0 12px 30px rgba(24, 119, 242, 0.22);
+}
+
+/* Hover quando o botão estiver selecionado */
+/* Destaca título */
+.form-option-button.is-selected:hover:not(:disabled) .form-option-button__title {
+  color: #FFFFFF;
+}
+.form-option-button.is-selected:hover:not(:disabled) {
+  background: linear-gradient(180deg, #3996ff, #247aeb);
+}
+
+/* Destaca descrição quando o botão está selecionado */
+.form-option-button.is-selected:not(:disabled) .form-option-button__description {
+  color: #FFFFFF;
+}
+
+/* Cria uma versão mais compacta com menor padding interno. */
+.form-option-button.is-compact {
+  padding: 0.7rem 0.85rem;
+}
+
+/* Usa cantos menos arredondados para uma aparência mais reta. */
+.form-option-button.is-square {
+  border-radius: 8px;
+}
+
+/* Usa cantos arredondados intermediários para uma variação mais suave. */
+.form-option-button.is-rounded {
+  border-radius: 18px;
+}
+
+/* Usa arredondamento máximo para aparência de pílula. */
+.form-option-button.is-pill {
+  border-radius: 999px;
+}
+
+/* Centraliza o conteúdo interno quando a variação pede alinhamento no centro. */
+.form-option-button.is-center {
+  text-align: center;
+  align-items: center;
+}
+
+/* Ajusta tipografia e leitura da linha principal do botão. */
+.form-option-button__title {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+/* Estiliza o texto auxiliar exibido abaixo do título da opção. */
+.form-option-button__description {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  opacity: 0.82;
+}
+
+/* Reforça a legibilidade da descrição quando a opção está selecionada. */
+.form-option-button.is-selected .form-option-button__description {
+  opacity: 1;
+}

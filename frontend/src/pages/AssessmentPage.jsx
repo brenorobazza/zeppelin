@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { FormOptionButton } from "../components/FormOptionButton";
 import { getStatements, getAdoptedLevels, saveAnswer } from "../services/questionnaire";
 
 export function AssessmentPage() {
@@ -116,18 +117,14 @@ export function AssessmentPage() {
           {options.map((option) => {
             const isSelected = answers[currentQuestion.id] === option.id;
             return (
-              <button
+              <FormOptionButton
                 key={option.id}
-                type="button"
-                className={isSelected ? "btn-primary-ui" : "btn-secondary-ui"}
-                style={{ textAlign: "left", padding: "15px", height: "auto" }}
+                title={`${option.percentage}% - ${option.name}`}
+                description={option.description}
+                selected={isSelected}
+                radius="square"
                 onClick={() => handleSetAnswer(option.id)}
-              >
-                <strong>{option.percentage}% - {option.name}</strong>
-                <p style={{ margin: "5px 0 0 0", fontSize: "0.85rem", opacity: isSelected ? 1 : 0.8 }}>
-                  {option.description}
-                </p>
-              </button>
+              />
             );
           })}
         </div>
