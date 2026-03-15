@@ -112,7 +112,7 @@ class Answer(Base):
     )
     adopted_level_answer = models.ForeignKey(AdoptedLevel, on_delete=models.CASCADE)
     statement_answer = models.ForeignKey(Statement, on_delete=models.CASCADE)
-    comment_answer = models.TextField()
+    comment_answer = models.TextField(null=True, blank=True)
     organization_answer = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
     class meta:

@@ -37,13 +37,17 @@ from rest_framework.views import APIView
 import django_filters.rest_framework
 from django.core.exceptions import ValidationError
 
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request):
+        return  # Para não bloquear chamadas da API do Frontend React
+
 
 class AdoptedLevelViewSet(ModelViewSet):
     queryset = AdoptedLevel.objects.all()
     pagination_class = CustomPagination
     # As respostas sao por organizacao, entao exigimos autenticacao.
-    authentication_classes = [OAuth2Authentication, SessionAuthentication]
-    permission_classes = permission_classes = [Or(IsAdminUser, TokenHasReadWriteScope)]
+    authentication_classes = [OAuth2Authentication, CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
     filter_backends = (
         filters.SearchFilter,
         filters.OrderingFilter,
@@ -63,8 +67,8 @@ class AdoptedLevelViewSet(ModelViewSet):
 class StatementViewSet(ModelViewSet):
     queryset = Statement.objects.all()
     pagination_class = CustomPagination
-    authentication_classes = [OAuth2Authentication, SessionAuthentication]
-    permission_classes = permission_classes = [Or(IsAdminUser, TokenHasReadWriteScope)]
+    authentication_classes = [OAuth2Authentication, CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
     filter_backends = (
         filters.SearchFilter,
         filters.OrderingFilter,
@@ -84,8 +88,8 @@ class StatementViewSet(ModelViewSet):
 class FeedbackQuestionnaireViewSet(ModelViewSet):
     queryset = FeedbackQuestionnaire.objects.all()
     pagination_class = CustomPagination
-    authentication_classes = [OAuth2Authentication, SessionAuthentication]
-    permission_classes = permission_classes = [Or(IsAdminUser, TokenHasReadWriteScope)]
+    authentication_classes = [OAuth2Authentication, CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
     filter_backends = (
         filters.SearchFilter,
         filters.OrderingFilter,
@@ -105,8 +109,8 @@ class FeedbackQuestionnaireViewSet(ModelViewSet):
 class QuestionnaireViewSet(ModelViewSet):
     queryset = Questionnaire.objects.all()
     pagination_class = CustomPagination
-    authentication_classes = [OAuth2Authentication, SessionAuthentication]
-    permission_classes = permission_classes = [Or(IsAdminUser, TokenHasReadWriteScope)]
+    authentication_classes = [OAuth2Authentication, CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
     filter_backends = (
         filters.SearchFilter,
         filters.OrderingFilter,
@@ -126,8 +130,8 @@ class QuestionnaireViewSet(ModelViewSet):
 class QuestionnaireExcelViewSet(ModelViewSet):
     queryset = QuestionnaireExcel.objects.all()
     pagination_class = CustomPagination
-    authentication_classes = [OAuth2Authentication, SessionAuthentication]
-    permission_classes = permission_classes = [Or(IsAdminUser, TokenHasReadWriteScope)]
+    authentication_classes = [OAuth2Authentication, CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
     filter_backends = (
         filters.SearchFilter,
         filters.OrderingFilter,
@@ -147,8 +151,8 @@ class QuestionnaireExcelViewSet(ModelViewSet):
 class AnswerViewSet(ModelViewSet):
     queryset = Answer.objects.all()
     pagination_class = CustomPagination
-    authentication_classes = [OAuth2Authentication, SessionAuthentication]
-    permission_classes = permission_classes = [Or(IsAdminUser, TokenHasReadWriteScope)]
+    authentication_classes = [OAuth2Authentication, CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
     filter_backends = (
         filters.SearchFilter,
         filters.OrderingFilter,
@@ -168,7 +172,7 @@ class AnswerViewSet(ModelViewSet):
 # As views abaixo exp?em a camada analitica do TCC como endpoints REST.
 # Cada endpoint alimenta diretamente uma tela do frontend.
 class QuestionnaireDashboardAnalyticsView(APIView):
-    authentication_classes = [OAuth2Authentication, SessionAuthentication]
+    authentication_classes = [OAuth2Authentication, CsrfExemptSessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):

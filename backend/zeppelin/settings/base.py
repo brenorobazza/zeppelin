@@ -30,6 +30,8 @@ DEBUG = True
 # load production server from .env
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1,app").split(",")
 
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Application definition
