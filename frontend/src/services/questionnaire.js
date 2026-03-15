@@ -1,8 +1,8 @@
 /**
- * Servicos de comunicacao com a API do modulo de Questionario.
+ * Serviços de comunicação com a API do módulo de Questionário.
  */
 
-// Funcao auxiliar para capturar o cookie CSRF do Django
+// Função auxiliar para capturar o cookie CSRF do Django
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== "") {
@@ -18,7 +18,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Busca todos os Niveis de Adocao (Adopted Levels) disponiveis no banco
+// Busca todos os Níveis de Adoção (Adopted Levels) disponíveis no banco
 export async function getAdoptedLevels() {
     const response = await fetch("/api/questionnaire/adoptedlevel/?page_size=100");
 
@@ -30,7 +30,7 @@ export async function getAdoptedLevels() {
     return json.data; // O CustomPagination do projeto usa o campo 'data'
 }
 
-// Busca todas as 71 Perguntas (Statements) oficiais do questionario
+// Busca todas as 71 Perguntas (Statements) oficiais do questionário
 export async function getStatements() {
     const response = await fetch("/api/questionnaire/statement/?page_size=100");
 
@@ -42,10 +42,19 @@ export async function getStatements() {
     return json.data;
 }
 
-// Busca as respostas salvas do usuario/organizacao atual
-export async function getSavedAnswers() {
-    const userOrgId = localStorage.getItem("organization_id") || 1;
-    const response = await fetch(`/api/questionnaire/answer/?organization_answer=${userOrgId}&page_size=1000`);
+// Busca as respostas salvas do usuário/organização atual no ciclo selecionado
+export async function getSavedAnswers(organizationId, questionnaireId) {
+    if (!organizationId) {
+        throw new Error("organizationId is required to fetch saved answers");
+    }
+
+    let url = `/api/questionnaire/answer/?organization_answer=${organizationId}&page_size=1000`;
+    
+    if (questionnaireId) {
+        url += `&questionnaire_answer=${questionnaireId}`;
+    }
+
+    const response = await fetch(url);
 
     if (!response.ok) {
         throw new Error("Failed to fetch saved answers");
@@ -55,16 +64,20 @@ export async function getSavedAnswers() {
     return json.data;
 }
 
-// Salva uma resposta individual do usuario
-export async function saveAnswer(statementId, adoptedLevelId) {
+// Salva uma resposta individual do usuário
+export async function saveAnswer(statementId, adoptedLevelId, organizationId, questionnaireId) {
     const csrftoken = getCookie("csrftoken");
-    const userOrgId = localStorage.getItem("organization_id");
     
+    if (!organizationId) {
+        throw new Error("organizationId is required to save an answer");
+    }
+
     const payload = {
         statement_answer: statementId,
         adopted_level_answer: adoptedLevelId,
         comment_answer: "",
-        organization_answer: userOrgId || 1
+        organization_answer: organizationId,
+        questionnaire_answer: questionnaireId || null
     };
 
     const response = await fetch("/api/questionnaire/answer/", {

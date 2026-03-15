@@ -1,8 +1,8 @@
 export function SettingsPage() {
   return (
     <>
-      {/* Bloco de dados da organizacao.
-          Nesta proposta ele funciona como uma tela corporativa simples de manutencao cadastral. */}
+      {/* Bloco de dados da organização.
+          Nesta proposta ele funciona como uma tela corporativa simples de manutenção cadastral. */}
       <section className="panel">
         <h3>Organization Profile</h3>
         <div className="grid-3">
@@ -21,8 +21,8 @@ export function SettingsPage() {
         </div>
       </section>
 
-      {/* Bloco de dados do usuario atual.
-          Como o foco do TCC nao e administracao de perfis, esta tela foi mantida propositalmente enxuta. */}
+      {/* Bloco de dados do usuário atual.
+          Como o foco do TCC não é administração de perfis, esta tela foi mantida propositalmente enxuta. */}
       <section className="panel">
         <h3>User Profile</h3>
         <div className="grid-3">
@@ -40,8 +40,8 @@ export function SettingsPage() {
           </label>
         </div>
         <div className="btn-row" style={{ marginTop: "1rem" }}>
-          {/* Botoes visuais para compor a experiencia de edicao.
-              Hoje funcionam mais como referencia de interface do que como fluxo completo. */}
+          {/* Botões visuais para compor a experiência de edição.
+              Hoje funcionam mais como referência de interface do que como fluxo completo. */}
           <button className="btn-secondary-ui" type="button">
             Cancel
           </button>

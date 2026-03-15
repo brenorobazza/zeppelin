@@ -962,3 +962,63 @@ User information: uid=0 euid=0 gid=0 egid=0
 [2026-03-15 19:45:53,964: INFO/MainProcess] mingle: searching for neighbors
 [2026-03-15 19:45:55,186: INFO/MainProcess] mingle: all alone
 [2026-03-15 19:45:55,206: INFO/MainProcess] celery@de67cb982aa0 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-15 19:58:59,013: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-15 19:58:59,018: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-15 19:59:00,032: INFO/MainProcess] mingle: all alone
+[2026-03-15 19:59:00,053: INFO/MainProcess] celery@de67cb982aa0 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-15 20:13:04,098: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-15 20:13:04,103: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-15 20:13:05,118: INFO/MainProcess] mingle: all alone
+[2026-03-15 20:13:05,135: INFO/MainProcess] celery@de67cb982aa0 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-15 20:21:05,032: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-15 20:21:05,037: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-15 20:21:06,048: INFO/MainProcess] mingle: all alone
+[2026-03-15 20:21:06,072: INFO/MainProcess] celery@de67cb982aa0 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-15 20:23:30,316: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-15 20:23:30,321: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-15 20:23:31,331: INFO/MainProcess] mingle: all alone
+[2026-03-15 20:23:31,355: INFO/MainProcess] celery@de67cb982aa0 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-15 20:35:29,375: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-15 20:35:29,380: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-15 20:35:30,390: INFO/MainProcess] mingle: all alone
+[2026-03-15 20:35:30,405: INFO/MainProcess] celery@de67cb982aa0 ready.

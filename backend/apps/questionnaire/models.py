@@ -58,7 +58,7 @@ class Statement(Base):
         db_table = "statement"
 
     def __str__(self):
-        return self.code + "-" + self.statement
+        return f"{self.code} - {self.text}"
 
 
 class FeedbackQuestionnaire(Base):

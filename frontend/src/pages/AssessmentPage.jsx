@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { FormOptionButton } from "../components/FormOptionButton";
 import { getStatements, getAdoptedLevels, saveAnswer, getSavedAnswers } from "../services/questionnaire";
 
-export function AssessmentPage() {
+export function AssessmentPage({ organizationId, questionnaireId }) {
   const [questions, setQuestions] = useState([]);
   const [options, setOptions] = useState([]);
   
-  // "current" indica qual pergunta do questionario esta sendo exibida (indice do array).
+  // "current" indica qual pergunta do questionário está sendo exibida (indice do array).
   const [current, setCurrent] = useState(0);
 
-  // Guarda as respostas escolhidas pelo usuario. Formato: { [statementId]: adoptedLevelId }
+  // Guarda as respostas escolhidas pelo usuário. Formato: { [statementId]: adoptedLevelId }
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -19,9 +19,9 @@ export function AssessmentPage() {
       try {
         const fetchedQuestions = await getStatements();
         const fetchedOptions = await getAdoptedLevels();
-        const fetchedAnswers = await getSavedAnswers();
+        const fetchedAnswers = await getSavedAnswers(organizationId, questionnaireId);
         
-        // Ordenar as perguntas pela ordem cronológica do modelo (baseado no codigo, ex: AO.01)
+        // Ordenar as perguntas pela ordem cronológica do modelo (baseado no código, ex: AO.01)
         const sortedQuestions = fetchedQuestions.sort((a, b) => {
            if(a.code < b.code) return -1;
            if(a.code > b.code) return 1;
@@ -31,7 +31,7 @@ export function AssessmentPage() {
         // Ordenar as alternativas de resposta pelo grau de maturidade (0% a 100%)
         const sortedOptions = fetchedOptions.sort((a, b) => a.percentage - b.percentage);
 
-        // Mapear respostas ja dadas e salvas no backend
+        // Mapear respostas já dadas e salvas no backend
         const initialAnswers = {};
         fetchedAnswers.forEach(ans => {
             const statementId = ans.statement_answer?.id;
@@ -45,7 +45,7 @@ export function AssessmentPage() {
         setOptions(sortedOptions);
         setAnswers(initialAnswers);
 
-        // Determinar a primeira pergunta sem resposta para o usuario continuar de onde parou
+        // Determinar a primeira pergunta sem resposta para o usuário continuar de onde parou
         if (sortedQuestions.length > 0) {
             const firstUnansweredIndex = sortedQuestions.findIndex(q => !initialAnswers[q.id]);
             if (firstUnansweredIndex !== -1) {
@@ -55,13 +55,13 @@ export function AssessmentPage() {
             }
         }
       } catch (error) {
-        console.error("Erro ao carregar os dados do questionario:", error);
+        console.error("Erro ao carregar os dados do questionário:", error);
       } finally {
         setLoading(false);
       }
     }
     loadData();
-  }, []);
+  }, [organizationId, questionnaireId]);
 
   const currentQuestion = questions[current];
 
@@ -75,15 +75,15 @@ export function AssessmentPage() {
   async function handleSetAnswer(optionId) {
     if (!currentQuestion) return;
     
-    // Atualiza a UI imediatamente (feedback instantaneo)
+    // Atualiza a UI imediatamente (feedback instantâneo)
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionId }));
 
-    // Dispara a requisicao de salvamento no backend em background
+    // Dispara a requisição de salvamento no backend em background
     try {
-      await saveAnswer(currentQuestion.id, optionId);
+      await saveAnswer(currentQuestion.id, optionId, organizationId, questionnaireId);
     } catch (err) {
       console.error("Falha ao salvar a resposta no auto-save:", err);
-      // Aqui podemos expandir futuramente mostrando um alerta de "erro de conexao" para o usuario
+      // Aqui podemos expandir futuramente mostrando um alerta de "erro de conexão" para o usuário
     }
   }
 
@@ -106,7 +106,7 @@ export function AssessmentPage() {
         }
       }
 
-      // Enter para avancar para a proxima pergunta
+      // Enter para avançar para a próxima pergunta
       if (event.key === "Enter") {
         if (current < questions.length - 1) {
           handleNext();
@@ -139,9 +139,9 @@ export function AssessmentPage() {
 
   return (
     <>
-      {/* Bloco de progresso para o usuario entender em que ponto da avaliacao ele esta */}
+      {/* Bloco de progresso para o usuário entender em que ponto da avaliação ele está */}
       <section className="panel">
-        <h3>Progresso da Avaliacao</h3>
+        <h3>Progresso da Avaliação</h3>
         <p>
           Pergunta {current + 1} de {questions.length}
         </p>
@@ -150,7 +150,7 @@ export function AssessmentPage() {
         </div>
       </section>
 
-      {/* Card principal da pergunta atual (Visualizacao One-by-One / Wizard) */}
+      {/* Card principal da pergunta atual (Visualização One-by-One / Wizard) */}
       <section className="panel">
         <h4 style={{ color: "#666", marginBottom: "0.5rem" }}>
           [{currentQuestion.code}]
@@ -192,7 +192,7 @@ export function AssessmentPage() {
             onClick={handleNext}
             disabled={current === questions.length - 1}
           >
-            {current === questions.length - 1 ? "Finalizar" : "Proximo"}
+            {current === questions.length - 1 ? "Finalizar" : "Próximo"}
           </button>
         </div>
       </section>

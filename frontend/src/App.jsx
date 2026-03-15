@@ -15,8 +15,8 @@ import {
   updateAnalyticsFiltersInUrl
 } from "./services/analytics";
 
-// Le o hash da URL e traduz isso para a "tela atual" da aplicacao.
-// A ideia aqui e manter uma navegacao simples, facil de seguir e suficiente para o TCC.
+// Lê o hash da URL e traduz isso para a "tela atual" da aplicação.
+// A ideia aqui é manter uma navegação simples, fácil de seguir e suficiente para o TCC.
 function getScreenFromHash() {
   const hash = window.location.hash.replace("#", "");
   if (hash === "create-account") return "create-account";
@@ -30,17 +30,17 @@ function getScreenFromHash() {
 }
 
 export default function App() {
-  // Define qual pagina esta visivel neste momento.
+  // Define qual página está visível neste momento.
   const [screen, setScreen] = useState(getScreenFromHash);
 
-  // Guarda apenas o dado minimo do usuario para apresentacao no layout.
+  // Guarda apenas o dado mínimo do usuário para apresentação no layout.
   const [user, setUser] = useState(null);
 
-  // Reune os filtros que controlam a analise: empresa, ciclo e escopo.
+  // Reúne os filtros que controlam a análise: empresa, ciclo e escopo.
   const [analyticsFilters, setAnalyticsFilters] = useState(getAnalyticsFiltersFromUrl);
 
   // Centraliza todos os dados usados pelas telas principais do TCC.
-  // Tambem informa se a tela esta carregando, se esta usando mock e se ocorreu erro.
+  // Também informa se a tela está carregando, se está usando mock e se ocorreu erro.
   const [analytics, setAnalytics] = useState(() => ({
     ...getFallbackAnalyticsBundle(),
     loading: false,
@@ -49,7 +49,7 @@ export default function App() {
   }));
 
   useEffect(() => {
-    // Sincroniza a interface com a URL sempre que o usuario navega manualmente.
+    // Sincroniza a interface com a URL sempre que o usuário navega manualmente.
     function syncNavigationState() {
       setScreen(getScreenFromHash());
       setAnalyticsFilters(getAnalyticsFiltersFromUrl());
@@ -63,7 +63,7 @@ export default function App() {
     };
   }, []);
 
-  // Apenas estas telas dependem do backend analitico do TCC.
+  // Apenas estas telas dependem do backend analítico do TCC.
   const isPlatformScreen = [
     "dashboard",
     "assessment",
@@ -76,11 +76,11 @@ export default function App() {
   useEffect(() => {
     if (!isPlatformScreen || !user) return;
 
-    // Evita atualizar estado quando o usuario troca de tela antes da resposta terminar.
+    // Evita atualizar estado quando o usuário troca de tela antes da resposta terminar.
     let ignore = false;
 
     async function syncAnalytics() {
-      // Mantem o que ja estava em tela e apenas marca que uma nova busca esta em andamento.
+      // Mantém o que já estava em tela e apenas marca que uma nova busca está em andamento.
       setAnalytics((current) => ({
         ...current,
         loading: true,
@@ -88,7 +88,7 @@ export default function App() {
       }));
 
       try {
-        // Busca todas as secoes em paralelo para manter a consistencia entre as telas.
+        // Busca todas as seções em paralelo para manter a consistência entre as telas.
         const bundle = await loadAnalyticsBundle(analyticsFilters);
 
         if (ignore) return;
@@ -102,7 +102,7 @@ export default function App() {
       } catch (error) {
         if (ignore) return;
 
-        // Sessao invalida: volta para o login.
+        // Sessão inválida: volta para o login.
         if (error.status === 401) {
           setUser(null);
           window.location.hash = "login";
@@ -110,7 +110,7 @@ export default function App() {
           return;
         }
 
-        // Falha de backend: entra em modo demonstracao para a interface continuar utilizavel.
+        // Falha de backend: entra em modo demonstração para a interface continuar utilizável.
         setAnalytics({
           ...getFallbackAnalyticsBundle(),
           loading: false,
@@ -149,13 +149,17 @@ export default function App() {
 
   function logout() {
     setUser(null);
+    const resetFilters = { organizationId: "", questionnaireId: "", stageScope: "ci_cd" };
+    setAnalyticsFilters(resetFilters);
+    updateAnalyticsFiltersInUrl(resetFilters);
+    localStorage.removeItem("organization_id");
     goToLogin();
   }
 
   function updateAnalyticsFilters(nextFilters) {
     setAnalyticsFilters((current) => {
       const next = { ...current, ...nextFilters };
-      // Mantem organização e ciclo no URL para suportar histórico por empresa/ciclo.
+      // Mantém organização e ciclo no URL para suportar histórico por empresa/ciclo.
       updateAnalyticsFiltersInUrl(next);
       return next;
     });
@@ -166,7 +170,7 @@ export default function App() {
     return <CreateAccountPage onBackToLogin={goToLogin} />;
   }
 
-  // Mapeia cada tela principal para titulo, subtitulo e componente.
+  // Mapeia cada tela principal para título, subtítulo e componente.
   const pageMap = {
     dashboard: {
       title: "Executive Dashboard",
@@ -182,7 +186,12 @@ export default function App() {
     assessment: {
       title: "Assessment Questionnaire",
       subtitle: "Evaluate CI/CD practices using a standardized maturity scale.",
-      component: <AssessmentPage />
+      component: (
+        <AssessmentPage 
+          organizationId={analyticsFilters.organizationId} 
+          questionnaireId={analyticsFilters.questionnaireId} 
+        />
+      )
     },
     results: {
       title: "Diagnosis Results",
@@ -216,6 +225,7 @@ export default function App() {
     }
   };
 
+
   if (user && pageMap[screen]) {
     const page = pageMap[screen];
     return (
@@ -227,6 +237,9 @@ export default function App() {
         userName={user.username}
         onNavigate={goToScreen}
         onLogout={logout}
+        organizationOptions={user.organizations || []}
+        selectedOrganizationId={analyticsFilters.organizationId}
+        onOrganizationChange={(value) => updateAnalyticsFilters({ organizationId: value, questionnaireId: "" })}
         cycleOptions={analytics.meta.cycleOptions}
         selectedCycleId={analyticsFilters.questionnaireId}
         onCycleChange={(value) => updateAnalyticsFilters({ questionnaireId: value })}
@@ -243,7 +256,20 @@ export default function App() {
     <LoginPage
       onCreateAccountClick={goToCreateAccount}
       onLoginSuccess={(loggedUser) => {
-        setUser({ username: loggedUser?.username || "Alex Silva" });
+        // Inicializa o usuário com seu nome e lista de empresas vinculadas.
+        setUser({ 
+          username: loggedUser?.username || "Alex Silva",
+          organizations: loggedUser?.organizations || []
+        });
+
+        // Se o usuário possuir empresas, define a primeira como o contexto inicial.
+        if (loggedUser?.organizations && loggedUser.organizations.length > 0) {
+          updateAnalyticsFilters({ 
+            organizationId: String(loggedUser.organizations[0].id),
+            questionnaireId: "" // Reseta o ciclo para garantir que não use lixo de sessões anteriores.
+          });
+        }
+
         goToDashboard();
       }}
     />

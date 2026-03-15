@@ -3361,3 +3361,62 @@ order (MRO) for bases Model, PolymorphicModel
 [2026-03-15 22:45:51 +0000] [13] [INFO] Using worker: sync
 [2026-03-15 22:45:51 +0000] [14] [INFO] Booting worker with pid: 14
 [2026-03-15 22:45:51 +0000] [15] [INFO] Booting worker with pid: 15
+[2026-03-15 22:58:56 +0000] [13] [INFO] Starting gunicorn 20.1.0
+[2026-03-15 22:58:56 +0000] [13] [INFO] Listening at: http://0.0.0.0:8000 (13)
+[2026-03-15 22:58:56 +0000] [13] [INFO] Using worker: sync
+[2026-03-15 22:58:56 +0000] [14] [INFO] Booting worker with pid: 14
+[2026-03-15 22:58:56 +0000] [15] [INFO] Booting worker with pid: 15
+[2026-03-15 20:06:46 -0300] [15] [INFO] Worker reloading: /app/backend/apps/questionnaire/api_views.py modified
+[2026-03-15 20:06:46 -0300] [15] [INFO] Worker exiting (pid: 15)
+[2026-03-15 20:06:46 -0300] [14] [INFO] Worker reloading: /app/backend/apps/questionnaire/api_views.py modified
+[2026-03-15 20:06:46 -0300] [14] [INFO] Worker exiting (pid: 14)
+[2026-03-15 23:06:47 +0000] [31] [INFO] Booting worker with pid: 31
+[2026-03-15 23:06:47 +0000] [32] [INFO] Booting worker with pid: 32
+[2026-03-15 23:12:51 +0000] [13] [INFO] Handling signal: term
+[2026-03-15 20:12:51 -0300] [32] [INFO] Worker exiting (pid: 32)
+[2026-03-15 20:12:51 -0300] [31] [INFO] Worker exiting (pid: 31)
+[2026-03-15 23:14:10 +0000] [13] [INFO] Shutting down: Master
+[2026-03-15 23:13:01 +0000] [13] [INFO] Starting gunicorn 20.1.0
+[2026-03-15 23:13:01 +0000] [13] [INFO] Listening at: http://0.0.0.0:8000 (13)
+[2026-03-15 23:13:01 +0000] [13] [INFO] Using worker: sync
+[2026-03-15 23:13:01 +0000] [14] [INFO] Booting worker with pid: 14
+[2026-03-15 23:14:20 +0000] [15] [INFO] Booting worker with pid: 15
+[2026-03-15 23:20:44 +0000] [13] [INFO] Handling signal: term
+[2026-03-15 20:20:44 -0300] [15] [INFO] Worker exiting (pid: 15)
+[2026-03-15 20:20:44 -0300] [14] [INFO] Worker exiting (pid: 14)
+[2026-03-15 23:20:44 +0000] [13] [INFO] Shutting down: Master
+[2026-03-15 23:22:21 +0000] [14] [INFO] Starting gunicorn 20.1.0
+[2026-03-15 23:22:21 +0000] [14] [INFO] Listening at: http://0.0.0.0:8000 (14)
+[2026-03-15 23:22:21 +0000] [14] [INFO] Using worker: sync
+[2026-03-15 23:22:21 +0000] [15] [INFO] Booting worker with pid: 15
+[2026-03-15 23:22:21 +0000] [16] [INFO] Booting worker with pid: 16
+[2026-03-15 20:21:05 -0300] [15] [INFO] Worker reloading: /app/backend/apps/questionnaire/analytics.py modified
+[2026-03-15 20:21:05 -0300] [15] [INFO] Worker exiting (pid: 15)
+[2026-03-15 23:21:05 +0000] [32] [INFO] Booting worker with pid: 32
+[2026-03-15 23:23:18 +0000] [14] [INFO] Handling signal: term
+[2026-03-15 20:23:18 -0300] [32] [INFO] Worker exiting (pid: 32)
+[2026-03-15 20:23:18 -0300] [16] [INFO] Worker exiting (pid: 16)
+[2026-03-15 23:23:18 +0000] [14] [INFO] Shutting down: Master
+[2026-03-15 23:24:46 +0000] [13] [INFO] Starting gunicorn 20.1.0
+[2026-03-15 23:24:46 +0000] [13] [INFO] Listening at: http://0.0.0.0:8000 (13)
+[2026-03-15 23:24:46 +0000] [13] [INFO] Using worker: sync
+[2026-03-15 23:24:46 +0000] [14] [INFO] Booting worker with pid: 14
+[2026-03-15 23:23:28 +0000] [15] [INFO] Booting worker with pid: 15
+[2026-03-15 20:32:27 -0300] [15] [INFO] Worker reloading: /app/backend/apps/questionnaire/analytics.py modified
+[2026-03-15 20:32:27 -0300] [14] [INFO] Worker reloading: /app/backend/apps/questionnaire/analytics.py modified
+[2026-03-15 20:32:27 -0300] [14] [INFO] Worker exiting (pid: 14)
+[2026-03-15 23:32:27 +0000] [31] [INFO] Booting worker with pid: 31
+[2026-03-15 20:35:11 -0300] [15] [INFO] Worker exiting (pid: 15)
+[2026-03-15 23:35:11 +0000] [33] [INFO] Booting worker with pid: 33
+[2026-03-15 23:35:12 +0000] [13] [INFO] Handling signal: term
+[2026-03-15 20:35:12 -0300] [33] [INFO] Worker exiting (pid: 33)
+[2026-03-15 20:35:12 -0300] [31] [INFO] Worker exiting (pid: 31)
+[2026-03-15 23:35:27 +0000] [13] [INFO] Starting gunicorn 20.1.0
+[2026-03-15 23:35:27 +0000] [13] [INFO] Listening at: http://0.0.0.0:8000 (13)
+[2026-03-15 23:35:27 +0000] [13] [INFO] Using worker: sync
+[2026-03-15 23:35:27 +0000] [14] [INFO] Booting worker with pid: 14
+[2026-03-15 23:35:27 +0000] [15] [INFO] Booting worker with pid: 15
+[2026-03-15 23:39:30 +0000] [13] [INFO] Handling signal: term
+[2026-03-15 20:39:30 -0300] [15] [INFO] Worker exiting (pid: 15)
+[2026-03-15 20:39:30 -0300] [14] [INFO] Worker exiting (pid: 14)
+[2026-03-15 23:39:31 +0000] [13] [INFO] Shutting down: Master

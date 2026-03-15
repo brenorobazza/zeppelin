@@ -6,10 +6,10 @@ import {
   fallbackResultsData
 } from "../mock/analyticsFallback";
 
-// A base da API vem do ambiente para permitir troca de servidor sem editar o codigo.
+// A base da API vem do ambiente para permitir troca de servidor sem editar o código.
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
 
-// Padroniza a leitura das respostas do backend e transforma falhas em mensagens legiveis.
+// Padroniza a leitura das respostas do backend e transforma falhas em mensagens legíveis.
 async function parseResponse(response, fallbackMessage) {
   const data = await response.json().catch(() => ({}));
 
@@ -36,7 +36,7 @@ function buildQuery(filters = {}) {
   return query ? `?${query}` : "";
 }
 
-// Busca uma secao especifica da camada analitica.
+// Busca uma seção específica da camada analítica.
 async function fetchAnalyticsSection(section, filters) {
   const query = buildQuery(filters);
   const response = await fetch(`${API_BASE}/questionnaire/analytics/${section}/${query}`, {
@@ -46,7 +46,7 @@ async function fetchAnalyticsSection(section, filters) {
   return parseResponse(response, `Failed to load ${section} analytics.`);
 }
 
-// Ajuda a encontrar rapidamente o score de CI ou CD dentro da lista de estagios.
+// Ajuda a encontrar rapidamente o score de CI ou CD dentro da lista de estágios.
 function findStageScore(stageScores, shortName) {
   return stageScores.find((item) => item.short_name === shortName)?.score || 0;
 }
@@ -64,7 +64,7 @@ function mapInsight(item) {
   };
 }
 
-// Faz a mesma padronizacao para as recomendacoes do roadmap.
+// Faz a mesma padronização para as recomendações do roadmap.
 function mapRecommendation(item) {
   return {
     id: item.id,
@@ -83,7 +83,7 @@ function mapRecommendation(item) {
   };
 }
 
-// Normaliza os cards de score por estagio.
+// Normaliza os cards de score por estágio.
 function mapStageScore(item) {
   return {
     key: item.key,
@@ -158,7 +158,7 @@ function normalizeResults(payload) {
   };
 }
 
-// Agrupa recomendacoes nas trilhas do roadmap para leitura mais estrategica.
+// Agrupa recomendações nas trilhas do roadmap para leitura mais estratégica.
 function normalizeRecommendations(payload) {
   const recommendationTracks = payload.tracks.map((lane) => ({
     key: lane.key,
@@ -182,7 +182,7 @@ function normalizeRecommendations(payload) {
   };
 }
 
-// Resolve pequenas variacoes de nome nas chaves de historico.
+// Resolve pequenas variações de nome nas chaves de histórico.
 function getHistoryCount(cycle, key) {
   if (cycle.adoption_levels[key] != null) return cycle.adoption_levels[key];
 
@@ -201,7 +201,7 @@ function getHistoryCount(cycle, key) {
   return matchedKey ? cycle.adoption_levels[matchedKey] : 0;
 }
 
-// Converte o historico bruto em um formato pronto para comparacao entre ciclos.
+// Converte o histórico bruto em um formato pronto para comparação entre ciclos.
 function normalizeHistory(payload) {
   const historySeries = payload.cycles.map((item, index) => {
     const ci = item.stage_scores.find((stage) => stage.short_name === "CI")?.score || 0;
@@ -260,7 +260,7 @@ function normalizeMeta(dashboardPayload, historyPayload) {
   };
 }
 
-// Carrega todas as secoes em paralelo para manter consistencia entre as paginas.
+// Carrega todas as seções em paralelo para manter consistência entre as páginas.
 export async function loadAnalyticsBundle(filters = {}) {
   const [dashboardPayload, resultsPayload, recommendationsPayload, historyPayload] =
     await Promise.all([
@@ -279,7 +279,7 @@ export async function loadAnalyticsBundle(filters = {}) {
   };
 }
 
-// Entrega um conjunto de dados de demonstracao quando o backend nao estiver disponivel.
+// Entrega um conjunto de dados de demonstração quando o backend não estiver disponível.
 export function getFallbackAnalyticsBundle() {
   return {
     meta: fallbackAnalyticsMeta,
@@ -290,7 +290,7 @@ export function getFallbackAnalyticsBundle() {
   };
 }
 
-// Le da URL o contexto atual da analise.
+// Lê da URL o contexto atual da análise.
 export function getAnalyticsFiltersFromUrl() {
   const url = new URL(window.location.href);
   return {
@@ -300,7 +300,7 @@ export function getAnalyticsFiltersFromUrl() {
   };
 }
 
-// Atualiza a URL sem recarregar a pagina, preservando o contexto escolhido pelo usuario.
+// Atualiza a URL sem recarregar a página, preservando o contexto escolhido pelo usuário.
 export function updateAnalyticsFiltersInUrl(filters) {
   const url = new URL(window.location.href);
   const values = {

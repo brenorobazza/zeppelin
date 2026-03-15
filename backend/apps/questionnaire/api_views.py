@@ -176,10 +176,12 @@ class AnswerViewSet(ModelViewSet):
         organization_answer = serializer.validated_data.get("organization_answer")
         adopted_level_answer = serializer.validated_data.get("adopted_level_answer")
         comment_answer = serializer.validated_data.get("comment_answer", "")
+        questionnaire_answer = serializer.validated_data.get("questionnaire_answer", None)
         
         answer, created = Answer.objects.update_or_create(
             statement_answer=statement_answer,
             organization_answer=organization_answer,
+            questionnaire_answer=questionnaire_answer,
             defaults={
                 "adopted_level_answer": adopted_level_answer,
                 "comment_answer": comment_answer

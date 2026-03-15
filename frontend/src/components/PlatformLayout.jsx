@@ -18,6 +18,9 @@ export function PlatformLayout({
   userName,
   onNavigate,
   onLogout,
+  organizationOptions = [],
+  selectedOrganizationId = "",
+  onOrganizationChange,
   cycleOptions = [],
   selectedCycleId = "",
   onCycleChange,
@@ -27,7 +30,7 @@ export function PlatformLayout({
 }) {
   return (
     <div className="platform-shell">
-      {/* Sidebar com identidade visual e acesso rapido as paginas centrais. */}
+      {/* Sidebar com identidade visual e acesso rápido às páginas centrais. */}
       <aside className="platform-sidebar">
         <div className="platform-logo">
           <img src="/branding/logo-zeppelin.png" alt="Zeppelin" />
@@ -53,10 +56,26 @@ export function PlatformLayout({
       </aside>
 
       <section className="platform-main">
-        {/* Topo com contexto da analise atual: empresa, pagina e ciclo selecionado. */}
+        {/* Topo com contexto da análise atual: empresa, página e ciclo selecionado. */}
         <header className="platform-topbar">
           <div>
-            <p>{organization}</p>
+            {organizationOptions.length > 1 && onOrganizationChange ? (
+              <label className="topbar-control-inline">
+                <select 
+                  value={selectedOrganizationId} 
+                  onChange={(event) => onOrganizationChange(event.target.value)}
+                  className="org-select"
+                >
+                  {organizationOptions.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <p>{organization}</p>
+            )}
             <h1>{title}</h1>
             <small>{subtitle}</small>
           </div>

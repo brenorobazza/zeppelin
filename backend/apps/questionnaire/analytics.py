@@ -9,14 +9,14 @@ from django.utils.text import slugify
 from .models import AdoptedLevel, Answer, Questionnaire
 
 
-# Este servico concentra a camada analitica criada para o TCC.
-# Ele recebe respostas ja persistidas e monta estruturas prontas
+# Este serviço concentra a camada analítica criada para o TCC.
+# Ele recebe respostas já persistidas e monta estruturas prontas
 # para as telas principais: dashboard, results, recommendations e history.
 class QuestionnaireAnalyticsService:
-    # Estagios usados como recorte principal da analise do frontend atual.
+    # Estágios usados como recorte principal da análise do frontend atual.
     CI_CD_STAGE_NAMES = ("Integração Contínua", "Entrega Contínua")
 
-    # Converte nomes completos do banco em siglas amigaveis para a interface.
+    # Converte nomes completos do banco em siglas amigáveis para a interface.
     STAGE_SHORT_NAMES = {
         "Desenvolvimento Ágil": "Agile",
         "Integração Contínua": "CI",
@@ -24,7 +24,7 @@ class QuestionnaireAnalyticsService:
         "P&D como Sistema de Inovação": "Experimentation",
     }
 
-    # Mantem uma ordem previsivel de exibicao dos estagios.
+    # Mantém uma ordem previsível de exibição dos estágios.
     STAGE_ORDER = {
         "Desenvolvimento Ágil": 1,
         "Integração Contínua": 2,
@@ -32,7 +32,7 @@ class QuestionnaireAnalyticsService:
         "P&D como Sistema de Inovação": 4,
     }
 
-    # Agrupa as recomendacoes em trilhas simples de roadmap.
+    # Agrupa as recomendações em trilhas simples de roadmap.
     RECOMMENDATION_TRACKS = (
         {
             "key": "Adopt now",
@@ -51,7 +51,7 @@ class QuestionnaireAnalyticsService:
         },
     )
 
-    # Carrega os niveis de adocao uma unica vez para reutilizacao ao longo dos calculos.
+    # Carrega os níveis de adoção uma única vez para reutilização ao longo dos cálculos.
     def __init__(self):
         self.adopted_levels = list(AdoptedLevel.objects.order_by("percentage"))
 
@@ -90,7 +90,7 @@ class QuestionnaireAnalyticsService:
             "recommendations_preview": recommendations[:3],
         }
 
-    # Monta a resposta detalhada da tela de resultados, com foco em forcas e gargalos.
+    # Monta a resposta detalhada da tela de resultados, com foco em forças e gargalos.
     def get_results_payload(self, request):
         context = self._resolve_context(request)
         answers = context["current_answers"]
@@ -123,7 +123,7 @@ class QuestionnaireAnalyticsService:
             "opportunities": recommendations[:5],
         }
 
-    # Gera o roadmap acionavel a partir das praticas com menor maturidade.
+    # Gera o roadmap acionável a partir das práticas com menor maturidade.
     def get_recommendations_payload(self, request):
         context = self._resolve_context(request)
         answers = context["current_answers"]
@@ -167,7 +167,7 @@ class QuestionnaireAnalyticsService:
             "items": recommendations,
         }
 
-    # Resume a evolucao entre ciclos para responder o que mudou ao longo do tempo.
+    # Resume a evolução entre ciclos para responder o que mudou ao longo do tempo.
     def get_history_payload(self, request):
         context = self._resolve_context(request)
         cycles = self._build_history_cycles(context["all_answers"])
@@ -194,7 +194,7 @@ class QuestionnaireAnalyticsService:
             "cycles": cycles,
         }
 
-    # Resolve todo o contexto necessario: organizacao, escopo, ciclo escolhido e respostas filtradas.
+    # Resolve todo o contexto necessário: organização, escopo, ciclo escolhido e respostas filtradas.
     def _resolve_context(self, request):
         organization = self._resolve_organization(request)
         stage_scope = request.query_params.get("stage_scope", "ci_cd")
@@ -220,36 +220,36 @@ class QuestionnaireAnalyticsService:
             "current_answers": current_answers,
         }
 
-    # Descobre a organizacao a partir da URL ou do usuario autenticado.
+    # Descobre a organização a partir da URL ou do usuário autenticado.
     def _resolve_organization(self, request):
         organization_id = request.query_params.get("organization_id")
-        if organization_id:
-            try:
-                return Organization.objects.get(id=organization_id)
-            except Organization.DoesNotExist as exc:
-                raise ValidationError("organization_id not found") from exc
-
+        
+        # O usuário deve estar obrigatoriamente autenticado.
         if not request.user or not request.user.is_authenticated:
             raise ValidationError(
                 "organization_id is required when the user is not authenticated"
             )
 
-        user_candidates = [request.user.email, request.user.username]
-        for candidate in user_candidates:
-            if not candidate:
-                continue
+        # Identifica todas as organizações às quais o usuário tem acesso (via Employee).
+        user_organizations = Organization.objects.filter(
+            employee_organization_employee__e_mail__iexact=request.user.email
+        ).distinct()
 
-            employee = (
-                Employee.objects.select_related("employee_organization")
-                .filter(e_mail__iexact=candidate)
-                .first()
+        if organization_id:
+            # Trava de Segurança: Verifica se o usuário tem permissão para a empresa solicitada.
+            org = user_organizations.filter(id=organization_id).first()
+            if not org:
+                raise ValidationError(f"Access denied or organization {organization_id} not found.")
+            return org
+
+        # Fallback: Se nenhuma empresa foi pedida na URL, assume a primeira vinculada ao usuário.
+        org = user_organizations.first()
+        if not org:
+            raise ValidationError(
+                "could not resolve any organization for the authenticated user"
             )
-            if employee and employee.employee_organization_id:
-                return employee.employee_organization
-
-        raise ValidationError(
-            "could not resolve the organization for the authenticated user"
-        )
+            
+        return org
 
     # Consulta base com relacionamentos carregados para evitar excesso de queries.
     def _base_answers_queryset(self, organization_id, stage_scope):
@@ -276,7 +276,7 @@ class QuestionnaireAnalyticsService:
 
         return queryset
 
-    # Resolve qual ciclo/questionario deve ser usado na analise atual.
+    # Resolve qual ciclo/questionário deve ser usado na análise atual.
     def _resolve_questionnaire(self, request, organization_id, answers):
         questionnaire_id = request.query_params.get("questionnaire_id")
         if questionnaire_id:
@@ -318,7 +318,7 @@ class QuestionnaireAnalyticsService:
         ]
         return filtered
 
-    # Converte a organizacao para um formato simples e estavel para o frontend.
+    # Converte a organização para um formato simples e estável para o frontend.
     def _serialize_organization(self, organization):
         return {
             "id": organization.id,
@@ -328,7 +328,7 @@ class QuestionnaireAnalyticsService:
             "age_months": organization.age,
         }
 
-    # Converte o ciclo para um resumo legivel usado no topo das telas.
+    # Converte o ciclo para um resumo legível usado no topo das telas.
     def _serialize_cycle(self, questionnaire, answers):
         if questionnaire is None:
             return {
@@ -350,7 +350,7 @@ class QuestionnaireAnalyticsService:
             "answered_practices": len(answers),
         }
 
-    # Calcula a pontuacao media do conjunto de respostas.
+    # Calcula a pontuação média do conjunto de respostas.
     def _score_for_answers(self, answers):
         percentages = [
             answer.adopted_level_answer.percentage
@@ -361,7 +361,7 @@ class QuestionnaireAnalyticsService:
             return 0
         return round(mean(percentages))
 
-    # Traduz um score numerico para o nivel de adocao mais proximo.
+    # Traduz um score numérico para o nível de adoção mais próximo.
     def _resolve_average_level(self, score):
         if not self.adopted_levels:
             return None
@@ -372,7 +372,7 @@ class QuestionnaireAnalyticsService:
         )
         return closest.name
 
-    # Agrupa as respostas por estagio e calcula os indicadores de cada grupo.
+    # Agrupa as respostas por estágio e calcula os indicadores de cada grupo.
     def _build_stage_scores(self, answers):
         grouped = defaultdict(list)
         for answer in answers:
@@ -416,7 +416,7 @@ class QuestionnaireAnalyticsService:
             key=lambda item: self.STAGE_ORDER.get(item["name"], 999),
         )
 
-    # Conta quantas praticas caem em cada nivel de adocao.
+    # Conta quantas práticas caem em cada nível de adoção.
     def _build_adoption_distribution(self, answers):
         total = len(answers) or 1
         grouped = defaultdict(list)
@@ -440,7 +440,7 @@ class QuestionnaireAnalyticsService:
 
         return items
 
-    # Seleciona as praticas mais maduras para a secao de pontos fortes.
+    # Seleciona as práticas mais maduras para a seção de pontos fortes.
     def _build_strengths(self, answers, limit=3):
         candidates = [
             answer for answer in answers if answer.adopted_level_answer.percentage >= 60
@@ -453,7 +453,7 @@ class QuestionnaireAnalyticsService:
         )
         return [self._serialize_insight(answer) for answer in candidates[:limit]]
 
-    # Seleciona as praticas mais criticas para a secao de gargalos.
+    # Seleciona as práticas mais críticas para a seção de gargalos.
     def _build_bottlenecks(self, answers, limit=3):
         candidates = [
             answer for answer in answers if answer.adopted_level_answer.percentage < 60
@@ -466,7 +466,7 @@ class QuestionnaireAnalyticsService:
         )
         return [self._serialize_insight(answer) for answer in candidates[:limit]]
 
-    # Agrupa resultados por tema/dimensao para facilitar a leitura do diagnostico.
+    # Agrupa resultados por tema/dimensão para facilitar a leitura do diagnóstico.
     def _build_dimension_results(self, answers):
         grouped = defaultdict(list)
         for answer in answers:
@@ -521,7 +521,7 @@ class QuestionnaireAnalyticsService:
             key=lambda item: (-item["score"], item["name"]),
         )
 
-    # Gera recomendacoes para praticas abaixo do limiar de 60 por cento.
+    # Gera recomendações para práticas abaixo do limiar de 60 por cento.
     def _build_recommendations(self, answers):
         items = []
         candidates = [
@@ -596,7 +596,7 @@ class QuestionnaireAnalyticsService:
 
         return items
 
-    # Reconstroi a linha do tempo dos ciclos da organizacao.
+    # Reconstrói a linha do tempo dos ciclos da organização.
     def _build_history_cycles(self, answers):
         grouped = defaultdict(list)
         questionnaires = {}
@@ -672,13 +672,13 @@ class QuestionnaireAnalyticsService:
 
         return cycles
 
-    # Calcula a diferenca entre o ultimo e o penultimo ciclo para um campo especifico.
+    # Calcula a diferença entre o último e o penúltimo ciclo para um campo específico.
     def _history_delta(self, cycles, field_name):
         if len(cycles) < 2:
             return 0
         return cycles[-1][field_name] - cycles[-2][field_name]
 
-    # Padroniza o formato de forcas e gargalos para o frontend.
+    # Padroniza o formato de forças e gargalos para o frontend.
     def _serialize_insight(self, answer):
         stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
         return {
@@ -695,7 +695,7 @@ class QuestionnaireAnalyticsService:
             "evidence": self._insight_evidence(answer),
         }
 
-    # Define qual texto de evidencia sera mostrado para cada insight.
+    # Define qual texto de evidência será mostrado para cada insight.
     def _insight_evidence(self, answer):
         if answer.comment_answer:
             return answer.comment_answer.strip()
@@ -734,12 +734,12 @@ class QuestionnaireAnalyticsService:
             f"with score {weakest['score']}."
         )
 
-    # Cria um titulo curto para cada recomendacao do roadmap.
+    # Cria um título curto para cada recomendação do roadmap.
     def _recommendation_title(self, answer):
         code = answer.statement_answer.code or "Practice"
         return f"{code} - strengthen this practice"
 
-    # Gera a explicacao principal da recomendacao em linguagem natural.
+    # Gera a explicação principal da recomendação em linguagem natural.
     def _recommendation_copy(self, answer, track):
         statement = self._compact_statement(
             answer.statement_answer.text,
@@ -758,7 +758,7 @@ class QuestionnaireAnalyticsService:
             "with documented expectations and wider team adoption."
         )
 
-    # Resume o impacto esperado caso a recomendacao seja executada.
+    # Resume o impacto esperado caso a recomendação seja executada.
     def _expected_impact(self, answer, track):
         stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
         short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
@@ -772,7 +772,7 @@ class QuestionnaireAnalyticsService:
             "consistent process-level capability."
         )
 
-    # Sugere a primeira acao concreta para colocar a recomendacao em pratica.
+    # Sugere a primeira ação concreta para colocar a recomendação em prática.
     def _next_step(self, answer, track):
         code = answer.statement_answer.code or "the selected practice"
         if track == "Adopt now":
