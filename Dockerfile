@@ -13,7 +13,7 @@ WORKDIR /app
 COPY ./backend/ .
 COPY .env .
 COPY supervisord.conf .
-# Copy requirements.txt
+
 COPY requirements.txt .
 # Instala dependências do sistema
 RUN apt-get update && apt-get install -y \

@@ -890,3 +890,39 @@ User information: uid=0 euid=0 gid=0 egid=0
 [2026-03-15 01:12:02,321: INFO/MainProcess] mingle: searching for neighbors
 [2026-03-15 01:12:03,333: INFO/MainProcess] mingle: all alone
 [2026-03-15 01:12:03,350: INFO/MainProcess] celery@1536ec7266e3 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-15 01:16:38,484: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-15 01:16:38,490: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-15 01:16:39,505: INFO/MainProcess] mingle: all alone
+[2026-03-15 01:16:39,527: INFO/MainProcess] celery@e8c61d7a6593 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-15 16:35:28,755: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-15 16:35:28,760: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-15 16:34:10,716: INFO/MainProcess] mingle: all alone
+[2026-03-15 16:34:10,734: INFO/MainProcess] celery@de67cb982aa0 ready.
+/usr/local/lib/python3.10/site-packages/celery/platforms.py:841: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+[2026-03-15 16:54:20,927: INFO/MainProcess] Connected to redis://redis:6379/0
+[2026-03-15 16:54:20,931: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-15 16:54:22,658: INFO/MainProcess] mingle: all alone
+[2026-03-15 16:54:22,678: INFO/MainProcess] celery@de67cb982aa0 ready.

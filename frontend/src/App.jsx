@@ -34,7 +34,7 @@ export default function App() {
   const [screen, setScreen] = useState(getScreenFromHash);
 
   // Guarda apenas o dado minimo do usuario para apresentacao no layout.
-  const [user, setUser] = useState({ username: "Alex Silva" });
+  const [user, setUser] = useState(null);
 
   // Reune os filtros que controlam a analise: empresa, ciclo e escopo.
   const [analyticsFilters, setAnalyticsFilters] = useState(getAnalyticsFiltersFromUrl);
@@ -74,7 +74,7 @@ export default function App() {
   ].includes(screen);
 
   useEffect(() => {
-    if (!isPlatformScreen) return;
+    if (!isPlatformScreen || !user) return;
 
     // Evita atualizar estado quando o usuario troca de tela antes da resposta terminar.
     let ignore = false;
@@ -104,7 +104,7 @@ export default function App() {
 
         // Sessao invalida: volta para o login.
         if (error.status === 401) {
-          setUser({ username: "Alex Silva" });
+          setUser(null);
           window.location.hash = "login";
           setScreen("login");
           return;
@@ -125,9 +125,8 @@ export default function App() {
     return () => {
       ignore = true;
     };
-  }, [isPlatformScreen, analyticsFilters.organizationId, analyticsFilters.questionnaireId, analyticsFilters.stageScope]);
+  }, [isPlatformScreen, user, analyticsFilters.organizationId, analyticsFilters.questionnaireId, analyticsFilters.stageScope]);
 
-  // Funcoes de navegacao pequenas deixam o fluxo mais facil de entender e manter.
   function goToLogin() {
     window.location.hash = "login";
     setScreen("login");
@@ -149,7 +148,7 @@ export default function App() {
   }
 
   function logout() {
-    setUser({ username: "Alex Silva" });
+    setUser(null);
     goToLogin();
   }
 
@@ -217,7 +216,7 @@ export default function App() {
     }
   };
 
-  if (pageMap[screen]) {
+  if (user && pageMap[screen]) {
     const page = pageMap[screen];
     return (
       <PlatformLayout

@@ -16,8 +16,8 @@ class Command(BaseCommand):
 
         # 1. Popular Adopted Levels
         adopted_levels = [
-            {"name": "Not adopted", "percentage": 0, "description": "A pratica nao e adotada."},
-            {"name": "Abandoned", "percentage": 10, "description": "A pratica foi tentada, mas abandonada."},
+            {"name": "Not adopted", "percentage": 0, "description": "A prática nao é adotada."},
+            {"name": "Abandoned", "percentage": 10, "description": "A prática foi tentada, mas abandonada."},
             {"name": "Realized at project/product level", "percentage": 30, "description": "Adotado em alguns projetos ou produtos específicos."},
             {"name": "Realized at process level", "percentage": 60, "description": "Padronizado como um processo dentro da organizacao."},
             {"name": "Institutionalized", "percentage": 100, "description": "Totalmente institucionalizado e enraizado na cultura da empresa."},

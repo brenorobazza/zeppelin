@@ -12,14 +12,14 @@ export function AssessmentPage() {
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // Carrega perguntas e opcoes da API ao abrir a tela
+  // Carrega perguntas e opções da API ao abrir a tela
   useEffect(() => {
     async function loadData() {
       try {
         const fetchedQuestions = await getStatements();
         const fetchedOptions = await getAdoptedLevels();
         
-        // Ordenar as perguntas pela ordem cronologica do modelo (baseado no codigo, ex: AO.01)
+        // Ordenar as perguntas pela ordem cronológica do modelo (baseado no codigo, ex: AO.01)
         const sortedQuestions = fetchedQuestions.sort((a, b) => {
            if(a.code < b.code) return -1;
            if(a.code > b.code) return 1;
