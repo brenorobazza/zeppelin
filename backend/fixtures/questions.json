@@ -1,0 +1,357 @@
+[
+  {
+    "code": "AO.01",
+    "stage": "Agile R&D Organization",
+    "text": "Papéis envolvidos no processo de desenvolvimento ágil (e.g., Scrum Master, Product Owner, Desenvolvedor e Tester) existem na organização."
+  },
+  {
+    "code": "AO.02",
+    "stage": "Agile R&D Organization",
+    "text": "As equipes dos projetos incluem um papel (p.ex., product owner) que é responsável por representar o cliente e participa ativamente nos projetos."
+  },
+  {
+    "code": "AO.03",
+    "stage": "Agile R&D Organization",
+    "text": "As equipes dos projetos são pequenas (geralmente entre 4 e 8 desenvolvedores), autoorganizadas e multidisciplinares."
+  },
+  {
+    "code": "AO.04",
+    "stage": "Agile R&D Organization",
+    "text": "Com o intuito de entregar valor para o cliente, os requisitos são definidos e priorizados de acordo com as necessidades do cliente, são periodicamente revisados e mudanças são absorvidas em iterações do processo de desenvolvimento."
+  },
+  {
+    "code": "AO.05",
+    "stage": "Agile R&D Organization",
+    "text": "O escopo do projeto é definido gradativamente, utilizando-se um Product Backlog (ou artefato equivalente)."
+  },
+  {
+    "code": "AO.06",
+    "stage": "Agile R&D Organization",
+    "text": "Estimativas de esforço são realizadas pela equipe de desenvolvimento (ou em conjunto com ela) considerando-se tarefas curtas para implementar um conjunto de requisitos selecionados (e não o projeto como um todo)."
+  },
+  {
+    "code": "AO.07",
+    "stage": "Agile R&D Organization",
+    "text": "Estimativas de custos são estabelecidas com base nas estimativas de esforço, considerando-se o esforço necessário para implementar um conjunto de requisitos selecionados (e não o projeto como um todo)."
+  },
+  {
+    "code": "AO.08",
+    "stage": "Agile R&D Organization",
+    "text": "O processo de desenvolvimento é ágil, sendo realizado de forma iterativa, em ciclos curtos (p.ex., duas semanas), nos quais requisitos do produto definidos em um Product Backlog (ou artefato equivalente) são selecionados, registrados em um Sprint Backlog (ou artefato equivalente) e desenvolvidos."
+  },
+  {
+    "code": "AO.09",
+    "stage": "Agile R&D Organization",
+    "text": "Há critérios de aceitação claros para os requisitos do software e eles são usados para avaliar os artefatos produzidos (p.ex., funcionalidades) e definir se estão \"prontos\"."
+  },
+  {
+    "code": "AO.10",
+    "stage": "Agile R&D Organization",
+    "text": "O cliente recebe novas versões do produto com frequência (após um ou mais ciclos curtos de desenvolvimento), incluindo novas funcionalidades definidas de acordo com as necessidades do cliente."
+  },
+  {
+    "code": "AO.11",
+    "stage": "Agile R&D Organization",
+    "text": "O processo de desenvolvimento (ágil) está alinhado ao negócio da organização e isso é percebido pela entrega de valor ao cliente e pela sua satisfação com o produto entregue."
+  },
+  {
+    "code": "AO.12",
+    "stage": "Agile R&D Organization",
+    "text": "Há pelo menos um papel (p.ex., tech lead, analista de qualidade) responsável pela qualidade dos artefatos produzidos e do produto final."
+  },
+  {
+    "code": "AO.13",
+    "stage": "Agile R&D Organization",
+    "text": "Os stakeholders do projeto (incluindo o cliente) são estimulados a refletir sobre seu sobre seu papel e suas responsabilidades no projeto."
+  },
+  {
+    "code": "AO.14",
+    "stage": "Agile R&D Organization",
+    "text": "A equipe do projeto possui autonomia para tomar decisões técnicas no projeto."
+  },
+  {
+    "code": "AO.15",
+    "stage": "Agile R&D Organization",
+    "text": "Frequentemente (p.ex.., diariamente, a cada dois ou três dias) a equipe se reúne e reflete sobre o progresso do desenvolvimento no âmbito do que foi definido para o time-box corrente e ajusta as tarefas se necessário (p.ex., em daily ou stand up meetings)."
+  },
+  {
+    "code": "AO.16",
+    "stage": "Agile R&D Organization",
+    "text": "A equipe se reúne com frequência ao longo do projeto para discutir sobre melhorias no produto, no processo ou nas ferramentas usadas (p.ex., em reunião de retrospectiva)."
+  },
+  {
+    "code": "AO.17",
+    "stage": "Agile R&D Organization",
+    "text": "A equipe se reúne com frequência ao longo do projeto para discutir sobre melhorias nas competências dos membros da equipe (p.ex., em reunião de retrospectiva)."
+  },
+  {
+    "code": "AO.18",
+    "stage": "Agile R&D Organization",
+    "text": "O processo de desenvolvimento (ágil) é avaliado e melhorado continuamente."
+  },
+  {
+    "code": "AO.19",
+    "stage": "Agile R&D Organization",
+    "text": "Boas práticas de programação são adotadas (p.ex., código coletivo, codificação padronizada, programação em pares, revisão de código)."
+  },
+  {
+    "code": "AO.20",
+    "stage": "Agile R&D Organization",
+    "text": "Boas práticas de testes (p.ex., teste automatizado, desenvolvimento orientado a testes) são adotadas."
+  },
+  {
+    "code": "AO.21",
+    "stage": "Agile R&D Organization",
+    "text": "Dados são coletados para métricas que permitem avaliar aspectos da qualidade dos artefatos produzidos e do produto (p.ex., complexidade ciclomática, quantidade de code smells)."
+  },
+  {
+    "code": "AO.22",
+    "stage": "Agile R&D Organization",
+    "text": "Dados são coletados para métricas que permitem avaliar aspectos de desempenho do processo de desenvolvimento ágil (p.ex., work in progress, velocidade)."
+  },
+  {
+    "code": "AO.23",
+    "stage": "Agile R&D Organization",
+    "text": "Dados produzidos ao longo do processo de desenvolvimento (p.ex., data de início das tarefas, data de conclusão das tarefas, pontos de história das tarefas) são armazenados em um (ou mais) repositório de dados."
+  },
+  {
+    "code": "AO.24",
+    "stage": "Agile R&D Organization",
+    "text": "Dados armazenados no(s) repositório(s) de dados são usados para melhorar o produto e o processo de desenvolvimento ágil."
+  },
+  {
+    "code": "AO.25",
+    "stage": "Agile R&D Organization",
+    "text": "Decisões nos projetos são tomadas com base em dados presentes no(s) repositório(s) de dados."
+  },
+  {
+    "code": "AO.26",
+    "stage": "Agile R&D Organization",
+    "text": "São realizadas ações para compartilhar conhecimento relevante ao desenvolvimento ágil (p.ex., palestras internas, tutoriais, repositórios de conhecimento, implementação de guilds)."
+  },
+  {
+    "code": "CI.01",
+    "stage": "Continuous Integration",
+    "text": "A arquitetura do software é modular de forma a permitir a realização de testes automatizados."
+  },
+  {
+    "code": "CI.02",
+    "stage": "Continuous Integration",
+    "text": "A arquitetura do software é modular de forma a permitir a realização de builds automatizados."
+  },
+  {
+    "code": "CI.03",
+    "stage": "Continuous Integration",
+    "text": "O código é integrado constantemente e automaticamente."
+  },
+  {
+    "code": "CI.04",
+    "stage": "Continuous Integration",
+    "text": "Testes são executados automaticamente, periodicamente (p.ex., sempre que código novo é integrado), em um ambiente de teste, para verificar a qualidade do código (p.ex., cobertura, corretude)."
+  },
+  {
+    "code": "CI.05",
+    "stage": "Continuous Integration",
+    "text": "Testes automatizados são utilizados para avaliar se o software implementado atende os requisitos estabelecidos."
+  },
+  {
+    "code": "CI.06",
+    "stage": "Continuous Integration",
+    "text": "Builds ocorrem frequentemente e automaticamente."
+  },
+  {
+    "code": "CI.07",
+    "stage": "Continuous Integration",
+    "text": "Builds são cancelados caso um ou mais testes falhem."
+  },
+  {
+    "code": "CI.08",
+    "stage": "Continuous Integration",
+    "text": "Há controle de versões dos artefatos de software (p.ex., código, teste, scripts etc.) em um repositório."
+  },
+  {
+    "code": "CI.09",
+    "stage": "Continuous Integration",
+    "text": "Boas práticas de check in são aplicadas no trunk de desenvolvimento (p.ex., uso de ferramentas como GitFlow e Toogle Feature)."
+  },
+  {
+    "code": "CI.10",
+    "stage": "Continuous Integration",
+    "text": "Há práticas que permitem que organizações ou pessoas externas ao projeto atuem na implementação do produto (i.e., produzam e integrem código ao produto sendo desenvolvido)."
+  },
+  {
+    "code": "CI.11",
+    "stage": "Continuous Integration",
+    "text": "Dados são coletados para métricas que permitem avaliar o processo de integração contínua (p.ex., quantidade de builds cancelados, quantidade de integrações de código realizadas)."
+  },
+  {
+    "code": "CI.12",
+    "stage": "Continuous Integration",
+    "text": "Dados produzidos nos ambientes de integração contínua (p.ex., data das builds, quantidade de testes executados e percentual de cobertura)  são armazenados em um (ou mais) repositório de dados."
+  },
+  {
+    "code": "CI.13",
+    "stage": "Continuous Integration",
+    "text": "O processo de integração contínua (incluindo a realização de testes automatizados) é avaliado e melhorado continuamente."
+  },
+  {
+    "code": "CI.14",
+    "stage": "Continuous Integration",
+    "text": "Dados armazenados no(s) repositório(s) de dados são usados para melhorar o produto e o processo de integração contínua."
+  },
+  {
+    "code": "CI.15",
+    "stage": "Continuous Integration",
+    "text": "São realizadas ações para compartilhar conhecimento relacionado a integração contínua (p.ex., palestras internas, tutoriais, repositórios de conhecimento, implementação de guilds)."
+  },
+  {
+    "code": "CD.01",
+    "stage": "Continuous Deployment",
+    "text": "Os principais clientes/consumidores são identificados e participam do processo de desenvolvimento, influenciando nas funcionalidades que serão produzidas e entregues."
+  },
+  {
+    "code": "CD.02",
+    "stage": "Continuous Deployment",
+    "text": "Há um fluxo de informação claro entre Desenvolvimento e Operação, permitindo que novas funcionalidades desenvolvidas entrem em operação automaticamente."
+  },
+  {
+    "code": "CD.03",
+    "stage": "Continuous Deployment",
+    "text": "A entrega de novas funcionalidades é realizada automaticamente e por releases."
+  },
+  {
+    "code": "CD.04",
+    "stage": "Continuous Deployment",
+    "text": "Há um fluxo de informação claro entre Operação e Negócio, permitindo que novas necessidades dos clientes/consumidores e oportunidades de negócio sejam identificadas a partir da entrega de novas funcionalidades."
+  },
+  {
+    "code": "CD.05",
+    "stage": "Continuous Deployment",
+    "text": "A arquitetura do software permite realizar entrega (deploy) de funcionalidades de forma independente."
+  },
+  {
+    "code": "CD.06",
+    "stage": "Continuous Deployment",
+    "text": "Clientes/consumidores recebem novas funcionalidades com frequência, inclusive, em ciclos mais curtos do que o time-box que costuma ser estabelecido no processo de desenvolvimento."
+  },
+  {
+    "code": "CD.07",
+    "stage": "Continuous Deployment",
+    "text": "Os clientes podem realizar testes no produto assim que é feita a entrega (deploy) de novas funcionalidades."
+  },
+  {
+    "code": "CD.08",
+    "stage": "Continuous Deployment",
+    "text": "O modelo de negócio da organização é constantemente avaliado e revisto (quando necessário) com base em informações dos clientes/consumidores."
+  },
+  {
+    "code": "CD.09",
+    "stage": "Continuous Deployment",
+    "text": "Estratégias de marketing são constantemente avaliadas e revistas (quando necessário) com base em informações dos lead customers (clientes/consumidores mais relevantes para a organização)."
+  },
+  {
+    "code": "CD.10",
+    "stage": "Continuous Deployment",
+    "text": "Estratégias de venda são constantemente avaliadas e revistas (quando necessário) com base em informações dos lead customers (clientes/consumidores mais relevantes para a organização)."
+  },
+  {
+    "code": "CD.11",
+    "stage": "Continuous Deployment",
+    "text": "Alinhamento entre o desenvolvimento dos produtos e o negócio da organização é mantido através de verificações contínuas, em ciclos curtos."
+  },
+  {
+    "code": "CD.12",
+    "stage": "Continuous Deployment",
+    "text": "Alinhamento entre o desenvolvimento dos produtos e o negócio da organização é mantido através de verificações contínuas, em ciclos curtos e baseando-se em dados."
+  },
+  {
+    "code": "CD.13",
+    "stage": "Continuous Deployment",
+    "text": "Dados são coletados para métricas que permitem avaliar o processo de entrega contínua  (p.ex., quantidade de releases, densidade de defeitos nas releases)."
+  },
+  {
+    "code": "CD.14",
+    "stage": "Continuous Deployment",
+    "text": "Dados produzidos nos ambientes de entrega contínua (p.ex., data das releases e versão do software entregue)  são armazenados em um (ou mais) repositório de dados."
+  },
+  {
+    "code": "CD.15",
+    "stage": "Continuous Deployment",
+    "text": "O  processo de entrega contínua é avaliado e melhorado continuamente."
+  },
+  {
+    "code": "CD.16",
+    "stage": "Continuous Deployment",
+    "text": "Dados armazenados no(s) repositório(s) de dados são usados para melhorar o produto e o processo de entrega contínua."
+  },
+  {
+    "code": "CD.17",
+    "stage": "Continuous Deployment",
+    "text": "São realizadas ações para compartilhar conhecimento relacionado a entrega contínua (e.g., palestras internas, tutoriais, repositórios de conhecimento, implementação de guilds)."
+  },
+  {
+    "code": "IS.01",
+    "stage": "R&D as an Experiment System",
+    "text": "Feedbacks (dados e opiniões) dos clientes/consumidores são capturados contínua e automaticamente e armazenados em um (ou mais) repositório de dados de clientes/consumidores."
+  },
+  {
+    "code": "IS.02",
+    "stage": "R&D as an Experiment System",
+    "text": "Feedbacks (dados e opiniões) dos clientes/consumidores (capturados contínua e automaticamente) são utilizados para melhorar os produtos (melhorar funcionalidades existentes e identificar novas)."
+  },
+  {
+    "code": "IS.03",
+    "stage": "R&D as an Experiment System",
+    "text": "A organização identifica novas oportunidades de negócio com base nos feedbacks capturados automaticamente dos clientes/consumidores."
+  },
+  {
+    "code": "IS.04",
+    "stage": "R&D as an Experiment System",
+    "text": "Feedbacks (dados e opiniões) dos clientes/consumidores (capturados contínua e automaticamente) são usados para experimentação e inovação."
+  },
+  {
+    "code": "IS.05",
+    "stage": "R&D as an Experiment System",
+    "text": "Experimentos (p.ex., testes A/B) são realizados com os clientes/consumidores para melhorar os produtos."
+  },
+  {
+    "code": "IS.06",
+    "stage": "R&D as an Experiment System",
+    "text": "São adotadas tecnologias (p.ex.., tecnologias de nuvem) que permitem potencializar a experimentação."
+  },
+  {
+    "code": "IS.07",
+    "stage": "R&D as an Experiment System",
+    "text": "A organização continuamente experimenta novas tecnologias e metodologias."
+  },
+  {
+    "code": "IS.08",
+    "stage": "R&D as an Experiment System",
+    "text": "Há um fluxo de informação claro entre o nível estratégico e a área de desenvolvimento da organização, permitindo que dados dos clientes/consumidores (capturados contínua e automaticamente) sejam utilizados de forma alinhada na tomada de decisões técnicas e de negócio."
+  },
+  {
+    "code": "IS.09",
+    "stage": "R&D as an Experiment System",
+    "text": "Dados do repositório de dados dos clientes/consumidores são usados na tomada de decisão pela área de desenvolvimento de software."
+  },
+  {
+    "code": "IS.10",
+    "stage": "R&D as an Experiment System",
+    "text": "Dados do(s) repositório(a) de dados dos clientes/consumidores são usados na tomada de decisão pela área de negócios."
+  },
+  {
+    "code": "IS.11",
+    "stage": "R&D as an Experiment System",
+    "text": "Alinhamento entre o desenvolvimento dos produtos e o negócio da organização é mantido através de verificações contínuas, em ciclos curtos e baseando-se em dados do(s) repositório(a) de dados dos clientes/consumidores."
+  },
+  {
+    "code": "IS.12",
+    "stage": "R&D as an Experiment System",
+    "text": "O processo de experimentação contínua é avaliado e melhorado continuamente."
+  },
+  {
+    "code": "IS.13",
+    "stage": "R&D as an Experiment System",
+    "text": "São realizadas ações para compartilhar conhecimento relacionado a experimentação  contínua (e.g., palestras internas, tutoriais, repositórios de conhecimento, implementação de guilds)."
+  }
+]

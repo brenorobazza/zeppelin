@@ -78,23 +78,30 @@ Follow these steps to get the entire Zeppelin stack (Backend + Frontend) running
    make superuser
    ```
 
-4. **Access Zeppelin**
+4. **Populate the database with the official questionnaire data**
+   ```bash
+   make seed-db
+   ```
+   *This will load the 71 official questions and required adoption levels into the database.*
+
+5. **Access Zeppelin**
    * **Web Interface (React):** [http://localhost:5173](http://localhost:5173)
    * **API / Backend Admin:** [http://localhost:8000/admin](http://localhost:8000/admin)
 
-5. **Stop the environment**
+6. **Stop the environment**
    ```bash
    make down
    ```
 
 ---
 
-## Makefile Commands
+## ⚙️ Makefile Commands
 
 | Command          | Description                                                                 |
 | ---------------- | --------------------------------------------------------------------------- |
 | `make up`        | Starts the containers defined in `docker-compose.yml`.                      |
 | `make build`     | Rebuilds images and starts containers. Use after adding new dependencies.   |
+| `make seed-db`   | Populates the database with the 71 official questions and base structures.  |
 | `make down`      | Stops and removes containers, preserving volumes.                           |
 | `make destroy`   | Stops and removes containers **and** volumes (erases persisted data).       |
 | `make superuser` | Runs the `create_superuser.sh` script to create a Django admin.             |

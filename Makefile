@@ -11,6 +11,9 @@ destroy:
 superuser:
 	sh ./create_superuser.sh
 
+seed-db:
+	docker-compose exec app python manage.py load_initial_questionnaire_data
+
 frontend-install:
 	cd frontend && npm install
 frontend-dev:
