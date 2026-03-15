@@ -95,6 +95,31 @@ export function AssessmentPage() {
     setCurrent((value) => Math.max(0, value - 1));
   }
 
+  // Atalhos de teclado para melhorar a UX no preenchimento do Zeppelin.
+  useEffect(() => {
+    function handleKeyDown(event) {
+      // Teclas 1 a 5 para as alternativas de maturidade
+      if (event.key >= "1" && event.key <= "5") {
+        const index = parseInt(event.key, 10) - 1;
+        if (options[index]) {
+          handleSetAnswer(options[index].id);
+        }
+      }
+
+      // Enter para avancar para a proxima pergunta
+      if (event.key === "Enter") {
+        if (current < questions.length - 1) {
+          handleNext();
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [questions, options, current]);
+
   if (loading) {
     return (
       <section className="panel">
