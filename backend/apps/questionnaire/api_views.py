@@ -168,6 +168,26 @@ class AnswerViewSet(ModelViewSet):
             return AnswerReadSerializer
         return AnswerWriteSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        statement_answer = serializer.validated_data.get("statement_answer")
+        organization_answer = serializer.validated_data.get("organization_answer")
+        adopted_level_answer = serializer.validated_data.get("adopted_level_answer")
+        comment_answer = serializer.validated_data.get("comment_answer", "")
+        
+        answer, created = Answer.objects.update_or_create(
+            statement_answer=statement_answer,
+            organization_answer=organization_answer,
+            defaults={
+                "adopted_level_answer": adopted_level_answer,
+                "comment_answer": comment_answer
+            }
+        )
+        
+        return Response(self.get_serializer(answer).data, status=201 if created else 200)
+
 
 # As views abaixo exp?em a camada analitica do TCC como endpoints REST.
 # Cada endpoint alimenta diretamente uma tela do frontend.

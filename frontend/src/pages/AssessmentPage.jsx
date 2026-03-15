@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { FormOptionButton } from "../components/FormOptionButton";
-import { getStatements, getAdoptedLevels, saveAnswer } from "../services/questionnaire";
+import { getStatements, getAdoptedLevels, saveAnswer, getSavedAnswers } from "../services/questionnaire";
 
 export function AssessmentPage() {
   const [questions, setQuestions] = useState([]);
@@ -19,6 +19,7 @@ export function AssessmentPage() {
       try {
         const fetchedQuestions = await getStatements();
         const fetchedOptions = await getAdoptedLevels();
+        const fetchedAnswers = await getSavedAnswers();
         
         // Ordenar as perguntas pela ordem cronológica do modelo (baseado no codigo, ex: AO.01)
         const sortedQuestions = fetchedQuestions.sort((a, b) => {
@@ -30,8 +31,29 @@ export function AssessmentPage() {
         // Ordenar as alternativas de resposta pelo grau de maturidade (0% a 100%)
         const sortedOptions = fetchedOptions.sort((a, b) => a.percentage - b.percentage);
 
+        // Mapear respostas ja dadas e salvas no backend
+        const initialAnswers = {};
+        fetchedAnswers.forEach(ans => {
+            const statementId = ans.statement_answer?.id;
+            const levelId = ans.adopted_level_answer?.id;
+            if (statementId && levelId) {
+                initialAnswers[statementId] = levelId;
+            }
+        });
+
         setQuestions(sortedQuestions);
         setOptions(sortedOptions);
+        setAnswers(initialAnswers);
+
+        // Determinar a primeira pergunta sem resposta para o usuario continuar de onde parou
+        if (sortedQuestions.length > 0) {
+            const firstUnansweredIndex = sortedQuestions.findIndex(q => !initialAnswers[q.id]);
+            if (firstUnansweredIndex !== -1) {
+                setCurrent(firstUnansweredIndex);
+            } else {
+                setCurrent(sortedQuestions.length - 1);
+            }
+        }
       } catch (error) {
         console.error("Erro ao carregar os dados do questionario:", error);
       } finally {

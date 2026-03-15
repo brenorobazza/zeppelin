@@ -3341,3 +3341,18 @@ order (MRO) for bases Model, PolymorphicModel
 [2026-03-15 19:21:07 -0300] [15] [INFO] Worker exiting (pid: 15)
 [2026-03-15 19:21:07 -0300] [14] [INFO] Worker exiting (pid: 14)
 [2026-03-15 22:21:07 +0000] [13] [INFO] Shutting down: Master
+[2026-03-15 22:21:29 +0000] [13] [INFO] Starting gunicorn 20.1.0
+[2026-03-15 22:21:29 +0000] [13] [INFO] Listening at: http://0.0.0.0:8000 (13)
+[2026-03-15 22:21:29 +0000] [13] [INFO] Using worker: sync
+[2026-03-15 22:21:29 +0000] [14] [INFO] Booting worker with pid: 14
+[2026-03-15 22:21:29 +0000] [15] [INFO] Booting worker with pid: 15
+[2026-03-15 19:44:41 -0300] [14] [INFO] Worker reloading: /app/backend/apps/questionnaire/models.py modified
+[2026-03-15 19:44:41 -0300] [15] [INFO] Worker reloading: /app/backend/apps/questionnaire/models.py modified
+[2026-03-15 19:44:41 -0300] [14] [INFO] Worker exiting (pid: 14)
+[2026-03-15 22:44:41 +0000] [31] [INFO] Booting worker with pid: 31
+[2026-03-15 19:45:37 -0300] [15] [INFO] Worker exiting (pid: 15)
+[2026-03-15 22:45:37 +0000] [33] [INFO] Booting worker with pid: 33
+[2026-03-15 22:45:40 +0000] [13] [INFO] Handling signal: term
+[2026-03-15 19:45:40 -0300] [31] [INFO] Worker exiting (pid: 31)
+[2026-03-15 19:45:40 -0300] [33] [INFO] Worker exiting (pid: 33)
+[2026-03-15 22:45:41 +0000] [13] [INFO] Shutting down: Master

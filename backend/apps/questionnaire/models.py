@@ -119,4 +119,4 @@ class Answer(Base):
         db_table = "answer"
 
     def __str__(self):
-        return self.statement.code
+        return self.statement_answer.code

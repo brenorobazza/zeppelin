@@ -20,7 +20,7 @@ function getCookie(name) {
 
 // Busca todos os Niveis de Adocao (Adopted Levels) disponiveis no banco
 export async function getAdoptedLevels() {
-    const response = await fetch("/api/questionnaire/adoptedlevel/?limit=100");
+    const response = await fetch("/api/questionnaire/adoptedlevel/?page_size=100");
 
     if (!response.ok) {
         throw new Error("Failed to fetch adopted levels");
@@ -32,10 +32,23 @@ export async function getAdoptedLevels() {
 
 // Busca todas as 71 Perguntas (Statements) oficiais do questionario
 export async function getStatements() {
-    const response = await fetch("/api/questionnaire/statement/?limit=100");
+    const response = await fetch("/api/questionnaire/statement/?page_size=100");
 
     if (!response.ok) {
         throw new Error("Failed to fetch statements");
+    }
+
+    const json = await response.json();
+    return json.data;
+}
+
+// Busca as respostas salvas do usuario/organizacao atual
+export async function getSavedAnswers() {
+    const userOrgId = localStorage.getItem("organization_id") || 1;
+    const response = await fetch(`/api/questionnaire/answer/?organization_answer=${userOrgId}&page_size=1000`);
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch saved answers");
     }
 
     const json = await response.json();
