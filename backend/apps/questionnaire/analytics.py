@@ -1,7 +1,6 @@
 from collections import defaultdict
 from statistics import mean
 
-from apps.employee.models import Employee
 from apps.organization.models import Organization
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
@@ -223,7 +222,7 @@ class QuestionnaireAnalyticsService:
     # Descobre a organização a partir da URL ou do usuário autenticado.
     def _resolve_organization(self, request):
         organization_id = request.query_params.get("organization_id")
-        
+
         # O usuário deve estar obrigatoriamente autenticado.
         if not request.user or not request.user.is_authenticated:
             raise ValidationError(
@@ -239,7 +238,9 @@ class QuestionnaireAnalyticsService:
             # Trava de Segurança: Verifica se o usuário tem permissão para a empresa solicitada.
             org = user_organizations.filter(id=organization_id).first()
             if not org:
-                raise ValidationError(f"Access denied or organization {organization_id} not found.")
+                raise ValidationError(
+                    f"Access denied or organization {organization_id} not found."
+                )
             return org
 
         # Fallback: Se nenhuma empresa foi pedida na URL, assume a primeira vinculada ao usuário.
@@ -248,7 +249,7 @@ class QuestionnaireAnalyticsService:
             raise ValidationError(
                 "could not resolve any organization for the authenticated user"
             )
-            
+
         return org
 
     # Consulta base com relacionamentos carregados para evitar excesso de queries.

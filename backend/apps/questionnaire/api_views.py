@@ -23,10 +23,8 @@ from .serializers import (
 from .analytics import QuestionnaireAnalyticsService
 
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_condition import Or
+from rest_framework.permissions import IsAuthenticated
 from oauth2_provider.contrib.rest_framework import (
-    TokenHasReadWriteScope,
     OAuth2Authentication,
 )
 from rest_framework.authentication import SessionAuthentication
@@ -36,6 +34,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import django_filters.rest_framework
 from django.core.exceptions import ValidationError
+
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
@@ -171,24 +170,28 @@ class AnswerViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         statement_answer = serializer.validated_data.get("statement_answer")
         organization_answer = serializer.validated_data.get("organization_answer")
         adopted_level_answer = serializer.validated_data.get("adopted_level_answer")
         comment_answer = serializer.validated_data.get("comment_answer", "")
-        questionnaire_answer = serializer.validated_data.get("questionnaire_answer", None)
-        
+        questionnaire_answer = serializer.validated_data.get(
+            "questionnaire_answer", None
+        )
+
         answer, created = Answer.objects.update_or_create(
             statement_answer=statement_answer,
             organization_answer=organization_answer,
             questionnaire_answer=questionnaire_answer,
             defaults={
                 "adopted_level_answer": adopted_level_answer,
-                "comment_answer": comment_answer
-            }
+                "comment_answer": comment_answer,
+            },
         )
-        
-        return Response(self.get_serializer(answer).data, status=201 if created else 200)
+
+        return Response(
+            self.get_serializer(answer).data, status=201 if created else 200
+        )
 
 
 # As views abaixo exp?em a camada analitica do TCC como endpoints REST.

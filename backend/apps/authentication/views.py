@@ -117,10 +117,13 @@ class LoginApiView(APIView):
         login(request, user)
 
         # Identifica todas as empresas vinculadas ao e-mail do usuário.
-        employees = Employee.objects.filter(e_mail__iexact=user.email).select_related("employee_organization")
+        employees = Employee.objects.filter(e_mail__iexact=user.email).select_related(
+            "employee_organization"
+        )
         organizations = [
             {"id": e.employee_organization.id, "name": e.employee_organization.name}
-            for e in employees if e.employee_organization
+            for e in employees
+            if e.employee_organization
         ]
 
         return Response(
