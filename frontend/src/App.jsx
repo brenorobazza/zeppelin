@@ -149,7 +149,7 @@ export default function App() {
 
   function logout() {
     setUser(null);
-    const resetFilters = { organizationId: "", questionnaireId: "", stageScope: "ci_cd" };
+    const resetFilters = { organizationId: "", questionnaireId: "", stageScope: "all" };
     setAnalyticsFilters(resetFilters);
     updateAnalyticsFiltersInUrl(resetFilters);
     localStorage.removeItem("organization_id");
@@ -173,8 +173,8 @@ export default function App() {
   // Mapeia cada tela principal para título, subtítulo e componente.
   const pageMap = {
     dashboard: {
-      title: "Executive Dashboard",
-      subtitle: "What is the overall result of the calibrated Zeppelin diagnosis for this cycle?",
+      title: "Executive Diagnostic View",
+      subtitle: "Current maturity position in the CSE evolution path for the selected assessment cycle.",
       component: (
         <DashboardPage
           onNavigate={goToScreen}
@@ -195,8 +195,14 @@ export default function App() {
     },
     results: {
       title: "Diagnosis Results",
-      subtitle: "Where are the main strengths and bottlenecks across CI and CD practices?",
-      component: <ResultsPage data={analytics.results} loading={analytics.loading} />
+      subtitle: "Analytical view of CSE practice adoption, progression constraints and improvement opportunities.",
+      component: (
+        <ResultsPage
+          data={analytics.results}
+          overview={analytics.dashboard}
+          loading={analytics.loading}
+        />
+      )
     },
     recommendations: {
       title: "Improvement Roadmap",

@@ -14,6 +14,9 @@ superuser:
 seed-db:
 	docker-compose exec app python manage.py load_initial_questionnaire_data
 
+seed-demo:
+	docker-compose exec app python manage.py load_demo_questionnaire_data
+
 frontend-install:
 	cd frontend && npm install
 frontend-dev:

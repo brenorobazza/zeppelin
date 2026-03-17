@@ -69,8 +69,8 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         self.service.adopted_levels = [
             make_level(1, "Not adopted", 0),
             make_level(2, "Abandoned", 10),
-            make_level(3, "Project/Product level", 30),
-            make_level(4, "Process level", 60),
+            make_level(3, "Realized at project/product level", 30),
+            make_level(4, "Realized at process level", 60),
             make_level(5, "Institutionalized", 100),
         ]
 
@@ -82,7 +82,7 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
                 1,
                 "CI.01",
                 "Every commit triggers an automated build.",
-                "Integração Contínua",
+                "Continuous Integration",
                 "Integration practices",
                 self.service.adopted_levels[0],
                 self.old_cycle,
@@ -92,7 +92,7 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
                 2,
                 "CD.01",
                 "Deployment packages are produced automatically.",
-                "Entrega Contínua",
+                "Continuous Deployment",
                 "Delivery practices",
                 self.service.adopted_levels[2],
                 self.old_cycle,
@@ -104,7 +104,7 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
                 3,
                 "CI.02",
                 "Automated tests are executed consistently in the pipeline.",
-                "Integração Contínua",
+                "Continuous Integration",
                 "Integration practices",
                 self.service.adopted_levels[4],
                 self.current_cycle,
@@ -114,7 +114,7 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
                 4,
                 "CD.02",
                 "Production deployments are repeatable and observable.",
-                "Entrega Contínua",
+                "Continuous Deployment",
                 "Delivery practices",
                 self.service.adopted_levels[1],
                 self.current_cycle,
@@ -137,7 +137,10 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         self.assertEqual(recommendations[1]["track"], "Adopt now")
         self.assertEqual(recommendations[1]["current_level"], "Abandoned")
         self.assertEqual(recommendations[2]["track"], "Consolidate")
-        self.assertEqual(recommendations[2]["current_level"], "Project/Product level")
+        self.assertEqual(
+            recommendations[2]["current_level"],
+            "Realized at project/product level",
+        )
 
     def test_build_history_cycles_summarizes_two_cycles(self):
         cycles = self.service._build_history_cycles(self.all_answers)

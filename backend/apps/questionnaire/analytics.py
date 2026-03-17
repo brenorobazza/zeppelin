@@ -13,24 +13,50 @@ from .models import AdoptedLevel, Answer, Questionnaire
 # para as telas principais: dashboard, results, recommendations e history.
 class QuestionnaireAnalyticsService:
     # Estágios usados como recorte principal da análise do frontend atual.
-    CI_CD_STAGE_NAMES = ("Integração Contínua", "Entrega Contínua")
+    CI_CD_STAGE_NAMES = (
+        "Continuous Integration",
+        "Continuous Deployment",
+        "Integracao Continua",
+        "Entrega Continua",
+    )
 
-    # Converte nomes completos do banco em siglas amigáveis para a interface.
+    # Converte nomes completos do banco em siglas amigaveis para a interface.
     STAGE_SHORT_NAMES = {
-        "Desenvolvimento Ágil": "Agile",
-        "Integração Contínua": "CI",
-        "Entrega Contínua": "CD",
-        "P&D como Sistema de Inovação": "Experimentation",
+        "Traditional Development": "Traditional",
+        "Agile R&D Organization": "Agile",
+        "Continuous Integration": "CI",
+        "Continuous Deployment": "CD",
+        "R&D as an Experiment System": "Experimentation",
+        "Desenvolvimento Agil": "Agile",
+        "Integracao Continua": "CI",
+        "Entrega Continua": "CD",
+        "Experimentacao Continua": "Experimentation",
     }
 
-    # Mantém uma ordem previsível de exibição dos estágios.
+    # Mantem uma ordem previsivel de exibicao dos estagios.
     STAGE_ORDER = {
-        "Desenvolvimento Ágil": 1,
-        "Integração Contínua": 2,
-        "Entrega Contínua": 3,
-        "P&D como Sistema de Inovação": 4,
+        "Traditional Development": 0,
+        "Agile R&D Organization": 1,
+        "Continuous Integration": 2,
+        "Continuous Deployment": 3,
+        "R&D as an Experiment System": 4,
+        "Desenvolvimento Agil": 1,
+        "Integracao Continua": 2,
+        "Entrega Continua": 3,
+        "Experimentacao Continua": 4,
     }
 
+    DIMENSION_LABELS = {
+        "Traditional Development": "Traditional Development",
+        "Agile R&D Organization": "Agile Development",
+        "Continuous Integration": "Continuous Integration",
+        "Continuous Deployment": "Continuous Deployment",
+        "R&D as an Experiment System": "Continuous Experimentation",
+        "Desenvolvimento Agil": "Agile Development",
+        "Integracao Continua": "Continuous Integration",
+        "Entrega Continua": "Continuous Deployment",
+        "Experimentacao Continua": "Continuous Experimentation",
+    }
     # Agrupa as recomendações em trilhas simples de roadmap.
     RECOMMENDATION_TRACKS = (
         {
@@ -196,7 +222,7 @@ class QuestionnaireAnalyticsService:
     # Resolve todo o contexto necessário: organização, escopo, ciclo escolhido e respostas filtradas.
     def _resolve_context(self, request):
         organization = self._resolve_organization(request)
-        stage_scope = request.query_params.get("stage_scope", "ci_cd")
+        stage_scope = request.query_params.get("stage_scope", "all")
         all_answers = list(self._base_answers_queryset(organization.id, stage_scope))
         questionnaire = self._resolve_questionnaire(
             request,
@@ -471,12 +497,7 @@ class QuestionnaireAnalyticsService:
     def _build_dimension_results(self, answers):
         grouped = defaultdict(list)
         for answer in answers:
-            dimension = getattr(
-                getattr(answer.statement_answer, "pe_element", None),
-                "dimension",
-                None,
-            )
-            dimension_name = getattr(dimension, "name", None) or "Unclassified"
+            dimension_name = self._resolve_dimension_name(answer)
             grouped[dimension_name].append(answer)
 
         items = []
@@ -548,15 +569,6 @@ class QuestionnaireAnalyticsService:
             track = "Adopt now" if level.percentage <= 10 else "Consolidate"
             priority = "High" if level.percentage <= 10 else "Medium"
 
-            if level.percentage == 0:
-                current_level = "Not adopted"
-            elif level.percentage <= 10:
-                current_level = "Abandoned"
-            elif level.percentage <= 30:
-                current_level = "Project/Product level"
-            else:
-                current_level = level.name
-
             items.append(
                 {
                     "id": answer.id,
@@ -566,18 +578,10 @@ class QuestionnaireAnalyticsService:
                         stage_name,
                         stage_name,
                     ),
-                    "dimension_name": getattr(
-                        getattr(
-                            answer.statement_answer.pe_element,
-                            "dimension",
-                            None,
-                        ),
-                        "name",
-                        None,
-                    ),
+                    "dimension_name": self._resolve_dimension_name(answer),
                     "track": track,
                     "priority": priority,
-                    "current_level": current_level,
+                    "current_level": level.name,
                     "title": self._recommendation_title(answer),
                     "recommendation": self._recommendation_copy(
                         answer,
@@ -713,6 +717,36 @@ class QuestionnaireAnalyticsService:
         if dimension_name:
             return f"{answer.adopted_level_answer.name} in {dimension_name}."
         return answer.adopted_level_answer.name
+
+    # Resolve a dimensao exibida na interface mesmo quando o catalogo
+    # oficial informa apenas o stage da pergunta.
+    def _resolve_dimension_name(self, answer):
+        dimension = getattr(
+            getattr(answer.statement_answer, "pe_element", None),
+            "dimension",
+            None,
+        )
+        if getattr(dimension, "name", None):
+            return dimension.name
+
+        stage_name = getattr(
+            getattr(answer.statement_answer, "sth_stage", None),
+            "name",
+            None,
+        )
+        if stage_name:
+            return self.DIMENSION_LABELS.get(stage_name, stage_name)
+
+        statement_code = getattr(answer.statement_answer, "code", "") or ""
+        if statement_code.startswith("AO."):
+            return "Agile Development"
+        if statement_code.startswith("CI."):
+            return "Continuous Integration"
+        if statement_code.startswith("CD."):
+            return "Continuous Deployment"
+        if statement_code.startswith("IS."):
+            return "Continuous Experimentation"
+        return "Unclassified"
 
     # Encurta textos longos para caber melhor nos cards e listas.
     def _compact_statement(self, text, limit=110):

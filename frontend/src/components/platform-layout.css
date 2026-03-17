@@ -408,6 +408,37 @@
   margin-top: 0.85rem;
 }
 
+.assessment-context-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 1rem;
+}
+
+.context-card {
+  border: 1px solid #dbe6f4;
+  border-radius: 14px;
+  background: #f8fbff;
+  padding: 0.85rem;
+}
+
+.context-card span {
+  display: block;
+  color: #60708a;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.context-card strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: #142946;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
 .executive-score-card {
   border: 1px solid #d9e4f5;
   border-radius: 18px;
@@ -448,11 +479,42 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.journey-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .stage-card {
   border: 1px solid #dbe6f4;
   border-radius: 16px;
   background: #f8fbff;
   padding: 0.95rem;
+}
+
+.stage-card--journey {
+  display: grid;
+  gap: 0.8rem;
+  align-content: start;
+}
+
+.stage-card--missing {
+  background: #fbfcfe;
+  border-style: dashed;
+}
+
+.stage-card__step {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.26rem 0.6rem;
+  background: #eaf2ff;
+  color: #1b5fc8;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .stage-card__head {
@@ -504,6 +566,51 @@
 
 .level-row__meta small {
   color: #61708a;
+}
+
+.stage-profile-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.stage-profile-item {
+  border-top: 1px solid #e2e9f5;
+  padding-top: 0.75rem;
+}
+
+.stage-profile-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.stage-profile-item--missing {
+  opacity: 0.72;
+}
+
+.stage-profile-item__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 0.55rem;
+}
+
+.stage-profile-item__head h4 {
+  margin: 0;
+  color: #142946;
+}
+
+.stage-profile-item__head span {
+  display: block;
+  margin-top: 0.22rem;
+  color: #60708a;
+  font-size: 0.84rem;
+}
+
+.stage-profile-item__head strong {
+  color: #123764;
+  font-size: 1.3rem;
+  line-height: 1;
 }
 
 .dimension-grid {
@@ -784,6 +891,7 @@
   .executive-hero,
   .two-column-grid,
   .stage-grid,
+  .journey-grid,
   .roadmap-grid,
   .history-cycles {
     grid-template-columns: 1fr;
@@ -797,6 +905,10 @@
   }
 
   .dimension-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assessment-context-grid {
     grid-template-columns: 1fr;
   }
 

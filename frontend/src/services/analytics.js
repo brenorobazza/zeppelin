@@ -39,7 +39,7 @@ function buildQuery(filters = {}) {
 // Busca uma seção específica da camada analítica.
 async function fetchAnalyticsSection(section, filters) {
   const query = buildQuery(filters);
-  const response = await fetch(`${API_BASE}/questionnaire/analytics/${section}/${query}`, {
+  const response = await fetch(`${API_BASE}/api/questionnaire/analytics/${section}/${query}`, {
     credentials: "include"
   });
 
@@ -189,8 +189,16 @@ function getHistoryCount(cycle, key) {
   const aliases = {
     "not-adopted": ["nao-adotada", "not-adopted"],
     abandoned: ["abandonada", "abandoned"],
-    project: ["realizada-no-nivel-de-projeto-produto", "project-product-level"],
-    process: ["realizada-no-nivel-de-processo", "process-level"],
+    project: [
+      "realizada-no-nivel-de-projeto-produto",
+      "project-product-level",
+      "realized-at-project-product-level"
+    ],
+    process: [
+      "realizada-no-nivel-de-processo",
+      "process-level",
+      "realized-at-process-level"
+    ],
     institutionalized: ["institucionalizada", "institutionalized"]
   };
 
@@ -296,7 +304,7 @@ export function getAnalyticsFiltersFromUrl() {
   return {
     organizationId: url.searchParams.get("organization_id") || "",
     questionnaireId: url.searchParams.get("questionnaire_id") || "",
-    stageScope: url.searchParams.get("stage_scope") || "ci_cd"
+    stageScope: url.searchParams.get("stage_scope") || "all"
   };
 }
 
@@ -306,7 +314,7 @@ export function updateAnalyticsFiltersInUrl(filters) {
   const values = {
     organization_id: filters.organizationId,
     questionnaire_id: filters.questionnaireId,
-    stage_scope: filters.stageScope && filters.stageScope !== "ci_cd" ? filters.stageScope : ""
+    stage_scope: filters.stageScope && filters.stageScope !== "all" ? filters.stageScope : ""
   };
 
   Object.entries(values).forEach(([key, value]) => {

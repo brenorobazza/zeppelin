@@ -53,6 +53,8 @@ export const fallbackDashboardData = {
   maturitySnapshot,
   stageScores,
   adoptionLevels,
+  strengths: maturitySnapshot.strengths.map(mapInsight),
+  bottlenecks: maturitySnapshot.bottlenecks.map(mapInsight),
   recommendationsPreview: recommendations.slice(0, 3).map(mapRecommendation),
   overallDelta: historySeries[historySeries.length - 1].overall - historySeries[historySeries.length - 2].overall
 };
@@ -62,7 +64,9 @@ export const fallbackResultsData = {
   summary: {
     answeredPractices: maturitySnapshot.answeredPractices,
     stageGap: Math.abs(maturitySnapshot.ciScore - maturitySnapshot.cdScore),
-    calibratedProfile: maturitySnapshot.calibratedProfile
+    calibratedProfile: maturitySnapshot.calibratedProfile,
+    overallScore: maturitySnapshot.overallScore,
+    overallLevel: resolveLevelFromScore(maturitySnapshot.overallScore)
   },
   stageScores,
   practiceThemes,

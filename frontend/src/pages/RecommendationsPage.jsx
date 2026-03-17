@@ -76,12 +76,12 @@ export function RecommendationsPage({ data, loading }) {
             </li>
             <li className="insight-item">
               <small>Gap analysis rule</small>
-              <h4>Project/Product level</h4>
+              <h4>Realized at project/product level</h4>
               <p>Trigger consolidation-oriented recommendations to scale the practice to process level.</p>
             </li>
             <li className="insight-item">
               <small>Gap analysis rule</small>
-              <h4>Process level or Institutionalized</h4>
+              <h4>Realized at process level or Institutionalized</h4>
               <p>No recommendation is triggered, because the practice is treated as already mature.</p>
             </li>
           </ul>

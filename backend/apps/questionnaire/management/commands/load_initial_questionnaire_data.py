@@ -1,6 +1,7 @@
-import os
 import json
 import logging
+import os
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from apps.questionnaire.models import AdoptedLevel, Statement
@@ -49,7 +50,7 @@ class Command(BaseCommand):
         ]
 
         for level_data in adopted_levels:
-            AdoptedLevel.objects.get_or_create(
+            AdoptedLevel.objects.update_or_create(
                 name=level_data["name"],
                 defaults={
                     "percentage": level_data["percentage"],
@@ -83,7 +84,7 @@ class Command(BaseCommand):
 
         stage_instances = {}
         for stage_data in sth_stages:
-            stage, _ = Stage.objects.get_or_create(
+            stage, _ = Stage.objects.update_or_create(
                 name=stage_data["name"],
                 defaults={"description": stage_data["description"]},
             )
@@ -107,8 +108,9 @@ class Command(BaseCommand):
             for q in questions:
                 stage_fk = stage_instances.get(q["stage"])
 
-                _, created = Statement.objects.get_or_create(
-                    code=q["code"], defaults={"text": q["text"], "sth_stage": stage_fk}
+                _, created = Statement.objects.update_or_create(
+                    code=q["code"],
+                    defaults={"text": q["text"], "sth_stage": stage_fk},
                 )
                 if created:
                     statements_created += 1
