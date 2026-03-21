@@ -75,7 +75,7 @@ class Questionnaire(Base):
     """
 
     applied_date = models.DateTimeField(null=True, blank=True)
-    document = models.FileField(upload_to="documents/%Y/%m/%d/")
+    document = models.FileField(upload_to="documents/%Y/%m/%d/", null=True, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     employee_questionnaire = models.ForeignKey(
         Employee,

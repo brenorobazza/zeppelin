@@ -64,6 +64,31 @@ export async function getSavedAnswers(organizationId, questionnaireId) {
     return json.data;
 }
 
+// Cria um novo ciclo de questionário em branco
+export async function createQuestionnaireCycle() {
+    const csrftoken = getCookie("csrftoken");
+    
+    const payload = {
+        applied_date: new Date().toISOString()
+    };
+
+    const response = await fetch("/api/questionnaire/questionnaire/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to create a new questionnaire cycle");
+    }
+
+    const data = await response.json();
+    return data;
+}
+
 // Salva uma resposta individual do usuário
 export async function saveAnswer(statementId, adoptedLevelId, organizationId, questionnaireId) {
     const csrftoken = getCookie("csrftoken");

@@ -307,14 +307,7 @@ class QuestionnaireAnalyticsService:
     def _resolve_questionnaire(self, request, organization_id, answers):
         questionnaire_id = request.query_params.get("questionnaire_id")
         if questionnaire_id:
-            questionnaire = (
-                Questionnaire.objects.filter(
-                    id=questionnaire_id,
-                    answer__organization_answer_id=organization_id,
-                )
-                .distinct()
-                .first()
-            )
+            questionnaire = Questionnaire.objects.filter(id=questionnaire_id).first()
             if questionnaire is None:
                 raise ValidationError("questionnaire_id not found")
             return questionnaire

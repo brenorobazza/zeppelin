@@ -34,7 +34,14 @@ export default function App() {
   const [screen, setScreen] = useState(getScreenFromHash);
 
   // Guarda apenas o dado mínimo do usuário para apresentação no layout.
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem("zeppelin_user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Reúne os filtros que controlam a análise: empresa, ciclo e escopo.
   const [analyticsFilters, setAnalyticsFilters] = useState(getAnalyticsFiltersFromUrl);
@@ -47,6 +54,12 @@ export default function App() {
     usingMockData: true,
     error: ""
   }));
+
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  function triggerRefresh() {
+    setRefreshKey(k => k + 1);
+  }
 
   useEffect(() => {
     // Sincroniza a interface com a URL sempre que o usuário navega manualmente.
@@ -125,7 +138,7 @@ export default function App() {
     return () => {
       ignore = true;
     };
-  }, [isPlatformScreen, user, analyticsFilters.organizationId, analyticsFilters.questionnaireId, analyticsFilters.stageScope]);
+  }, [isPlatformScreen, user, analyticsFilters.organizationId, analyticsFilters.questionnaireId, analyticsFilters.stageScope, refreshKey]);
 
   function goToLogin() {
     window.location.hash = "login";
@@ -149,6 +162,7 @@ export default function App() {
 
   function logout() {
     setUser(null);
+    localStorage.removeItem("zeppelin_user");
     const resetFilters = { organizationId: "", questionnaireId: "", stageScope: "all" };
     setAnalyticsFilters(resetFilters);
     updateAnalyticsFiltersInUrl(resetFilters);
@@ -187,13 +201,25 @@ export default function App() {
       title: "Assessment Questionnaire",
       subtitle: "Evaluate CI/CD practices using a standardized maturity scale.",
       component: (
-        <AssessmentPage 
-          organizationId={analyticsFilters.organizationId} 
-          questionnaireId={analyticsFilters.questionnaireId} 
+        <AssessmentPage
+          organizationId={analyticsFilters.organizationId}
+          questionnaireId={analyticsFilters.questionnaireId}
+          organizations={user?.organizations || []}
+          cycleOptions={analytics.meta?.cycleOptions || []}
+          organizationName={analytics.meta?.organizationName}
+          onChangeOrganization={(id) => updateAnalyticsFilters({ organizationId: id, questionnaireId: "" })}
+          onCycleCreated={(id) => updateAnalyticsFilters({ questionnaireId: id })}
+          onViewResults={(qId) => {
+            updateAnalyticsFilters({ questionnaireId: qId });
+            goToScreen("results");
+          }}
+          onFinish={() => {
+            triggerRefresh();
+            goToScreen("results");
+          }}
         />
       )
-    },
-    results: {
+    },    results: {
       title: "Diagnosis Results",
       subtitle: "Analytical view of CSE practice adoption, progression constraints and improvement opportunities.",
       component: (
@@ -263,10 +289,12 @@ export default function App() {
       onCreateAccountClick={goToCreateAccount}
       onLoginSuccess={(loggedUser) => {
         // Inicializa o usuário com seu nome e lista de empresas vinculadas.
-        setUser({ 
+        const newUser = { 
           username: loggedUser?.username || "Alex Silva",
           organizations: loggedUser?.organizations || []
-        });
+        };
+        setUser(newUser);
+        localStorage.setItem("zeppelin_user", JSON.stringify(newUser));
 
         // Se o usuário possuir empresas, define a primeira como o contexto inicial.
         if (loggedUser?.organizations && loggedUser.organizations.length > 0) {
