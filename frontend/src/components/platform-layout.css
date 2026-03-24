@@ -415,6 +415,10 @@
   margin-top: 1rem;
 }
 
+.assessment-context-grid--compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .context-card {
   border: 1px solid #dbe6f4;
   border-radius: 14px;
@@ -471,6 +475,40 @@
   padding-top: 0.6rem;
   border-top: 1px solid #e2e9f5;
   color: #41526f;
+}
+
+.diagnostic-summary-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.8fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.maturity-highlight-card {
+  border: 1px solid #d9e4f5;
+  border-radius: 18px;
+  padding: 1rem;
+  background: linear-gradient(180deg, #f8fbff, #eef5ff);
+  align-content: start;
+}
+
+.maturity-highlight-card span {
+  display: block;
+  color: #61708a;
+  font-weight: 700;
+}
+
+.maturity-highlight-card strong {
+  display: block;
+  margin-top: 0.5rem;
+  color: #123764;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  line-height: 1.15;
+}
+
+.maturity-highlight-card p {
+  margin: 0.85rem 0 0;
+  color: #4b5d79;
 }
 
 .stage-grid {
@@ -889,6 +927,7 @@
   }
 
   .executive-hero,
+  .diagnostic-summary-layout,
   .two-column-grid,
   .stage-grid,
   .journey-grid,
@@ -909,6 +948,10 @@
   }
 
   .assessment-context-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assessment-context-grid--compact {
     grid-template-columns: 1fr;
   }
 

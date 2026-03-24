@@ -187,8 +187,8 @@ export default function App() {
   // Mapeia cada tela principal para título, subtítulo e componente.
   const pageMap = {
     dashboard: {
-      title: "Executive Diagnostic View",
-      subtitle: "Current maturity position in the CSE evolution path for the selected assessment cycle.",
+      title: "Diagnostic Summary",
+      subtitle: "Initial overview of the organization's current maturity position for the selected assessment cycle.",
       component: (
         <DashboardPage
           onNavigate={goToScreen}
