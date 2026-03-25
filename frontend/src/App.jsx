@@ -8,6 +8,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { RecommendationsPage } from "./pages/RecommendationsPage";
 import { ResultsPage } from "./pages/ResultsPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { JoinOrganizationPage } from "./pages/JoinOrganizationPage";
 import {
   getAnalyticsFiltersFromUrl,
   getFallbackAnalyticsBundle,
@@ -19,6 +20,7 @@ import {
 function getScreenFromHash() {
   const hash = window.location.hash.replace("#", "");
   if (hash === "create-account") return "create-account";
+  if (hash === "join-organization") return "join-organization";
   if (hash === "dashboard") return "dashboard";
   if (hash === "assessment") return "assessment";
   if (hash === "results") return "results";
@@ -160,6 +162,11 @@ export default function App() {
     setScreen("dashboard");
   }
 
+  function goToJoinOrganization() {
+    window.location.hash = "join-organization";
+    setScreen("join-organization");
+  }
+
   function goToScreen(nextScreen) {
     window.location.hash = nextScreen;
     setScreen(nextScreen);
@@ -202,7 +209,16 @@ export default function App() {
 
   // Cadastro fica fora do layout interno da plataforma.
   if (screen === "create-account") {
-    return <CreateAccountPage onBackToLogin={goToLogin} />;
+    return (
+      <CreateAccountPage
+        onBackToLogin={goToLogin}
+        onAccountCreated={goToJoinOrganization}
+      />
+    );
+  }
+
+  if (screen === "join-organization") {
+    return <JoinOrganizationPage />;
   }
 
   // Mapeia cada tela principal para título, subtítulo e componente.

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { registerAccount, searchOrganizations } from "../services/auth";
 import "./login-page.css";
 
-export function CreateAccountPage({ onBackToLogin }) {
+export function CreateAccountPage({ onBackToLogin, onAccountCreated }) {
   // Campos exigidos pelo endpoint atual de criacao de conta.
   // O formulario foi mantido simples porque o foco do projeto nao e onboarding,
   // e sim a camada de visualizacao dos resultados.
@@ -97,6 +97,10 @@ export function CreateAccountPage({ onBackToLogin }) {
     try {
       await registerAccount(form);
       setSuccess("Account created successfully. You can sign in now.");
+
+      if (typeof onAccountCreated === "function") {
+        onAccountCreated();
+      }
     } catch (err) {
       setError(err.message);
     } finally {

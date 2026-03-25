@@ -33,6 +33,7 @@ This repository contains the complete web application, transitioning the diagnos
 - Python 3.12+
 - Node.js 22+
 - Docker and Docker Compose
+- Postgresql
 
 ### Setup
 
