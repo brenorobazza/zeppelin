@@ -188,7 +188,7 @@ export default function App() {
   const pageMap = {
     dashboard: {
       title: "Diagnostic Summary",
-      subtitle: "Initial overview of the organization's current maturity position for the selected assessment cycle.",
+      subtitle: "Initial view of the organization's current maturity position in the selected assessment cycle.",
       component: (
         <DashboardPage
           onNavigate={goToScreen}
@@ -199,7 +199,7 @@ export default function App() {
     },
     assessment: {
       title: "Assessment Questionnaire",
-      subtitle: "Evaluate CI/CD practices using a standardized maturity scale.",
+      subtitle: "Evaluate CSE practices using a standardized maturity scale.",
       component: (
         <AssessmentPage
           organizationId={analyticsFilters.organizationId}
@@ -219,9 +219,10 @@ export default function App() {
           }}
         />
       )
-    },    results: {
-      title: "Diagnosis Results",
-      subtitle: "Analytical view of CSE practice adoption, progression constraints and improvement opportunities.",
+    },
+    results: {
+      title: "Diagnostic Detail",
+      subtitle: "Detailed analytical interpretation of the current diagnosis by stage and practice group.",
       component: (
         <ResultsPage
           data={analytics.results}
@@ -231,8 +232,8 @@ export default function App() {
       )
     },
     recommendations: {
-      title: "Improvement Roadmap",
-      subtitle: "What should the organization do next based on the rule-based recommendations?",
+      title: "Recommendations",
+      subtitle: "Actions derived from the current diagnostic reading.",
       component: (
         <RecommendationsPage
           data={analytics.recommendations}

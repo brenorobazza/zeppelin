@@ -10,6 +10,19 @@ export function HistoryPage({ data, loading }) {
     return <section className="panel">Loading historical progression from backend...</section>;
   }
 
+  if (view.selectedCycleEmpty) {
+    return (
+      <section className="panel">
+        <p className="eyebrow">History</p>
+        <h3>No submitted answers for this cycle</h3>
+        <p>
+          The selected assessment cycle does not contain submitted answers yet. Historical
+          comparisons will be available after the cycle receives recorded answers.
+        </p>
+      </section>
+    );
+  }
+
   return (
     <>
       {/* Resumo rapido da evolucao desde o ciclo base. */}

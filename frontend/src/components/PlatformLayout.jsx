@@ -96,10 +96,6 @@ export function PlatformLayout({
             ) : null}
 
             <div className="topbar-status">
-              {/* Mostra explicitamente se a tela esta usando backend real ou dados de fallback. */}
-              <span className={`topbar-badge ${usingMockData ? "mock" : "live"}`}>
-                {usingMockData ? "Demo data" : "Backend data"}
-              </span>
               <div className="user-box">
                 <span>{userName}</span>
               </div>

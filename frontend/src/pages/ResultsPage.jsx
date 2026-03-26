@@ -6,90 +6,251 @@ import {
 } from "./stairwayStages";
 
 function formatStageSpread(leadingStage, constrainingStage) {
-  if (!leadingStage || !constrainingStage) return "N/A";
+  if (!leadingStage || !constrainingStage) return "Not available";
   return `${leadingStage.score - constrainingStage.score} points`;
 }
 
-function buildResultsReading(leadingStage, constrainingStage) {
+function buildAnalyticalNarrative(leadingStage, constrainingStage) {
   if (!leadingStage || !constrainingStage) {
-    return "This analytical view consolidates the available assessment evidence and highlights where the current payload still needs richer stage-level detail.";
+    return "This page examines the diagnostic evidence available in the current assessment payload by combining the stage interpretation with the analysis of related practice groups.";
   }
 
-  return `The current cycle indicates that ${leadingStage.name} is the strongest maturity signal, while ${constrainingStage.name} concentrates the main constraints that still prevent a more even progression across the CSE path.`;
+  return `The current diagnosis is more strongly supported in ${leadingStage.name}, while ${constrainingStage.name} concentrates the main restrictions that still limit a more balanced progression across the CSE stages.`;
+}
+
+function buildStageSignal(stage) {
+  if (!stage.available) {
+    return "This stage is not represented in the current analytics payload.";
+  }
+
+  const strengthCount = stage.strengthCount || 0;
+  const bottleneckCount = stage.bottleneckCount || 0;
+
+  if (!strengthCount && !bottleneckCount) {
+    return "No supporting or constraining practices are explicitly identified for this stage.";
+  }
+
+  return `${strengthCount} supporting practices and ${bottleneckCount} constraining practices are currently associated with this stage.`;
+}
+
+function normalizeLevel(level = "") {
+  const value = level.trim().toLowerCase();
+
+  if (value === "not adopted" || value === "nao adotado" || value === "não adotado") {
+    return "Not adopted";
+  }
+
+  if (value === "abandoned" || value === "abandonado") {
+    return "Abandoned";
+  }
+
+  if (
+    value === "realized at project/product level" ||
+    value === "project/product level" ||
+    value === "realizado ao nivel de projeto/produto" ||
+    value === "realizado ao nível de projeto/produto"
+  ) {
+    return "Project/Product level";
+  }
+
+  if (
+    value === "realized at process level" ||
+    value === "process level" ||
+    value === "realizado ao nivel de processo" ||
+    value === "realizado ao nível de processo"
+  ) {
+    return "Process level";
+  }
+
+  if (value === "institutionalized" || value === "institucionalizado") {
+    return "Institutionalized";
+  }
+
+  return level || "Not informed";
+}
+
+function buildInsightTitle(item, variant) {
+  if (variant === "strengths") return `${item.questionId} - supporting practice`;
+  if (variant === "bottlenecks") return `${item.questionId} - constraining practice`;
+  return `${item.questionId} - recommended action`;
+}
+
+function buildInsightDescription(item, variant) {
+  if (variant === "strengths") {
+    return `${item.questionId} currently operates at ${normalizeLevel(item.currentLevel).toLowerCase()} in ${item.stage} and reinforces the current diagnostic position.`;
+  }
+
+  if (variant === "bottlenecks") {
+    return `${item.questionId} currently operates at ${normalizeLevel(item.currentLevel).toLowerCase()} in ${item.stage} and still constrains progression to the next stage.`;
+  }
+
+  return item.expectedImpact || "This recommended action strengthens the current diagnostic response.";
+}
+
+function buildPracticeGroupSignal(group, variant) {
+  const insight = variant === "strength" ? group.strengthItem : group.bottleneckItem;
+
+  if (!insight?.questionId) {
+    if (variant === "strength") {
+      return "The strongest supporting signal in this practice group is not explicitly available in the current payload.";
+    }
+
+    return "The main constraining signal in this practice group is not explicitly available in the current payload.";
+  }
+
+  if (variant === "strength") {
+    return `${insight.questionId} currently provides the strongest supporting signal in this practice group.`;
+  }
+
+  return `${insight.questionId} currently represents the main constraining signal in this practice group.`;
+}
+
+function renderInsightList(items, variant) {
+  if (!items.length) {
+    return <p className="empty-state">No diagnostic evidence is available for this section.</p>;
+  }
+
+  return (
+    <ul className="insight-list">
+      {items.map((item) => (
+        <li key={item.id} className="insight-item">
+          <small>
+            {item.stage} / {item.questionId}
+          </small>
+          <h4>{buildInsightTitle(item, variant)}</h4>
+          <p>{buildInsightDescription(item, variant)}</p>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 export function ResultsPage({ data, overview, loading }) {
-  // Esta tela aprofunda o diagnostico exibido no dashboard.
+  // A Tela 2 funciona como aprofundamento analitico do diagnostico, sem repetir o resumo inicial.
   const view = data || fallbackResultsData;
   const overviewData = overview || fallbackDashboardData;
   const stages = mapStagesToJourney(view.stageScores);
   const leadingStage = getLeadingStage(stages);
   const constrainingStage = getConstrainingStage(stages);
-  const analyticalReading = buildResultsReading(leadingStage, constrainingStage);
+  const analyticalNarrative = buildAnalyticalNarrative(leadingStage, constrainingStage);
+  const practiceGroups = view.practiceThemes || [];
+  const adoptionLevels = overviewData.adoptionLevels || [];
+
+  const diagnosticFacts = [
+    { label: "Assessed statements", value: view.summary.answeredPractices },
+    { label: "Spread across stages", value: formatStageSpread(leadingStage, constrainingStage) },
+    { label: "Practice groups reviewed", value: practiceGroups.length }
+  ];
 
   if (loading && !data) {
-    return <section className="panel">Loading diagnostic results from backend...</section>;
+    return <section className="panel">Loading diagnostic detail...</section>;
+  }
+
+  if (view.selectedCycleEmpty) {
+    return (
+      <section className="panel">
+        <p className="eyebrow">Diagnostic detail</p>
+        <h3>No submitted answers for this cycle</h3>
+        <p>
+          The selected assessment cycle does not contain submitted answers yet. Detailed
+          interpretation becomes available after the cycle receives recorded answers.
+        </p>
+      </section>
+    );
   }
 
   return (
     <>
       <section className="panel">
-        <p className="eyebrow">Analytical report</p>
+        <p className="eyebrow">Diagnostic detail</p>
+
         <div className="section-head">
           <div>
-            <h3>Analytical view of CSE practice adoption</h3>
+            <h3>Detailed diagnostic interpretation</h3>
             <p>
-              This page deepens the current assessment cycle and clarifies what is already mature,
-              what constrains progression and which improvement opportunities follow from the
-              diagnostic evidence.
+              This page explains the current maturity position by combining stage-level evidence
+              with the analysis of related practice groups.
             </p>
           </div>
         </div>
 
         <article className="insight-item">
-          <small>Analytical reading</small>
-          <h4>{view.summary.overallLevel}</h4>
-          <p>{analyticalReading}</p>
-        </article>
-      </section>
-
-      {/* Resumo quantitativo inicial do diagnostico. */}
-      <section className="grid-4">
-        <article className="metric-card">
-          <p>Overall maturity score</p>
-          <h2>{view.summary.overallScore}</h2>
-          <small>Consolidated analytical score for the selected cycle</small>
+          <small>Interpretive summary</small>
+          <h4>How to interpret the current diagnosis</h4>
+          <p>{analyticalNarrative}</p>
         </article>
 
-        <article className="metric-card">
-          <p>Current maturity level</p>
-          <h2>{view.summary.overallLevel}</h2>
-          <small>Stage-independent reading of the current maturity position</small>
-        </article>
-
-        <article className="metric-card">
-          <p>Assessed statements</p>
-          <h2>{view.summary.answeredPractices}</h2>
-          <small>Statements consolidated into the analytical report for this cycle</small>
-        </article>
-
-        <article className="metric-card">
-          <p>Stage spread</p>
-          <h2>{formatStageSpread(leadingStage, constrainingStage)}</h2>
-          <small>Distance between the strongest and most constrained stages</small>
-        </article>
+        <div className="assessment-context-grid assessment-context-grid--compact">
+          {diagnosticFacts.map((item) => (
+            <article key={item.label} className="context-card">
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="two-column-grid">
-        <article className="panel support-panel">
-          <h3>Adoption level distribution from the current cycle</h3>
+        <article className="panel">
+          <h3>Stage interpretation</h3>
           <p>
-            The current analytics payload exposes the global distribution of adoption levels across
-            all assessed statements in this cycle.
+            Stages are the primary analytical axis of the diagnostic. The section below shows where
+            support and restriction currently concentrate across the Stairway to Heaven model.
+          </p>
+
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Score</th>
+                <th>Current level</th>
+                <th>Supporting practices</th>
+                <th>Constraining practices</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stages.map((stage) => (
+                <tr key={stage.key}>
+                  <td>
+                    <strong>{stage.name}</strong>
+                  </td>
+                  <td>{stage.available ? stage.score : "N/A"}</td>
+                  <td>{stage.currentLevel}</td>
+                  <td>{stage.available ? stage.strengthCount || 0 : "N/A"}</td>
+                  <td>{stage.available ? stage.bottleneckCount || 0 : "N/A"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="stage-profile-list">
+            {stages.map((stage) => (
+              <article
+                key={`${stage.key}-signal`}
+                className={`stage-profile-item ${stage.available ? "" : "stage-profile-item--missing"}`.trim()}
+              >
+                <div className="stage-profile-item__head">
+                  <div>
+                    <h4>{stage.name}</h4>
+                    <span>{stage.currentLevel}</span>
+                  </div>
+                  <strong>{stage.available ? stage.score : "N/A"}</strong>
+                </div>
+                <p>{buildStageSignal(stage)}</p>
+              </article>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel support-panel">
+          <h3>Adoption level distribution across assessed statements</h3>
+          <p>
+            This distribution shows how the assessed statements are currently positioned across the
+            adoption levels defined by the diagnostic instrument.
           </p>
 
           <div className="level-rows">
-            {overviewData.adoptionLevels.map((item) => (
+            {adoptionLevels.map((item) => (
               <div key={item.key} className="level-row">
                 <div className="level-row__meta">
                   <strong>{item.label}</strong>
@@ -103,164 +264,71 @@ export function ResultsPage({ data, overview, loading }) {
             ))}
           </div>
         </article>
-
-        <article className="panel">
-          <h3>Adoption profile by stage</h3>
-          <p>
-            Stage scores indicate how close each Stairway to Heaven stage is to a process-level or
-            institutionalized operating mode.
-          </p>
-
-          <div className="stage-profile-list">
-            {stages.map((item) => (
-              <article key={item.key} className={`stage-profile-item ${item.available ? "" : "stage-profile-item--missing"}`.trim()}>
-                <div className="stage-profile-item__head">
-                  <div>
-                    <h4>{item.name}</h4>
-                    <span>{item.currentLevel}</span>
-                  </div>
-                  <strong>{item.available ? item.score : "N/A"}</strong>
-                </div>
-
-                <div className="progress">
-                  <span style={{ width: `${item.available ? item.score : 0}%` }} />
-                </div>
-
-                <p>
-                  {item.available
-                    ? `${item.answeredPractices || 0} statements currently feed this stage, with ${item.bottleneckCount || 0} practices still below process level.`
-                    : "This stage is not yet represented in the current analytics payload."}
-                </p>
-              </article>
-            ))}
-          </div>
-        </article>
       </section>
 
-      {/* Comparacao por estagio para evidenciar onde os estagios estao mais maduros ou mais atrasados. */}
       <section className="panel">
         <div className="section-head">
           <div>
-            <h3>Stage-level maturity overview</h3>
+            <h3>Practice-group analysis</h3>
             <p>
-              The diagnosis below highlights the four CSE stages and makes explicit which ones are
-              already supporting the current position and which still constrain further evolution.
+              Practice groups are used here as a secondary analytical lens. They do not replace the
+              stage reading; they clarify where related practices reinforce or constrain it.
             </p>
           </div>
         </div>
 
-        <div className="journey-grid">
-          {stages.map((item, index) => (
-            <article
-              key={item.key}
-              className={`stage-card stage-card--journey ${item.available ? "" : "stage-card--missing"}`.trim()}
-            >
-              <div className="stage-card__step">Stage {index + 1}</div>
-              <div className="stage-card__head">
-                <div>
-                  <h4>{item.name}</h4>
-                  <span>{item.currentLevel}</span>
+        {practiceGroups.length ? (
+          <div className="dimension-grid">
+            {practiceGroups.map((item) => (
+              <article key={item.key} className="dimension-card dimension-card--detailed">
+                <div className="dimension-card__head">
+                  <div>
+                    <h4>{item.name}</h4>
+                    <span>{item.focus}</span>
+                  </div>
+                  <strong>{item.score}</strong>
                 </div>
-                <strong>{item.available ? item.score : "N/A"}</strong>
-              </div>
 
-              <div className="progress">
-                <span style={{ width: `${item.available ? item.score : 0}%` }} />
-              </div>
+                <div className="progress">
+                  <span style={{ width: `${item.score}%` }} />
+                </div>
 
-              <p>
-                {item.available
-                  ? `${item.answeredPractices || 0} statements contribute to this score, with ${item.strengthCount || 0} strong signals and ${item.bottleneckCount || 0} constraining practices.`
-                  : "No direct evidence for this stage is available in the current dataset."}
-              </p>
-            </article>
-          ))}
-        </div>
+                <div className="dimension-card__evidence">
+                  <div>
+                    <span>Current reading</span>
+                    <strong>{normalizeLevel(item.currentLevel)}</strong>
+                  </div>
+                  <div>
+                    <span>What supports this group</span>
+                    <strong>{buildPracticeGroupSignal(item, "strength")}</strong>
+                  </div>
+                  <div>
+                    <span>What constrains this group</span>
+                    <strong>{buildPracticeGroupSignal(item, "bottleneck")}</strong>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="empty-state">No practice-group evidence is available in the current payload.</p>
+        )}
       </section>
 
-      {/* Agrupamento por tema de pratica para facilitar a leitura dos resultados. */}
-      <section className="panel">
-        <h3>Diagnosis by practice theme</h3>
-        <p>
-          These themes organize the available evidence by practice cluster, helping translate raw
-          assessment statements into a more readable diagnostic view.
-        </p>
-
-        <div className="dimension-grid">
-          {view.practiceThemes.map((item) => (
-            <article key={item.key} className="dimension-card dimension-card--detailed">
-              <div className="dimension-card__head">
-                <div>
-                  <h4>{item.name}</h4>
-                  <span>{item.focus}</span>
-                </div>
-                <strong>{item.score}</strong>
-              </div>
-
-              <div className="progress">
-                <span style={{ width: `${item.score}%` }} />
-              </div>
-
-              <div className="dimension-card__evidence">
-                <div>
-                  <span>Strength</span>
-                  <strong>{item.strength}</strong>
-                </div>
-                <div>
-                  <span>Bottleneck</span>
-                  <strong>{item.bottleneck}</strong>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* Fechamento analitico: forcas, gargalos e oportunidades de melhoria. */}
       <section className="grid-3">
         <article className="panel">
-          <h3>Practices already supporting the current maturity position</h3>
-          <ul className="insight-list">
-            {view.strengths.map((item) => (
-              <li key={item.id} className="insight-item">
-                <small>
-                  {item.stage} / {item.questionId}
-                </small>
-                <h4>{item.title}</h4>
-                <p>{item.evidence}</p>
-              </li>
-            ))}
-          </ul>
+          <h3>Practices supporting the current maturity position</h3>
+          {renderInsightList(view.strengths, "strengths")}
         </article>
 
         <article className="panel">
           <h3>Practices constraining progression to the next CSE stage</h3>
-          <ul className="insight-list">
-            {view.bottlenecks.map((item) => (
-              <li key={item.id} className="insight-item">
-                <small>
-                  {item.stage} / {item.questionId}
-                </small>
-                <h4>{item.title}</h4>
-                <p>{item.evidence}</p>
-              </li>
-            ))}
-          </ul>
+          {renderInsightList(view.bottlenecks, "bottlenecks")}
         </article>
 
         <article className="panel">
-          <h3>Improvement opportunities derived from the assessment</h3>
-          <ul className="insight-list">
-            {view.opportunities.map((item) => (
-              <li key={item.id} className="insight-item">
-                <small>
-                  {item.stage} / {item.questionId}
-                </small>
-                <h4>{item.title}</h4>
-                <p>{item.expectedImpact}</p>
-              </li>
-            ))}
-          </ul>
+          <h3>Analytical priorities derived from the current diagnosis</h3>
+          {renderInsightList(view.opportunities, "opportunities")}
         </article>
       </section>
     </>

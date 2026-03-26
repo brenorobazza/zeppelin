@@ -92,9 +92,14 @@ class QuestionnaireAnalyticsService:
             "organization": self._serialize_organization(context["organization"]),
             "cycle": self._serialize_cycle(
                 context["questionnaire"],
-                answers,
+                (
+                    context["selected_answers"]
+                    if context["questionnaire"] is not None
+                    else answers
+                ),
             ),
             "scope": context["stage_scope"],
+            "selected_cycle_empty": context["selected_cycle_empty"],
             "snapshot": {
                 "overall_score": self._score_for_answers(answers),
                 "overall_level": self._resolve_average_level(
@@ -132,9 +137,14 @@ class QuestionnaireAnalyticsService:
             "organization": self._serialize_organization(context["organization"]),
             "cycle": self._serialize_cycle(
                 context["questionnaire"],
-                answers,
+                (
+                    context["selected_answers"]
+                    if context["questionnaire"] is not None
+                    else answers
+                ),
             ),
             "scope": context["stage_scope"],
+            "selected_cycle_empty": context["selected_cycle_empty"],
             "summary": {
                 "overall_score": overall_score,
                 "overall_level": self._resolve_average_level(overall_score),
@@ -163,9 +173,14 @@ class QuestionnaireAnalyticsService:
             "organization": self._serialize_organization(context["organization"]),
             "cycle": self._serialize_cycle(
                 context["questionnaire"],
-                answers,
+                (
+                    context["selected_answers"]
+                    if context["questionnaire"] is not None
+                    else answers
+                ),
             ),
             "scope": context["stage_scope"],
+            "selected_cycle_empty": context["selected_cycle_empty"],
             "summary": {
                 "triggered_recommendations": len(recommendations),
                 "adopt_now_count": len(
@@ -210,7 +225,12 @@ class QuestionnaireAnalyticsService:
 
         return {
             "organization": self._serialize_organization(context["organization"]),
+            "cycle": self._serialize_cycle(
+                context["questionnaire"],
+                context["selected_answers"],
+            ),
             "scope": context["stage_scope"],
+            "selected_cycle_empty": context["selected_cycle_empty"],
             "summary": {
                 "cycle_count": len(cycles),
                 "overall_delta": overall_delta,
@@ -229,10 +249,12 @@ class QuestionnaireAnalyticsService:
             organization.id,
             all_answers,
         )
-        current_answers = self._answers_for_questionnaire(
+        selected_answers = self._answers_for_questionnaire(
             all_answers,
             questionnaire,
         )
+        selected_cycle_empty = questionnaire is not None and not selected_answers
+        current_answers = selected_answers
 
         if not current_answers:
             current_answers = all_answers
@@ -242,6 +264,8 @@ class QuestionnaireAnalyticsService:
             "questionnaire": questionnaire,
             "stage_scope": stage_scope,
             "all_answers": all_answers,
+            "selected_answers": selected_answers,
+            "selected_cycle_empty": selected_cycle_empty,
             "current_answers": current_answers,
         }
 

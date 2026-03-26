@@ -108,7 +108,7 @@ export const stageScores = [
     diagnosis:
       "Integration practices are stable enough to support frequent code integration, automated builds and repository traceability, but test depth and data-driven improvement still vary between teams.",
     whyItMatters:
-      "The dissertation highlights CI as the foundation required for sustainable CD. Without strong CI, later delivery stages become inconsistent."
+      "Continuous Integration provides the foundation required for sustainable Continuous Deployment. Without strong CI, later delivery stages become inconsistent."
   },
   {
     key: "cd",
@@ -118,7 +118,7 @@ export const stageScores = [
     diagnosis:
       "Delivery capability exists, but automation of releases, customer validation and business-operation feedback loops are still not consistently institutionalized.",
     whyItMatters:
-      "The study shows that CD can appear advanced while still lacking the automation and feedback foundations needed for coherent maturity."
+      "Continuous Deployment can appear advanced while still lacking the automation and feedback foundations required for coherent maturity."
   }
 ];
 
@@ -243,7 +243,7 @@ export const recommendations = [
     nextStep:
       "Pilot a daily integration rule in one core repository and monitor the volume of failed merges for two weeks.",
     contextNote:
-      "The dissertation reports that some teams struggle to decompose work into small enough tasks, so rollout should start with a manageable pilot."
+      "Some teams struggle to decompose work into sufficiently small tasks, so rollout should begin with a manageable pilot."
   },
   {
     id: 2,
@@ -293,7 +293,7 @@ export const recommendations = [
     nextStep:
       "Run a joint workshop to map the current deployment path and define which validations must be automated first.",
     contextNote:
-      "Cross-team coordination was one of the main practical barriers reported in the case study, so this action should start with explicit ownership."
+      "Cross-team coordination is a common practical barrier, so this action should begin with explicit ownership."
   },
   {
     id: 5,
@@ -311,7 +311,7 @@ export const recommendations = [
     nextStep:
       "Automate one release path end-to-end and publish release notes directly from the pipeline.",
     contextNote:
-      "The dissertation notes that mobile or highly controlled domains may keep some manual steps, so the first automation target should be chosen carefully."
+      "Mobile products and highly controlled domains may retain some manual steps, so the first automation target should be chosen carefully."
   },
   {
     id: 6,

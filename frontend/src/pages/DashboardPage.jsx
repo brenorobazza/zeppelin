@@ -7,15 +7,15 @@ function formatScope(stages) {
 }
 
 function buildSummaryIntro(currentLevel, scope) {
-  return `This summary presents the current maturity classification for the selected assessment cycle and situates the diagnostic across the assessed CSE stages (${scope}).`;
+  return `This summary situates the organization's current maturity classification within the Continuous Software Engineering stages covered by the selected assessment cycle (${scope}).`;
 }
 
 function buildStageInterpretation(stage) {
   if (!stage.available) {
-    return "This stage is not available in the current analytics payload.";
+    return "This stage is not represented in the current analytics payload.";
   }
 
-  return `${stage.answeredPractices || 0} assessed statements currently contribute to this stage reading.`;
+  return `${stage.answeredPractices || 0} assessed statements currently inform the interpretation of this stage.`;
 }
 
 export function DashboardPage({ data, loading }) {
@@ -32,13 +32,26 @@ export function DashboardPage({ data, loading }) {
   ];
 
   if (loading && !data) {
-    return <section className="panel">Loading diagnostic summary from backend...</section>;
+    return <section className="panel">Loading diagnostic summary...</section>;
+  }
+
+  if (view.selectedCycleEmpty) {
+    return (
+      <section className="panel">
+        <p className="eyebrow">Diagnostic summary</p>
+        <h3>No submitted answers for this cycle</h3>
+        <p>
+          The selected assessment cycle does not contain submitted answers yet. The diagnostic
+          summary will become available after at least one response is recorded for this cycle.
+        </p>
+      </section>
+    );
   }
 
   return (
     <>
       <section className="panel">
-        <p className="eyebrow">Diagnostic overview</p>
+        <p className="eyebrow">Diagnostic summary</p>
 
         <div className="diagnostic-summary-layout">
           <div>
@@ -59,8 +72,8 @@ export function DashboardPage({ data, loading }) {
             <span>Current maturity level</span>
             <strong>{view.maturitySnapshot.overallLevel}</strong>
             <p>
-              This qualitative interpretation summarizes the organization&apos;s current position in
-              the selected assessment cycle.
+              This qualitative reading summarizes the organization&apos;s current position in the
+              selected assessment cycle.
             </p>
           </aside>
         </div>
@@ -71,8 +84,8 @@ export function DashboardPage({ data, loading }) {
           <div>
             <h3>Stage-level diagnostic overview</h3>
             <p>
-              The stage reading below positions the organization across the Stairway to Heaven
-              model without introducing additional aggregate indicators.
+              The stage-level reading below positions the organization within the Stairway to
+              Heaven model without introducing additional aggregate indicators.
             </p>
           </div>
         </div>

@@ -102,6 +102,7 @@ function normalizeDashboard(payload) {
   const stageScores = payload.stage_scores.map(mapStageScore);
 
   return {
+    selectedCycleEmpty: payload.selected_cycle_empty || false,
     maturitySnapshot: {
       organization: payload.organization.name,
       organizationType: payload.organization.type || "",
@@ -134,6 +135,8 @@ function normalizeDashboard(payload) {
 // Prepara os dados usados pela tela de resultados.
 function normalizeResults(payload) {
   return {
+    selectedCycleEmpty: payload.selected_cycle_empty || false,
+    selectedCycleLabel: payload.cycle?.label || "",
     summary: {
       answeredPractices: payload.summary.answered_practices,
       stageGap: payload.summary.stage_gap,
@@ -150,7 +153,9 @@ function normalizeResults(payload) {
       currentLevel: item.current_level,
       strength: item.strength,
       bottleneck: item.bottleneck,
-      answeredPractices: item.answered_practices
+      answeredPractices: item.answered_practices,
+      strengthItem: item.strength_item ? mapInsight(item.strength_item) : null,
+      bottleneckItem: item.bottleneck_item ? mapInsight(item.bottleneck_item) : null
     })),
     strengths: payload.strengths.map(mapInsight),
     bottlenecks: payload.bottlenecks.map(mapInsight),
@@ -169,6 +174,8 @@ function normalizeRecommendations(payload) {
   }));
 
   return {
+    selectedCycleEmpty: payload.selected_cycle_empty || false,
+    selectedCycleLabel: payload.cycle?.label || "",
     summary: {
       triggeredRecommendations: payload.summary.triggered_recommendations,
       adoptNowCount: payload.summary.adopt_now_count,
@@ -239,6 +246,8 @@ function normalizeHistory(payload) {
   const last = historySeries[historySeries.length - 1];
 
   return {
+    selectedCycleEmpty: payload.selected_cycle_empty || false,
+    selectedCycleLabel: payload.cycle?.label || "",
     summary: {
       overallDelta: payload.summary.overall_delta,
       ciDelta: last ? last.ci - first.ci : 0,
