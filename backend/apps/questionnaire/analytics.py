@@ -84,6 +84,8 @@ class QuestionnaireAnalyticsService:
     def get_dashboard_payload(self, request):
         context = self._resolve_context(request)
         answers = context["current_answers"]
+        selected_answers = context.get("selected_answers", answers)
+        selected_cycle_empty = context.get("selected_cycle_empty", False)
         stage_scores = self._build_stage_scores(answers)
         recommendations = self._build_recommendations(answers)
         history_cycles = self._build_history_cycles(context["all_answers"])
@@ -92,14 +94,10 @@ class QuestionnaireAnalyticsService:
             "organization": self._serialize_organization(context["organization"]),
             "cycle": self._serialize_cycle(
                 context["questionnaire"],
-                (
-                    context["selected_answers"]
-                    if context["questionnaire"] is not None
-                    else answers
-                ),
+                selected_answers if context["questionnaire"] is not None else answers,
             ),
             "scope": context["stage_scope"],
-            "selected_cycle_empty": context["selected_cycle_empty"],
+            "selected_cycle_empty": selected_cycle_empty,
             "snapshot": {
                 "overall_score": self._score_for_answers(answers),
                 "overall_level": self._resolve_average_level(
@@ -124,6 +122,8 @@ class QuestionnaireAnalyticsService:
     def get_results_payload(self, request):
         context = self._resolve_context(request)
         answers = context["current_answers"]
+        selected_answers = context.get("selected_answers", answers)
+        selected_cycle_empty = context.get("selected_cycle_empty", False)
         stage_scores = self._build_stage_scores(answers)
         recommendations = self._build_recommendations(answers)
         overall_score = self._score_for_answers(answers)
@@ -137,14 +137,10 @@ class QuestionnaireAnalyticsService:
             "organization": self._serialize_organization(context["organization"]),
             "cycle": self._serialize_cycle(
                 context["questionnaire"],
-                (
-                    context["selected_answers"]
-                    if context["questionnaire"] is not None
-                    else answers
-                ),
+                selected_answers if context["questionnaire"] is not None else answers,
             ),
             "scope": context["stage_scope"],
-            "selected_cycle_empty": context["selected_cycle_empty"],
+            "selected_cycle_empty": selected_cycle_empty,
             "summary": {
                 "overall_score": overall_score,
                 "overall_level": self._resolve_average_level(overall_score),
@@ -162,6 +158,8 @@ class QuestionnaireAnalyticsService:
     def get_recommendations_payload(self, request):
         context = self._resolve_context(request)
         answers = context["current_answers"]
+        selected_answers = context.get("selected_answers", answers)
+        selected_cycle_empty = context.get("selected_cycle_empty", False)
         recommendations = self._build_recommendations(answers)
 
         grouped_tracks = []
@@ -173,14 +171,10 @@ class QuestionnaireAnalyticsService:
             "organization": self._serialize_organization(context["organization"]),
             "cycle": self._serialize_cycle(
                 context["questionnaire"],
-                (
-                    context["selected_answers"]
-                    if context["questionnaire"] is not None
-                    else answers
-                ),
+                selected_answers if context["questionnaire"] is not None else answers,
             ),
             "scope": context["stage_scope"],
-            "selected_cycle_empty": context["selected_cycle_empty"],
+            "selected_cycle_empty": selected_cycle_empty,
             "summary": {
                 "triggered_recommendations": len(recommendations),
                 "adopt_now_count": len(
@@ -210,6 +204,8 @@ class QuestionnaireAnalyticsService:
     # Resume a evolução entre ciclos para responder o que mudou ao longo do tempo.
     def get_history_payload(self, request):
         context = self._resolve_context(request)
+        selected_answers = context.get("selected_answers", context["current_answers"])
+        selected_cycle_empty = context.get("selected_cycle_empty", False)
         cycles = self._build_history_cycles(context["all_answers"])
 
         if len(cycles) >= 2:
@@ -227,10 +223,10 @@ class QuestionnaireAnalyticsService:
             "organization": self._serialize_organization(context["organization"]),
             "cycle": self._serialize_cycle(
                 context["questionnaire"],
-                context["selected_answers"],
+                selected_answers,
             ),
             "scope": context["stage_scope"],
-            "selected_cycle_empty": context["selected_cycle_empty"],
+            "selected_cycle_empty": selected_cycle_empty,
             "summary": {
                 "cycle_count": len(cycles),
                 "overall_delta": overall_delta,
