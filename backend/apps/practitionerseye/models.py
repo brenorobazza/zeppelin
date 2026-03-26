@@ -10,7 +10,7 @@ class Category(Base):
     name = models.CharField(max_length=200, help_text="Category's name", unique=True)
     description = models.TextField(help_text="Category's description")
 
-    class meta:
+    class Meta:
         db_table = "practitioners_eye_category"
 
     def __str__(self):
@@ -29,9 +29,9 @@ class Element(Base):
         Category, on_delete=models.CASCADE, help_text="Element's category"
     )
 
-    class meta:
+    class Meta:
         db_table = "practitioners_eye_element"
-        ordering = ["dimension.name", "name"]
+        ordering = ["dimension__name", "name"]
 
     def __str__(self):
         """String para representar o element"""

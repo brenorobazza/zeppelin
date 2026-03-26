@@ -154,7 +154,7 @@ class SthStageExperienceLevel(Base):
         related_name="employee_experience_level",
     )
 
-    class meta:
+    class Meta:
         db_table = "sth_stage_experience_level"
 
     def __str__(self):

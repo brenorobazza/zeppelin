@@ -17,7 +17,7 @@ class AdoptedLevel(Base):
     description = models.TextField(help_text="description")
     percentage = models.IntegerField(help_text="percentage")
 
-    class meta:
+    class Meta:
         db_table = "adopted_level"
 
     def __str__(self):
@@ -54,7 +54,7 @@ class Statement(Base):
         related_name="continuous_activity_%(class)s",
     )
 
-    class meta:
+    class Meta:
         db_table = "statement"
 
     def __str__(self):
@@ -85,7 +85,7 @@ class Questionnaire(Base):
         related_name="questionnaire_questionnaire_%(class)s",
     )
 
-    class meta:
+    class Meta:
         db_table = "questionnaire"
 
     def __str__(self):
@@ -115,7 +115,7 @@ class Answer(Base):
     comment_answer = models.TextField(null=True, blank=True)
     organization_answer = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
-    class meta:
+    class Meta:
         db_table = "answer"
 
     def __str__(self):

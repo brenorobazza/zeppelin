@@ -6,7 +6,7 @@ class Stage(Base):
     Represents a stage of StH.
     """
 
-    class meta:
+    class Meta:
         db_table = "sth_stage"
         ordering = ["name"]
 

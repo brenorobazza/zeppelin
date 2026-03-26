@@ -7,7 +7,7 @@ class OrganizationCategory(Base):
         max_length=200, help_text="organization type's name", unique=True
     )
 
-    class meta:
+    class Meta:
         db_table = "organization_category"
 
     def __str__(self):
@@ -23,7 +23,7 @@ class Size(Base):
         max_length=200, help_text="organization type's name", unique=True
     )
 
-    class meta:
+    class Meta:
         db_table = "size"
 
     def __str__(self):
@@ -48,7 +48,7 @@ class OrganizationType(Base):
         blank=True,
     )
 
-    class meta:
+    class Meta:
         db_table = "organization_type"
 
     def __str__(self):
@@ -58,7 +58,7 @@ class OrganizationType(Base):
 class Region(Base):
     name = models.CharField(max_length=200, help_text="Region", unique=True)
 
-    class meta:
+    class Meta:
         ordering = ["name"]
 
     def __str__(self):
@@ -74,7 +74,7 @@ class State(Base):
         Region, on_delete=models.CASCADE, help_text="region", null=True, blank=True
     )
 
-    class meta:
+    class Meta:
         db_table = "location"
         ordering = ["name"]
 
@@ -110,7 +110,7 @@ class Organization(Base):
         State, on_delete=models.CASCADE, help_text="location", null=True, blank=True
     )
 
-    class meta:
+    class Meta:
         db_table = "organization"
 
     def __str__(self):
