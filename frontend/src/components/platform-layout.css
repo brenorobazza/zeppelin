@@ -43,20 +43,68 @@
 }
 
 .platform-sidebar nav button {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
   text-align: left;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  padding: 0.65rem 0.7rem;
-  background: transparent;
-  color: #203251;
-  font-weight: 600;
+  border: 1px solid #dce7f6;
+  border-radius: 14px;
+  padding: 0.72rem 0.78rem;
+  background: rgba(255, 255, 255, 0.78);
+  color: #183253;
+  font-weight: 700;
+  font-size: 0.94rem;
   cursor: pointer;
+  box-shadow: 0 1px 0 rgba(17, 24, 39, 0.02);
+}
+
+.platform-sidebar nav button:hover {
+  border-color: #c6dafb;
+  background: #eef5ff;
+  color: #115fc7;
 }
 
 .platform-sidebar nav button.active {
-  border-color: #b9d4fd;
-  background: linear-gradient(180deg, #e9f2ff, #e3eeff);
+  border-color: #9fc4fb;
+  background: linear-gradient(180deg, #e7f1ff, #dceaff);
   color: #1262cf;
+  box-shadow: inset 0 0 0 1px rgba(24, 119, 242, 0.08);
+}
+
+.platform-sidebar nav button span {
+  line-height: 1.1;
+}
+
+.nav-item-icon {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: #edf3ff;
+  color: #49648d;
+  flex-shrink: 0;
+  border: 1px solid #dbe6f8;
+}
+
+.nav-item-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.platform-sidebar nav button:hover .nav-item-icon {
+  background: #e3eeff;
+  color: #115fc7;
+  border-color: #cadbfd;
+}
+
+.platform-sidebar nav button.active .nav-item-icon {
+  background: #d7e7ff;
+  color: #1262cf;
+  border-color: #bdd6ff;
 }
 
 .logout-btn {

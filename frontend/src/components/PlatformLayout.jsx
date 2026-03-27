@@ -1,13 +1,84 @@
 import "./platform-layout.css";
 
+function NavIcon({ children }) {
+  return (
+    <span className="nav-item-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        {children}
+      </svg>
+    </span>
+  );
+}
+
 // Itens fixos da navegacao principal. Eles refletem a ordem de leitura pensada para o TCC.
 const navItems = [
-  { key: "dashboard", label: "Dashboard" },
-  { key: "assessment", label: "Assessment" },
-  { key: "results", label: "Results" },
-  { key: "recommendations", label: "Recommendations" },
-  { key: "history", label: "History" },
-  { key: "settings", label: "Settings" }
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    icon: (
+      <NavIcon>
+        <path d="M3.5 10.5 12 4l8.5 6.5" />
+        <path d="M5.5 9.5V20h13V9.5" />
+        <path d="M9.5 20v-5.5h5V20" />
+      </NavIcon>
+    ),
+  },
+  {
+    key: "assessment",
+    label: "Assessment",
+    icon: (
+      <NavIcon>
+        <rect x="6" y="3.5" width="12" height="17" rx="2.5" />
+        <path d="M9 8h6" />
+        <path d="M9 12h6" />
+        <path d="M9 16h4" />
+      </NavIcon>
+    ),
+  },
+  {
+    key: "results",
+    label: "Results",
+    icon: (
+      <NavIcon>
+        <path d="M5 19.5V10" />
+        <path d="M12 19.5V5.5" />
+        <path d="M19 19.5V13" />
+        <path d="M3.5 19.5h17" />
+      </NavIcon>
+    ),
+  },
+  {
+    key: "recommendations",
+    label: "Recommendations",
+    icon: (
+      <NavIcon>
+        <path d="M12 3.5a5.5 5.5 0 0 0-3.7 9.6c.9.8 1.5 1.8 1.7 2.9h4c.2-1.1.8-2.1 1.7-2.9A5.5 5.5 0 0 0 12 3.5Z" />
+        <path d="M9.7 18h4.6" />
+        <path d="M10.4 20.5h3.2" />
+      </NavIcon>
+    ),
+  },
+  {
+    key: "history",
+    label: "History",
+    icon: (
+      <NavIcon>
+        <path d="M4 12a8 8 0 1 0 2.3-5.7" />
+        <path d="M4 5.5v4.5h4.5" />
+        <path d="M12 8v4.2l2.8 1.8" />
+      </NavIcon>
+    ),
+  },
+  {
+    key: "settings",
+    label: "Settings",
+    icon: (
+      <NavIcon>
+        <path d="m12 3 1.4 2.3 2.7.6-.7 2.7 1.8 2.1-1.8 2.1.7 2.7-2.7.6L12 21l-1.4-2.3-2.7-.6.7-2.7-1.8-2.1 1.8-2.1-.7-2.7 2.7-.6L12 3Z" />
+        <circle cx="12" cy="12" r="2.6" />
+      </NavIcon>
+    ),
+  },
 ];
 
 export function PlatformLayout({
@@ -45,7 +116,8 @@ export function PlatformLayout({
               className={item.key === activePage ? "active" : ""}
               onClick={() => onNavigate(item.key)}
             >
-              {item.label}
+              {item.icon}
+              <span>{item.label}</span>
             </button>
           ))}
         </nav>
