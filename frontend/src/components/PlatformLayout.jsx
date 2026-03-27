@@ -1,9 +1,10 @@
 import "./platform-layout.css";
+import { Settings as SettingsIcon } from "lucide-react";
 
-function NavIcon({ children }) {
+function NavIcon({ children, className = "", viewBox = "0 0 24 24" }) {
   return (
-    <span className="nav-item-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+    <span className={`nav-item-icon ${className}`.trim()} aria-hidden="true">
+      <svg viewBox={viewBox} fill="none" stroke="currentColor" strokeWidth="1.9">
         {children}
       </svg>
     </span>
@@ -73,10 +74,9 @@ const navItems = [
     key: "settings",
     label: "Settings",
     icon: (
-      <NavIcon>
-        <path d="m12 3 1.4 2.3 2.7.6-.7 2.7 1.8 2.1-1.8 2.1.7 2.7-2.7.6L12 21l-1.4-2.3-2.7-.6.7-2.7-1.8-2.1 1.8-2.1-.7-2.7 2.7-.6L12 3Z" />
-        <circle cx="12" cy="12" r="2.6" />
-      </NavIcon>
+      <span className="nav-item-icon" aria-hidden="true">
+        <SettingsIcon strokeWidth={2.15} />
+      </span>
     ),
   },
 ];
