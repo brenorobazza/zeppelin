@@ -8,3 +8,22 @@ body,
 body {
   min-height: 100vh;
 }
+
+/*
+  Evita que o caret de digitação apareça em áreas estáticas da interface
+  quando o usuário clica em textos, logos ou blocos não editáveis.
+*/
+body * {
+  caret-color: transparent;
+}
+
+input,
+textarea,
+select,
+[data-allow-selection="true"],
+[contenteditable="true"],
+[contenteditable="plaintext-only"] {
+  caret-color: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
