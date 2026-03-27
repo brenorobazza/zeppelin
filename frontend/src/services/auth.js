@@ -38,6 +38,18 @@ export async function registerAccount(payload) {
   return parseResponse(response, "Falha ao criar conta.");
 }
 
+export async function searchOrganizations(query) {
+  const response = await fetch(
+    `${API_BASE}/api/organization/organization/?search=${encodeURIComponent(query)}&page_size=5`,
+    {
+      credentials: "include",
+    }
+  );
+
+  const data = await parseResponse(response, "Falha ao buscar organizacoes.");
+  return data.data || [];
+}
+
 export async function requestPasswordReset(email) {
   const response = await fetch(`${API_BASE}/auth/forgot-password/`, {
     method: "POST",

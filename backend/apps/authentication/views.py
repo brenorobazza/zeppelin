@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from django.views import View
+import re
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -48,13 +49,15 @@ class RegisterView(APIView):
 
     @transaction.atomic
     def post(self, request):
-        username = request.data.get("username")
-        email = request.data.get("email")
+        username = _collapse_whitespace(request.data.get("username"))
+        email = (request.data.get("email") or "").strip()
         password = request.data.get("password")
-        role = request.data.get("role", "")
+        role = _collapse_whitespace(request.data.get("role", ""))
         organization_id = request.data.get("organization_id")
-        org_name = request.data.get("organization_name")
-        org_description = request.data.get("organization_description", "")
+        org_name = _collapse_whitespace(request.data.get("organization_name"))
+        org_description = _collapse_whitespace(
+            request.data.get("organization_description", "")
+        )
 
         if not username or not password:
             return Response({"error": "username and password are required"}, status=400)
@@ -74,9 +77,15 @@ class RegisterView(APIView):
             except Organization.DoesNotExist:
                 return Response({"error": "Organization not found"}, status=404)
         else:
-            organization = Organization.objects.create(
-                name=org_name, description=org_description
-            )
+            organization = _find_organization_by_normalized_name(org_name)
+            if organization and org_description and not organization.description:
+                organization.description = org_description
+                organization.save(update_fields=["description"])
+
+            if not organization:
+                organization = Organization.objects.create(
+                    name=org_name, description=org_description
+                )
 
         user = User.objects.create_user(
             username=username, email=email, password=password
@@ -159,6 +168,25 @@ class ForgotPasswordApiView(APIView):
 
 def _is_admin(user):
     return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
+
+
+def _collapse_whitespace(value):
+    return re.sub(r"\s+", " ", (value or "").strip())
+
+
+def _normalize_organization_name(value):
+    return _collapse_whitespace(value).casefold()
+
+
+def _find_organization_by_normalized_name(name):
+    normalized_name = _normalize_organization_name(name)
+    if not normalized_name:
+        return None
+
+    for organization in Organization.objects.only("id", "name", "description"):
+        if _normalize_organization_name(organization.name) == normalized_name:
+            return organization
+    return None
 
 
 def _has_membership(user, organization_id):

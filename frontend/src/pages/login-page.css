@@ -170,6 +170,51 @@
   box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.18);
 }
 
+.typeahead-note {
+  margin: -0.2rem 0 0.15rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.typeahead-note.success {
+  color: #0a6d2f;
+}
+
+.typeahead-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: -0.1rem;
+  margin-bottom: 0.2rem;
+}
+
+.typeahead-option {
+  width: 100%;
+  border: 1px solid #d7e2f1;
+  border-radius: 14px;
+  background: #f6f9ff;
+  color: #1c1e21;
+  padding: 0.8rem 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.typeahead-option strong {
+  display: block;
+  color: #123764;
+}
+
+.typeahead-option span {
+  display: block;
+  margin-top: 0.18rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.typeahead-option:hover {
+  border-color: var(--blue);
+  background: #eef5ff;
+}
+
 .btn-primary,
 .btn-secondary {
   width: 100%;

@@ -134,3 +134,44 @@ class OrganizationSettingsApiTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    def test_register_reuses_existing_organization_case_insensitively(self):
+        existing_org = Organization.objects.create(name="Bradesco")
+
+        response = self.client.post(
+            "/auth/register/",
+            data={
+                "username": "New Member",
+                "email": "newmember@example.com",
+                "password": "test-pass-123",
+                "role": "Analyst",
+                "organization_name": "  brADESCO  ",
+                "organization_description": "Banking company",
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertEqual(payload["organization_id"], existing_org.id)
+        self.assertEqual(
+            Organization.objects.filter(name__iexact="Bradesco").count(),
+            1,
+        )
+
+    def test_register_trims_new_organization_name_before_persisting(self):
+        response = self.client.post(
+            "/auth/register/",
+            data={
+                "username": "Whitespace User",
+                "email": "spaces@example.com",
+                "password": "test-pass-123",
+                "role": "Analyst",
+                "organization_name": "  Banco   XP  ",
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        created_org = Organization.objects.get(id=response.json()["organization_id"])
+        self.assertEqual(created_org.name, "Banco XP")

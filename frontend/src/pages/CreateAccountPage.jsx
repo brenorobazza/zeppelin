@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { registerAccount } from "../services/auth";
+import { useEffect, useState } from "react";
+import { registerAccount, searchOrganizations } from "../services/auth";
 import "./login-page.css";
 
 export function CreateAccountPage({ onBackToLogin }) {
@@ -11,6 +11,7 @@ export function CreateAccountPage({ onBackToLogin }) {
     email: "",
     password: "",
     role: "",
+    organization_id: "",
     organization_name: "",
     organization_description: ""
   });
@@ -19,11 +20,60 @@ export function CreateAccountPage({ onBackToLogin }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [organizationSuggestions, setOrganizationSuggestions] = useState([]);
+  const [isSearchingOrganizations, setIsSearchingOrganizations] = useState(false);
 
   // Atualiza qualquer campo do formulario de acordo com o "name" do input.
   function handleChange(event) {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "organization_name" ? { organization_id: "" } : {})
+    }));
+  }
+
+  useEffect(() => {
+    const query = form.organization_name.trim();
+    if (form.organization_id || query.length < 2) {
+      setOrganizationSuggestions([]);
+      setIsSearchingOrganizations(false);
+      return undefined;
+    }
+
+    let ignore = false;
+    const timerId = window.setTimeout(async () => {
+      setIsSearchingOrganizations(true);
+
+      try {
+        const suggestions = await searchOrganizations(query);
+        if (!ignore) {
+          setOrganizationSuggestions(suggestions);
+        }
+      } catch {
+        if (!ignore) {
+          setOrganizationSuggestions([]);
+        }
+      } finally {
+        if (!ignore) {
+          setIsSearchingOrganizations(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      ignore = true;
+      window.clearTimeout(timerId);
+    };
+  }, [form.organization_id, form.organization_name]);
+
+  function handleOrganizationSelect(organization) {
+    setForm((prev) => ({
+      ...prev,
+      organization_id: organization.id,
+      organization_name: organization.name
+    }));
+    setOrganizationSuggestions([]);
   }
 
   // Volta para o login.
@@ -137,6 +187,37 @@ export function CreateAccountPage({ onBackToLogin }) {
                 required
                 placeholder="Zeppelin Labs"
               />
+              {form.organization_id ? (
+                <p className="typeahead-note success">
+                  Existing organization selected. The account will be linked to this record.
+                </p>
+              ) : null}
+              {isSearchingOrganizations ? (
+                <p className="typeahead-note">Searching existing organizations...</p>
+              ) : null}
+              {!form.organization_id && organizationSuggestions.length > 0 ? (
+                <div className="typeahead-list" role="listbox" aria-label="Organization suggestions">
+                  {organizationSuggestions.map((organization) => (
+                    <button
+                      key={organization.id}
+                      type="button"
+                      className="typeahead-option"
+                      onClick={() => handleOrganizationSelect(organization)}
+                    >
+                      <strong>{organization.name}</strong>
+                      <span>Select existing organization</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {!form.organization_id &&
+              !isSearchingOrganizations &&
+              form.organization_name.trim().length >= 2 &&
+              organizationSuggestions.length === 0 ? (
+                <p className="typeahead-note">
+                  No existing organization matched this name. A new record will be created.
+                </p>
+              ) : null}
 
               <label htmlFor="organization_description">Organization description (optional)</label>
               <textarea
