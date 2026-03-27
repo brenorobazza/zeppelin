@@ -170,6 +170,21 @@ export default function App() {
     goToLogin();
   }
 
+  function updateUserProfile(nextProfile) {
+    setUser((current) => {
+      if (!current) return current;
+
+      const nextUser = {
+        ...current,
+        username: nextProfile.username || current.username,
+        fullName: nextProfile.fullName || current.fullName,
+        email: nextProfile.email || current.email,
+      };
+      localStorage.setItem("zeppelin_user", JSON.stringify(nextUser));
+      return nextUser;
+    });
+  }
+
   function updateAnalyticsFilters(nextFilters) {
     setAnalyticsFilters((current) => {
       const next = { ...current, ...nextFilters };
@@ -253,8 +268,14 @@ export default function App() {
     },
     settings: {
       title: "Organization Settings",
-      subtitle: "Manage organization and user profile information.",
-      component: <SettingsPage />
+      subtitle: "Review current members and apply removal permissions within the selected organization.",
+      component: (
+        <SettingsPage
+          organizationId={analyticsFilters.organizationId}
+          onProfileUpdated={updateUserProfile}
+          onSelfRemoved={logout}
+        />
+      )
     }
   };
 
@@ -267,7 +288,7 @@ export default function App() {
         title={page.title}
         subtitle={page.subtitle}
         organization={analytics.meta.organizationName}
-        userName={user.username}
+        userName={user.fullName || user.username}
         onNavigate={goToScreen}
         onLogout={logout}
         organizationOptions={user.organizations || []}
@@ -292,6 +313,9 @@ export default function App() {
         // Inicializa o usuário com seu nome e lista de empresas vinculadas.
         const newUser = { 
           username: loggedUser?.username || "Alex Silva",
+          fullName: loggedUser?.full_name || loggedUser?.username || "Alex Silva",
+          email: loggedUser?.email || "",
+          isAdmin: Boolean(loggedUser?.is_admin),
           organizations: loggedUser?.organizations || []
         };
         setUser(newUser);

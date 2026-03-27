@@ -22,6 +22,8 @@ class Command(BaseCommand):
     demo_username = "demo.analyst"
     demo_email = "demo@zeppelin.local"
     demo_password = "zeppelin-demo-123"
+    demo_first_name = "Alexandre"
+    demo_last_name = "Seixas"
 
     demo_scenarios = (
         {
@@ -171,6 +173,12 @@ class Command(BaseCommand):
         if user.email != self.demo_email:
             user.email = self.demo_email
             changed = True
+        if user.first_name != self.demo_first_name:
+            user.first_name = self.demo_first_name
+            changed = True
+        if user.last_name != self.demo_last_name:
+            user.last_name = self.demo_last_name
+            changed = True
         if not user.check_password(self.demo_password):
             user.set_password(self.demo_password)
             changed = True
@@ -207,7 +215,10 @@ class Command(BaseCommand):
             employee, _ = Employee.objects.update_or_create(
                 e_mail=self.demo_email,
                 employee_organization=organization,
-                defaults={"role": scenario["role"]},
+                defaults={
+                    "name": f"{self.demo_first_name} {self.demo_last_name}",
+                    "role": scenario["role"],
+                },
             )
             employees[organization_name] = employee
         return employees

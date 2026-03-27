@@ -7,7 +7,7 @@ const navItems = [
   { key: "results", label: "Results" },
   { key: "recommendations", label: "Recommendations" },
   { key: "history", label: "History" },
-  { key: "settings", label: "Organization Settings" }
+  { key: "settings", label: "Settings" }
 ];
 
 export function PlatformLayout({

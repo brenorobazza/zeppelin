@@ -375,6 +375,32 @@
   color: #24406a;
 }
 
+.btn-secondary-ui:disabled,
+.btn-primary-ui:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.feedback {
+  margin: 0 0 0.9rem;
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.feedback.error {
+  background: #fdeeee;
+  color: #9e2f2f;
+  border: 1px solid #f2caca;
+}
+
+.feedback.success {
+  background: #eaf8ef;
+  color: #1f6a3a;
+  border: 1px solid #cdebd7;
+}
+
 .executive-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.9fr);
@@ -992,6 +1018,76 @@
   color: #203251;
 }
 
+.settings-rule {
+  margin: 1rem 0 0;
+  color: #4a5d7a;
+}
+
+.settings-member-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.settings-profile-form {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e9f5;
+}
+
+.settings-profile-form__actions {
+  display: flex;
+  align-items: end;
+}
+
+.settings-member-card {
+  border: 1px solid #dce6f4;
+  border-radius: 16px;
+  background: #f8fbff;
+  padding: 0.95rem;
+}
+
+.settings-member-card__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.settings-member-card__head h4 {
+  margin: 0;
+  color: #142946;
+}
+
+.settings-member-card__head p {
+  margin: 0.3rem 0 0;
+  color: #61708a;
+}
+
+.settings-member-card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #e2e9f5;
+}
+
+.settings-member-card__meta span {
+  display: block;
+  color: #70809a;
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.settings-member-card__meta strong {
+  display: block;
+  margin-top: 0.22rem;
+  color: #203251;
+}
+
 @media (max-width: 1120px) {
   .platform-shell {
     grid-template-columns: 1fr;
@@ -1065,5 +1161,11 @@
 
   .section-head {
     flex-direction: column;
+  }
+
+  .settings-member-card__head,
+  .settings-member-card__meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
