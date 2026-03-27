@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.test import TestCase
 
 from apps.employee.models import Employee
@@ -175,3 +176,22 @@ class OrganizationSettingsApiTests(TestCase):
         self.assertEqual(response.status_code, 201)
         created_org = Organization.objects.get(id=response.json()["organization_id"])
         self.assertEqual(created_org.name, "Banco XP")
+
+    def test_merge_duplicate_organizations_reassigns_memberships(self):
+        canonical_org = Organization.objects.create(name="Ale test")
+        duplicate_org = Organization.objects.create(name="  ale   TEST ")
+        duplicate_employee = Employee.objects.create(
+            name="Duplicate Member",
+            e_mail="duplicate@example.com",
+            role="Engineer",
+            employee_organization=duplicate_org,
+        )
+
+        call_command("merge_duplicate_organizations")
+
+        duplicate_employee.refresh_from_db()
+        self.assertEqual(duplicate_employee.employee_organization_id, canonical_org.id)
+        self.assertEqual(
+            Organization.objects.filter(name__icontains="Ale test").count(),
+            1,
+        )

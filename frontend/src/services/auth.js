@@ -1,5 +1,12 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
 
+function normalizeOrganizationName(value) {
+  return (value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase();
+}
+
 async function parseResponse(response, fallbackMessage) {
   const data = await response.json().catch(() => ({}));
 
@@ -47,7 +54,21 @@ export async function searchOrganizations(query) {
   );
 
   const data = await parseResponse(response, "Falha ao buscar organizacoes.");
-  return data.data || [];
+  const organizations = data.data || [];
+  const uniqueOrganizations = [];
+  const seenNames = new Set();
+
+  organizations.forEach((organization) => {
+    const normalizedName = normalizeOrganizationName(organization.name);
+    if (!normalizedName || seenNames.has(normalizedName)) {
+      return;
+    }
+
+    seenNames.add(normalizedName);
+    uniqueOrganizations.push(organization);
+  });
+
+  return uniqueOrganizations;
 }
 
 export async function requestPasswordReset(email) {
