@@ -186,7 +186,9 @@ class OrganizationSettingsApiView(APIView):
         except Organization.DoesNotExist:
             return Response({"error": "Organization not found"}, status=404)
 
-        if not (_is_admin(request.user) or _has_membership(request.user, organization.id)):
+        if not (
+            _is_admin(request.user) or _has_membership(request.user, organization.id)
+        ):
             return Response(
                 {"error": "You do not have access to this organization."},
                 status=403,
@@ -194,9 +196,9 @@ class OrganizationSettingsApiView(APIView):
 
         current_email = (request.user.email or "").strip().lower()
         is_admin = _is_admin(request.user)
-        members = Employee.objects.filter(
-            employee_organization=organization
-        ).order_by("name", "id")
+        members = Employee.objects.filter(employee_organization=organization).order_by(
+            "name", "id"
+        )
         current_membership = Employee.objects.filter(
             e_mail__iexact=request.user.email,
             employee_organization=organization,
@@ -211,7 +213,8 @@ class OrganizationSettingsApiView(APIView):
                     "member_count": members.count(),
                 },
                 "current_user": {
-                    "full_name": request.user.get_full_name().strip() or request.user.username,
+                    "full_name": request.user.get_full_name().strip()
+                    or request.user.username,
                     "first_name": request.user.first_name or "",
                     "last_name": request.user.last_name or "",
                     "username": request.user.username,
@@ -253,13 +256,17 @@ class OrganizationSettingsMemberApiView(APIView):
     @transaction.atomic
     def delete(self, request, member_id):
         try:
-            member = Employee.objects.select_related("employee_organization").get(id=member_id)
+            member = Employee.objects.select_related("employee_organization").get(
+                id=member_id
+            )
         except Employee.DoesNotExist:
             return Response({"error": "Member not found"}, status=404)
 
         current_email = (request.user.email or "").strip().lower()
         member_email = (member.e_mail or "").strip().lower()
-        same_user = bool(current_email and member_email and current_email == member_email)
+        same_user = bool(
+            current_email and member_email and current_email == member_email
+        )
         is_admin = _is_admin(request.user)
 
         if not is_admin:
@@ -307,7 +314,9 @@ class CurrentUserProfileApiView(APIView):
 
         full_name = request.user.get_full_name().strip() or request.user.username
         if request.user.email:
-            Employee.objects.filter(e_mail__iexact=request.user.email).update(name=full_name)
+            Employee.objects.filter(e_mail__iexact=request.user.email).update(
+                name=full_name
+            )
 
         return Response(
             {

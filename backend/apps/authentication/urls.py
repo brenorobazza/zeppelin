@@ -25,6 +25,8 @@ urlpatterns = [
         OrganizationSettingsMemberApiView.as_view(),
         name="organization-settings-member-api",
     ),
-    path("profile/", CurrentUserProfileApiView.as_view(), name="current-user-profile-api"),
+    path(
+        "profile/", CurrentUserProfileApiView.as_view(), name="current-user-profile-api"
+    ),
     path("register/", RegisterView.as_view()),
 ]

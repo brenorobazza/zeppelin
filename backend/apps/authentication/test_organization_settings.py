@@ -73,9 +73,7 @@ class OrganizationSettingsApiTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(
-            Employee.objects.filter(id=self.member_employee.id).exists()
-        )
+        self.assertFalse(Employee.objects.filter(id=self.member_employee.id).exists())
         self.assertTrue(response.json()["deleted_self"])
 
     def test_member_cannot_delete_other_member(self):
