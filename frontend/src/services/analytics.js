@@ -1,3 +1,4 @@
+import { getAuthHeaders } from "./authHelper";
 import {
   fallbackAnalyticsMeta,
   fallbackDashboardData,

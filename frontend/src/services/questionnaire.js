@@ -1,3 +1,4 @@
+import { getAuthHeaders } from "./authHelper";
 /**
  * Serviços de comunicação com a API do módulo de Questionário.
  */
@@ -20,7 +21,7 @@ function getCookie(name) {
 
 // Busca todos os Níveis de Adoção (Adopted Levels) disponíveis no banco
 export async function getAdoptedLevels() {
-    const response = await fetch("/api/questionnaire/adoptedlevel/?page_size=100");
+    const response = await fetch("/api/questionnaire/adoptedlevel/?page_size=100", { headers: getAuthHeaders() });
 
     if (!response.ok) {
         throw new Error("Failed to fetch adopted levels");
@@ -32,7 +33,7 @@ export async function getAdoptedLevels() {
 
 // Busca todas as 71 Perguntas (Statements) oficiais do questionário
 export async function getStatements() {
-    const response = await fetch("/api/questionnaire/statement/?page_size=100");
+    const response = await fetch("/api/questionnaire/statement/?page_size=100", { headers: getAuthHeaders() });
 
     if (!response.ok) {
         throw new Error("Failed to fetch statements");
@@ -54,7 +55,7 @@ export async function getSavedAnswers(organizationId, questionnaireId) {
         url += `&questionnaire_answer=${questionnaireId}`;
     }
 
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: getAuthHeaders() });
 
     if (!response.ok) {
         throw new Error("Failed to fetch saved answers");
@@ -74,10 +75,10 @@ export async function createQuestionnaireCycle() {
 
     const response = await fetch("/api/questionnaire/questionnaire/", {
         method: "POST",
-        headers: {
+        headers: getAuthHeaders({
             "Content-Type": "application/json",
             "X-CSRFToken": csrftoken
-        },
+        }),
         body: JSON.stringify(payload)
     });
 
@@ -107,10 +108,10 @@ export async function saveAnswer(statementId, adoptedLevelId, organizationId, qu
 
     const response = await fetch("/api/questionnaire/answer/", {
         method: "POST",
-        headers: {
+        headers: getAuthHeaders({
             "Content-Type": "application/json",
             "X-CSRFToken": csrftoken
-        },
+        }),
         body: JSON.stringify(payload)
     });
 

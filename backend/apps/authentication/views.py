@@ -11,6 +11,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from apps.employee.models import Employee
 from apps.organization.models import Organization
 from django.db import transaction
+from oauth2_provider.models import Application, AccessToken, RefreshToken
+from oauthlib.common import generate_token
+from django.utils import timezone
+from datetime import timedelta
+from django.conf import settings
 
 
 class LoginPageView(View):
@@ -126,6 +131,39 @@ class LoginApiView(APIView):
 
         login(request, user)
 
+        # Generate OAuth2 Token
+        app = Application.objects.filter(
+            client_type=Application.CLIENT_CONFIDENTIAL
+        ).first()
+        if not app:
+            app = Application.objects.first()
+
+        access_token_str = None
+        refresh_token_str = None
+        expires_in = getattr(settings, "OAUTH2_PROVIDER", {}).get(
+            "ACCESS_TOKEN_EXPIRE_SECONDS", 36000
+        )
+
+        if app:
+            access_token_str = generate_token()
+            refresh_token_str = generate_token()
+            expires = timezone.now() + timedelta(seconds=expires_in)
+
+            AccessToken.objects.create(
+                user=user,
+                application=app,
+                expires=expires,
+                token=access_token_str,
+                scope="read write",
+            )
+
+            RefreshToken.objects.create(
+                user=user,
+                application=app,
+                token=refresh_token_str,
+                access_token=AccessToken.objects.get(token=access_token_str),
+            )
+
         # Identifica todas as empresas vinculadas ao e-mail do usuário.
         employees = Employee.objects.filter(e_mail__iexact=user.email).select_related(
             "employee_organization"
@@ -136,17 +174,21 @@ class LoginApiView(APIView):
             if e.employee_organization
         ]
 
-        return Response(
-            {
-                "id": user.id,
-                "username": user.username,
-                "full_name": user.get_full_name().strip() or user.username,
-                "email": user.email,
-                "is_admin": bool(user.is_staff or user.is_superuser),
-                "organizations": organizations,
-            },
-            status=200,
-        )
+        response_data = {
+            "id": user.id,
+            "username": user.username,
+            "full_name": user.get_full_name().strip() or user.username,
+            "email": user.email,
+            "is_admin": bool(user.is_staff or user.is_superuser),
+            "organizations": organizations,
+        }
+
+        if access_token_str:
+            response_data["access_token"] = access_token_str
+            response_data["refresh_token"] = refresh_token_str
+            response_data["expires_in"] = expires_in
+
+        return Response(response_data, status=200)
 
 
 class ForgotPasswordApiView(APIView):

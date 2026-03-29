@@ -179,6 +179,7 @@ export default function App() {
         username: nextProfile.username || current.username,
         fullName: nextProfile.fullName || current.fullName,
         email: nextProfile.email || current.email,
+        accessToken: current.accessToken,
       };
       localStorage.setItem("zeppelin_user", JSON.stringify(nextUser));
       return nextUser;
@@ -332,5 +333,8 @@ export default function App() {
         goToDashboard();
       }}
     />
+  );
+}
+/>
   );
 }

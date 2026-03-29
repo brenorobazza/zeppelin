@@ -1,3 +1,4 @@
+import { getAuthHeaders } from "./authHelper";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
 
 function getCookie(name) {
@@ -46,9 +47,9 @@ export async function deleteOrganizationMember(memberId) {
   const response = await fetch(`${API_BASE}/auth/organization-settings/members/${memberId}/`, {
     method: "DELETE",
     credentials: "include",
-    headers: {
+    headers: getAuthHeaders({
       "X-CSRFToken": getCookie("csrftoken"),
-    },
+    }),
   });
 
   return parseResponse(response, "Failed to remove member.");
@@ -58,10 +59,10 @@ export async function updateCurrentUserProfile(payload) {
   const response = await fetch(`${API_BASE}/auth/profile/`, {
     method: "PATCH",
     credentials: "include",
-    headers: {
+    headers: getAuthHeaders({
       "Content-Type": "application/json",
       "X-CSRFToken": getCookie("csrftoken"),
-    },
+    }),
     body: JSON.stringify(payload),
   });
 
