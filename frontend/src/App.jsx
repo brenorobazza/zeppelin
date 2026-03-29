@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PlatformLayout } from "./components/PlatformLayout";
 import { CreateAccountPage } from "./pages/CreateAccountPage";
 import { AssessmentPage } from "./pages/AssessmentPage";
@@ -56,10 +56,18 @@ export default function App() {
   }));
 
   const [refreshKey, setRefreshKey] = useState(0);
+  const lastScreenRef = useRef(screen);
 
   function triggerRefresh() {
     setRefreshKey(k => k + 1);
   }
+
+  useEffect(() => {
+    if (lastScreenRef.current === "assessment" && screen !== "assessment") {
+      triggerRefresh();
+    }
+    lastScreenRef.current = screen;
+  }, [screen]);
 
   useEffect(() => {
     // Sincroniza a interface com a URL sempre que o usuário navega manualmente.

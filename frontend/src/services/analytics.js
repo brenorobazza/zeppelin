@@ -273,7 +273,8 @@ function normalizeMeta(dashboardPayload, historyPayload) {
       .map((item, index) => ({
         id: String(item.id),
         label: item.label,
-        shortLabel: `Cycle ${index + 1}`
+        shortLabel: `Cycle ${index + 1}`,
+        answeredPractices: item.answered_practices || 0
       }))
   };
 }

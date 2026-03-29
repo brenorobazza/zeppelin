@@ -4,7 +4,7 @@ import { getStatements, getAdoptedLevels, saveAnswer, getSavedAnswers, createQue
 import departingImg from "../assets/departing.png";
 
 // Internal component for the questionnaire form
-function AssessmentForm({ organizationId, questionnaireId, onFinish }) {
+function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToList }) {
   const [questions, setQuestions] = useState([]);
   const [options, setOptions] = useState([]);
   
@@ -130,12 +130,21 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish }) {
 
   return (
     <>
-      <section className="panel">
-        <h3>Assessment Progress</h3>
-        <p>Question {current + 1} of {questions.length}</p>
-        <div className="progress">
-          <span style={{ width: `${progress}%` }} />
+      <section className="panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h3>Assessment Progress</h3>
+          <p>Question {current + 1} of {questions.length}</p>
+          <div className="progress" style={{ width: "200px", marginTop: "0.5rem" }}>
+            <span style={{ width: `${progress}%` }} />
+          </div>
         </div>
+        <button 
+          className="btn-secondary-ui" 
+          onClick={onBackToList}
+          style={{ fontSize: "0.9rem" }}
+        >
+          Exit and save
+        </button>
       </section>
 
       <section className="panel">
@@ -254,6 +263,7 @@ export function AssessmentPage({
         organizationId={organizationId}
         questionnaireId={questionnaireId}
         onFinish={onFinish}
+        onBackToList={() => setCurrentView("list")}
       />
     );
   }
@@ -366,6 +376,7 @@ export function AssessmentPage({
             <tr style={{ borderBottom: "2px solid #eaeaea", color: "#666" }}>
               <th style={{ padding: "1rem", fontWeight: "normal" }}>Organization Name</th>
               <th style={{ padding: "1rem", fontWeight: "normal" }}>Cycle</th>
+              <th style={{ padding: "1rem", fontWeight: "normal" }}>Progress</th>
               <th style={{ padding: "1rem", textAlign: "right", fontWeight: "normal" }}>Actions</th>
             </tr>
           </thead>
@@ -377,20 +388,43 @@ export function AssessmentPage({
               }}>
                 <td style={{ padding: "1rem" }}>{organizationName}</td>
                 <td style={{ padding: "1rem" }}>{cycle.label}</td>
+                <td style={{ padding: "1rem", color: cycle.answeredPractices < 71 ? "#f59f00" : "#22c55e", fontWeight: 500 }}>
+                  {cycle.answeredPractices} / 71 answered
+                </td>
                 <td style={{ padding: "1rem", textAlign: "right" }}>
-                  <button 
-                    onClick={() => onViewResults && onViewResults(cycle.id)}
-                    style={{ 
-                      background: "none", 
-                      border: "none", 
-                      color: "#007bff", 
-                      cursor: "pointer",
-                      fontSize: "0.95rem",
-                      textDecoration: "none"
-                    }}
-                  >
-                    View results
-                  </button>
+                  {cycle.answeredPractices < 71 ? (
+                    <button 
+                      onClick={() => {
+                        if (onCycleCreated) onCycleCreated(cycle.id);
+                        setCurrentView("form");
+                      }}
+                      style={{ 
+                        background: "none", 
+                        border: "none", 
+                        color: "#007bff", 
+                        cursor: "pointer",
+                        fontSize: "0.95rem",
+                        textDecoration: "none",
+                        fontWeight: "500"
+                      }}
+                    >
+                      Continue answering
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => onViewResults && onViewResults(cycle.id)}
+                      style={{ 
+                        background: "none", 
+                        border: "none", 
+                        color: "#007bff", 
+                        cursor: "pointer",
+                        fontSize: "0.95rem",
+                        textDecoration: "none"
+                      }}
+                    >
+                      View results
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

@@ -88,7 +88,9 @@ class QuestionnaireAnalyticsService:
         selected_cycle_empty = context.get("selected_cycle_empty", False)
         stage_scores = self._build_stage_scores(answers)
         recommendations = self._build_recommendations(answers)
-        history_cycles = self._build_history_cycles(context["all_answers"])
+        history_cycles = self._build_history_cycles(
+            context["all_answers"], context["organization"]
+        )
 
         return {
             "organization": self._serialize_organization(context["organization"]),
@@ -206,7 +208,9 @@ class QuestionnaireAnalyticsService:
         context = self._resolve_context(request)
         selected_answers = context.get("selected_answers", context["current_answers"])
         selected_cycle_empty = context.get("selected_cycle_empty", False)
-        cycles = self._build_history_cycles(context["all_answers"])
+        cycles = self._build_history_cycles(
+            context["all_answers"], context["organization"]
+        )
 
         if len(cycles) >= 2:
             baseline = cycles[0]
@@ -615,7 +619,7 @@ class QuestionnaireAnalyticsService:
         return items
 
     # Reconstrói a linha do tempo dos ciclos da organização.
-    def _build_history_cycles(self, answers):
+    def _build_history_cycles(self, answers, organization=None):
         grouped = defaultdict(list)
         questionnaires = {}
 
@@ -629,6 +633,16 @@ class QuestionnaireAnalyticsService:
                 questionnaires[
                     answer.questionnaire_answer_id
                 ] = answer.questionnaire_answer
+
+        if organization:
+            org_questionnaires = Questionnaire.objects.filter(
+                employee_questionnaire__employee_organization=organization
+            )
+            for q in org_questionnaires:
+                if q.id not in questionnaires:
+                    questionnaires[q.id] = q
+                    if q.id not in grouped:
+                        grouped[q.id] = []
 
         def sort_key(item):
             key, cycle_answers = item
