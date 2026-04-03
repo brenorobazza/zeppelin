@@ -9,7 +9,7 @@ down:
 destroy:
 	docker-compose down -v
 superuser:
-	sh ./create_superuser.sh
+	sh ./backend/create_superuser.sh
 
 seed-db:
 	docker-compose exec app python manage.py load_initial_questionnaire_data

@@ -10,8 +10,7 @@ ENV DEBUG=true
 WORKDIR /app
 
 # Copia tudo do projeto (raiz, onde está o docker-compose.yml)
-COPY ./backend/ .
-COPY .env .
+COPY . .
 COPY supervisord.conf .
 
 COPY requirements.txt .

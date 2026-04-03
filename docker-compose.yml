@@ -1,23 +1,21 @@
 services:
   app:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: zeppelin
     ports:
       - "8000:8000"
       - "5555:5555"
     volumes:
-      - .:/app
-      - ./logs:/app/logs
-    working_dir: /app/backend
+      - ./backend:/app
+      - ./.env:/app/.env
+    working_dir: /app
     depends_on:
       - db_zeppelin
       - redis
     env_file:
       - .env
-    environment:
-      - PYTHONPATH=/app/backend
     command: supervisord -c /etc/supervisord.conf
 
   db_zeppelin:

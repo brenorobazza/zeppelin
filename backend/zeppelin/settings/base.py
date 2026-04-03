@@ -87,7 +87,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join("templates")],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -134,7 +134,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 STATIC_URL = "/static/"
 
-STATICFILES_DIRS = (os.path.join("static"),)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 
 DATE_INPUT_FORMATS = ["%d/%m/%Y"]
 
@@ -215,7 +215,7 @@ LOGGING = {
         "file": {
             "level": "INFO",
             "class": "logging.FileHandler",
-            "filename": "./logs/django.log",
+            "filename": os.path.join(BASE_DIR, "logs", "django.log"),
             "formatter": "app",
         },
     },
