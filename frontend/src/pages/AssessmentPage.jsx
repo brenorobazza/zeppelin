@@ -1,19 +1,40 @@
-import { useEffect, useMemo, useState } from "react";
-import { FormOptionButton } from "../components/FormOptionButton";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { getStatements, getAdoptedLevels, saveAnswer, getSavedAnswers, createQuestionnaireCycle } from "../services/questionnaire";
-import departingImg from "../assets/departing.png";
+import { AssessmentTabs } from "../components/assessment/AssessmentTabs";
+import { AssessmentProgressHeader } from "../components/assessment/AssessmentProgressHeader";
+import { AssessmentQuestionBody } from "../components/assessment/AssessmentQuestionBody";
+import { AssessmentWelcome } from "../components/assessment/AssessmentWelcome";
+import { AssessmentHistoryTable } from "../components/assessment/AssessmentHistoryTable";
+import { AssessmentOrgSelectorModal } from "../components/assessment/AssessmentOrgSelectorModal";
+
+const STAGE_ORDER = {
+  "Agile R&D Organization": 1,
+  "Continuous Integration": 2,
+  "Continuous Deployment": 3,
+  "R&D as an Experiment System": 4
+};
 
 // Internal component for the questionnaire form
 function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToList }) {
-  const [questions, setQuestions] = useState([]);
+  const [groupedQuestions, setGroupedQuestions] = useState({});
+  const [stages, setStages] = useState([]);
+  const [activeStage, setActiveStage] = useState(null);
+  const [currentLocalIndex, setCurrentLocalIndex] = useState(0);
   const [options, setOptions] = useState([]);
-  
-  // "current" indicates which question is being displayed
-  const [current, setCurrent] = useState(0);
-
-  // Stores chosen answers: { [statementId]: adoptedLevelId }
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
+
+  // Refs to avoid race conditions and stale closures (especially for keyboard navigation)
+  const answersRef = useRef({});
+  const stagesRef = useRef([]);
+  const activeStageRef = useRef(null);
+  const currentLocalIndexRef = useRef(0);
+  const groupedQuestionsRef = useRef({});
+
+  useEffect(() => {
+    activeStageRef.current = activeStage;
+    currentLocalIndexRef.current = currentLocalIndex;
+  }, [activeStage, currentLocalIndex]);
 
   useEffect(() => {
     async function loadData() {
@@ -39,17 +60,50 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
             }
         });
 
-        setQuestions(sortedQuestions);
+        const grouped = {};
+        const stageListRaw = [];
+        sortedQuestions.forEach(q => {
+            const stageName = q.sth_stage?.name || "General";
+            if (!grouped[stageName]) {
+                grouped[stageName] = [];
+                stageListRaw.push(stageName);
+            }
+            grouped[stageName].push(q);
+        });
+
+        const stageList = stageListRaw.sort((a, b) => {
+            return (STAGE_ORDER[a] || 99) - (STAGE_ORDER[b] || 99);
+        });
+
+        setGroupedQuestions(grouped);
+        groupedQuestionsRef.current = grouped;
+        setStages(stageList);
+        stagesRef.current = stageList;
         setOptions(sortedOptions);
         setAnswers(initialAnswers);
+        answersRef.current = initialAnswers;
 
-        if (sortedQuestions.length > 0) {
-            const firstUnansweredIndex = sortedQuestions.findIndex(q => !initialAnswers[q.id]);
-            if (firstUnansweredIndex !== -1) {
-                setCurrent(firstUnansweredIndex);
-            } else {
-                setCurrent(sortedQuestions.length - 1);
+        if (stageList.length > 0) {
+            let foundStage = stageList[0];
+            let foundIndex = 0;
+
+            for (const stage of stageList) {
+                const questionsInStage = grouped[stage];
+                const unansweredIndex = questionsInStage.findIndex(q => !initialAnswers[q.id]);
+                if (unansweredIndex !== -1) {
+                    foundStage = stage;
+                    foundIndex = unansweredIndex;
+                    break;
+                }
             }
+
+            if (stageList.every(stage => grouped[stage].every(q => initialAnswers[q.id]))) {
+                foundStage = stageList[stageList.length - 1];
+                foundIndex = grouped[foundStage].length - 1;
+            }
+
+            setActiveStage(foundStage);
+            setCurrentLocalIndex(foundIndex);
         }
       } catch (error) {
         console.error("Error loading questionnaire data:", error);
@@ -60,17 +114,27 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
     loadData();
   }, [organizationId, questionnaireId]);
 
-  const currentQuestion = questions[current];
+  const questionsInActiveStage = activeStage ? groupedQuestions[activeStage] : [];
+  const currentQuestion = questionsInActiveStage ? questionsInActiveStage[currentLocalIndex] : null;
 
   const progress = useMemo(() => {
-    if (questions.length === 0) return 0;
-    return Math.round(((current + 1) / questions.length) * 100);
-  }, [current, questions]);
+    if (!questionsInActiveStage || questionsInActiveStage.length === 0) return 0;
+    return Math.round(((currentLocalIndex + 1) / questionsInActiveStage.length) * 100);
+  }, [currentLocalIndex, questionsInActiveStage]);
+
+  const allAnswered = useMemo(() => {
+    if (!stages || stages.length === 0) return false;
+    return stages.every(stage => 
+      groupedQuestions[stage]?.every(q => answers[q.id])
+    );
+  }, [stages, groupedQuestions, answers]);
 
   async function handleSetAnswer(optionId) {
     if (!currentQuestion) return;
     
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionId }));
+    const newAnswers = { ...answersRef.current, [currentQuestion.id]: optionId };
+    setAnswers(newAnswers);
+    answersRef.current = newAnswers;
 
     try {
       await saveAnswer(currentQuestion.id, optionId, organizationId, questionnaireId);
@@ -79,12 +143,60 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
     }
   }
 
+  function getNavState(currentAnswers, currentStage, currentStages, currentGrouped) {
+      const allComplete = currentStages.every(s => currentGrouped[s].every(q => currentAnswers[q.id]));
+      
+      if (allComplete) return { isComplete: true, nextStage: null };
+
+      const currentIndex = currentStages.indexOf(currentStage);
+      // Circular search for next missing stage
+      for (let i = 1; i < currentStages.length; i++) {
+          const checkIndex = (currentIndex + i) % currentStages.length;
+          const stage = currentStages[checkIndex];
+          if (currentGrouped[stage].some(q => !currentAnswers[q.id])) {
+              return { isComplete: false, nextStage: stage };
+          }
+      }
+
+      // If only current stage has missing items
+      if (currentGrouped[currentStage].some(q => !currentAnswers[q.id])) {
+          return { isComplete: false, nextStage: currentStage };
+      }
+
+      return { isComplete: true, nextStage: null };
+  }
+
   function handleNext() {
-    setCurrent((value) => Math.min(questions.length - 1, value + 1));
+    const curStage = activeStageRef.current;
+    const curLocalIdx = currentLocalIndexRef.current;
+    const curStages = stagesRef.current;
+    const curGrouped = groupedQuestionsRef.current;
+    const curAnswers = answersRef.current;
+
+    const questionsInStage = curGrouped[curStage] || [];
+
+    if (curLocalIdx < questionsInStage.length - 1) {
+        setCurrentLocalIndex(curLocalIdx + 1);
+    } else {
+        const nav = getNavState(curAnswers, curStage, curStages, curGrouped);
+        if (nav.nextStage) {
+            setActiveStage(nav.nextStage);
+            const firstUnansweredIndex = curGrouped[nav.nextStage].findIndex(q => !curAnswers[q.id]);
+            setCurrentLocalIndex(firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0);
+        } else {
+            const currentStageIndex = curStages.indexOf(curStage);
+            if (currentStageIndex < curStages.length - 1) {
+                setActiveStage(curStages[currentStageIndex + 1]);
+                setCurrentLocalIndex(0);
+            } else if (onFinish) {
+                onFinish();
+            }
+        }
+    }
   }
 
   function handleBack() {
-    setCurrent((value) => Math.max(0, value - 1));
+    setCurrentLocalIndex((value) => Math.max(0, value - 1));
   }
 
   useEffect(() => {
@@ -97,22 +209,21 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
       }
 
       if (event.key === "Enter") {
-        const isAnswered = currentQuestion && answers[currentQuestion.id];
-        if (isAnswered) {
-          if (current < questions.length - 1) {
-            handleNext();
-          } else if (onFinish) {
-            onFinish();
-          }
+        const curStage = activeStageRef.current;
+        const curLocalIdx = currentLocalIndexRef.current;
+        const curAnswers = answersRef.current;
+        const curGrouped = groupedQuestionsRef.current;
+        
+        const currentQ = curGrouped[curStage]?.[curLocalIdx];
+        if (currentQ && curAnswers[currentQ.id]) {
+          handleNext();
         }
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [questions, options, current, answers, onFinish, currentQuestion]);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [options, onFinish]);
 
   if (loading) {
     return (
@@ -122,82 +233,61 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
     );
   }
 
-  if (questions.length === 0) {
+  if (stages.length === 0 || !activeStage) {
     return (
       <section className="panel">
         <h3>No questions found.</h3>
-        <p>Make sure the database was populated by running <code>make seed-db</code>.</p>
+        <p>You were not supposed to see this.</p>
+        {/* Dev, run make seed-db */}
       </section>
     );
   }
 
+  const isLastQuestionInStage = currentLocalIndex === questionsInActiveStage.length - 1;
+  const isLastStage = activeStage === stages[stages.length - 1];
+
   return (
     <>
-      <section className="panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h3>Assessment Progress</h3>
-          <p>Question {current + 1} of {questions.length}</p>
-          <div className="progress" style={{ width: "200px", marginTop: "0.5rem" }}>
-            <span style={{ width: `${progress}%` }} />
-          </div>
-        </div>
-        <button 
-          className="btn-secondary-ui" 
-          onClick={onBackToList}
-          style={{ fontSize: "0.9rem" }}
-        >
-          Exit and save
-        </button>
-      </section>
+      <AssessmentTabs 
+        stages={stages} 
+        groupedQuestions={groupedQuestions} 
+        answers={answers} 
+        activeStage={activeStage} 
+        onTabClick={(stage, stageQuestions) => {
+          setActiveStage(stage);
+          const firstUnanswered = stageQuestions.findIndex(q => !answers[q.id]);
+          setCurrentLocalIndex(firstUnanswered !== -1 ? firstUnanswered : 0);
+        }}
+      />
 
-      <section className="panel">
-        <h4 style={{ color: "#666", marginBottom: "0.5rem" }}>
-          [{currentQuestion.code}]
-        </h4>
-        <h3 style={{ fontSize: "1.2rem", marginBottom: "2rem" }}>
-          {currentQuestion.text || currentQuestion.statement}
-        </h3>
+      <AssessmentProgressHeader 
+        activeStage={activeStage} 
+        currentLocalIndex={currentLocalIndex} 
+        questionsInActiveStage={questionsInActiveStage} 
+        progress={progress} 
+        onBackToList={onBackToList} 
+      />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {options.map((option) => {
-            const isSelected = answers[currentQuestion.id] === option.id;
-            return (
-              <FormOptionButton
-                key={option.id}
-                title={`${option.percentage}% - ${option.name}`}
-                description={option.description}
-                selected={isSelected}
-                radius="square"
-                onClick={() => handleSetAnswer(option.id)}
-              />
-            );
-          })}
-        </div>
-
-        <div className="btn-row" style={{ marginTop: "2rem", display: "flex", justifyContent: "space-between" }}>
-          <button
-            className="btn-secondary-ui"
-            type="button"
-            onClick={handleBack}
-            disabled={current === 0}
-          >
-            Back
-          </button>
-          
-          <button
-            className="btn-primary-ui"
-            type="button"
-            onClick={current === questions.length - 1 ? onFinish : handleNext}
-            disabled={!answers[currentQuestion.id]}
-          >
-            {current === questions.length - 1 ? "Finish" : "Next"}
-          </button>
-        </div>
-      </section>
+      {currentQuestion && (
+        <AssessmentQuestionBody 
+          currentQuestion={currentQuestion} 
+          options={options} 
+          answers={answers} 
+          handleSetAnswer={handleSetAnswer} 
+          handleBack={handleBack} 
+          handleNext={handleNext} 
+          currentLocalIndex={currentLocalIndex} 
+          isLastQuestionInStage={isLastQuestionInStage} 
+          isLastStage={isLastStage} 
+          allAnswered={allAnswered} 
+          stages={stages} 
+          groupedQuestions={groupedQuestions} 
+          activeStage={activeStage}
+        />
+      )}
     </>
   );
 }
-
 
 // Main component managing visualization states
 export function AssessmentPage({ 
@@ -274,167 +364,37 @@ export function AssessmentPage({
 
   if (currentView === "modal") {
     return (
-      <section className="panel" style={{ textAlign: "center", padding: "4rem 2rem", maxWidth: "500px", margin: "0 auto" }}>
-        <h3>Select organization</h3>
-        <p style={{ color: "#666", marginBottom: "2rem" }}>
-          Choose which company this new diagnostic will be linked to.
-        </p>
-        
-        <select 
-          value={selectedOrgId} 
-          onChange={(e) => setSelectedOrgId(e.target.value)}
-          style={{ 
-            width: "100%", 
-            padding: "0.8rem", 
-            marginBottom: "2rem", 
-            borderRadius: "4px", 
-            border: "1px solid #ccc",
-            fontSize: "1rem"
-          }}
-        >
-          <option value="" disabled>Select a company...</option>
-          {organizations.map(org => (
-            <option key={org.id} value={org.id}>{org.name}</option>
-          ))}
-        </select>
-
-        <button 
-          className="btn-primary-ui" 
-          disabled={!selectedOrgId}
-          onClick={handleSelectOrganization}
-        >
-          Next
-        </button>
-      </section>
+      <AssessmentOrgSelectorModal 
+        organizations={organizations} 
+        selectedOrgId={selectedOrgId} 
+        setSelectedOrgId={setSelectedOrgId} 
+        handleSelectOrganization={handleSelectOrganization} 
+      />
     );
   }
 
-  // currentView === "list"
   if (cycleOptions.length === 0) {
     return (
-      <section className="panel" style={{ textAlign: "center", padding: "4rem 2rem" }}>
-        {organizations.length > 1 && (
-          <div style={{ marginBottom: "2rem", display: "flex", justifyContent: "center", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontWeight: "bold" }}>Organization:</span>
-            <select 
-              value={organizationId} 
-              onChange={(e) => onChangeOrganization && onChangeOrganization(e.target.value)}
-              style={{ padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc", fontSize: "1rem" }}
-            >
-              {organizations.map(org => (
-                <option key={org.id} value={org.id}>{org.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
-        <div style={{ 
-          width: "300px", 
-          height: "150px", 
-          margin: "0 auto 2rem", 
-          display: "flex", 
-          alignItems: "center", 
-          justifyContent: "center",
-          borderRadius: "8px"
-        }}>
-          {/* visual Placeholder */}
-          {/* <span style={{ color: "#888", fontSize: "3rem" }}>📋</span> */}
-          <img src={departingImg} alt="Zeppelin departing" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.4 }} />
-        </div>
-        <h3 style={{ marginBottom: "1rem", fontSize: "1.5rem" }}>Welcome to Zeppelin!</h3>
-        <p style={{ color: "#666", marginBottom: "2rem", maxWidth: "400px", margin: "0 auto 2rem" }}>
-          To understand your CSE maturity, start your first diagnostic
-        </p>
-        <button className="btn-primary-ui" onClick={handleStartNew}>
-          Start assessment
-        </button>
-      </section>
+      <AssessmentWelcome 
+        organizations={organizations} 
+        organizationId={organizationId} 
+        onChangeOrganization={onChangeOrganization} 
+        handleStartNew={handleStartNew} 
+      />
     );
   }
 
-  // Table view with history
   return (
-    <section className="panel">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          <h3 style={{ margin: 0 }}>Your previous assessments</h3>
-          {organizations.length > 1 && (
-            <select 
-              value={organizationId} 
-              onChange={(e) => onChangeOrganization && onChangeOrganization(e.target.value)}
-              style={{ padding: "0.4rem", borderRadius: "4px", border: "1px solid #ccc" }}
-            >
-              {organizations.map(org => (
-                <option key={org.id} value={org.id}>{org.name}</option>
-              ))}
-            </select>
-          )}
-        </div>
-        <button className="btn-primary-ui" onClick={handleStartNew} style={{ borderRadius: "20px", padding: "0.5rem 1.5rem" }}>
-          New
-        </button>
-      </div>
-      
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.95rem" }}>
-          <thead>
-            <tr style={{ borderBottom: "2px solid #eaeaea", color: "#666" }}>
-              <th style={{ padding: "1rem", fontWeight: "normal" }}>Organization Name</th>
-              <th style={{ padding: "1rem", fontWeight: "normal" }}>Cycle</th>
-              <th style={{ padding: "1rem", fontWeight: "normal" }}>Progress</th>
-              <th style={{ padding: "1rem", textAlign: "right", fontWeight: "normal" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cycleOptions.map((cycle, index) => (
-              <tr key={cycle.id} style={{ 
-                borderBottom: "1px solid #eaeaea", 
-                backgroundColor: index % 2 === 0 ? "#f9f9f9" : "transparent"
-              }}>
-                <td style={{ padding: "1rem" }}>{organizationName}</td>
-                <td style={{ padding: "1rem" }}>{cycle.label}</td>
-                <td style={{ padding: "1rem", color: cycle.answeredPractices < 71 ? "#f59f00" : "#22c55e", fontWeight: 500 }}>
-                  {cycle.answeredPractices} / 71 answered
-                </td>
-                <td style={{ padding: "1rem", textAlign: "right" }}>
-                  {cycle.answeredPractices < 71 ? (
-                    <button 
-                      onClick={() => {
-                        if (onCycleCreated) onCycleCreated(cycle.id);
-                        setCurrentView("form");
-                      }}
-                      style={{ 
-                        background: "none", 
-                        border: "none", 
-                        color: "#007bff", 
-                        cursor: "pointer",
-                        fontSize: "0.95rem",
-                        textDecoration: "none",
-                        fontWeight: "500"
-                      }}
-                    >
-                      Continue answering
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => onViewResults && onViewResults(cycle.id)}
-                      style={{ 
-                        background: "none", 
-                        border: "none", 
-                        color: "#007bff", 
-                        cursor: "pointer",
-                        fontSize: "0.95rem",
-                        textDecoration: "none"
-                      }}
-                    >
-                      View results
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <AssessmentHistoryTable 
+      cycleOptions={cycleOptions} 
+      organizationName={organizationName} 
+      onCycleCreated={onCycleCreated} 
+      onViewResults={onViewResults} 
+      setCurrentView={setCurrentView} 
+      organizations={organizations} 
+      organizationId={organizationId} 
+      onChangeOrganization={onChangeOrganization} 
+      handleStartNew={handleStartNew} 
+    />
   );
 }

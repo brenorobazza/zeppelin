@@ -49,12 +49,17 @@ export async function getSavedAnswers(organizationId, questionnaireId) {
         throw new Error("organizationId is required to fetch saved answers");
     }
 
-    let url = `/api/questionnaire/answer/?organization_answer=${organizationId}&page_size=1000`;
+    // Build query parameters explicitly to avoid data leakage
+    const params = new URLSearchParams({
+        organization_answer: organizationId,
+        page_size: "1000"
+    });
     
     if (questionnaireId) {
-        url += `&questionnaire_answer=${questionnaireId}`;
+        params.append("questionnaire_answer", questionnaireId);
     }
 
+    const url = `/api/questionnaire/answer/?${params.toString()}`;
     const response = await fetch(url, { headers: getAuthHeaders() });
 
     if (!response.ok) {
