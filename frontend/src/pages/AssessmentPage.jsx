@@ -97,10 +97,13 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
       }
 
       if (event.key === "Enter") {
-        if (current < questions.length - 1) {
-          handleNext();
-        } else if (onFinish) {
-          onFinish();
+        const isAnswered = currentQuestion && answers[currentQuestion.id];
+        if (isAnswered) {
+          if (current < questions.length - 1) {
+            handleNext();
+          } else if (onFinish) {
+            onFinish();
+          }
         }
       }
     }
@@ -109,7 +112,7 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [questions, options, current, onFinish]);
+  }, [questions, options, current, answers, onFinish, currentQuestion]);
 
   if (loading) {
     return (
@@ -185,6 +188,7 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
             className="btn-primary-ui"
             type="button"
             onClick={current === questions.length - 1 ? onFinish : handleNext}
+            disabled={!answers[currentQuestion.id]}
           >
             {current === questions.length - 1 ? "Finish" : "Next"}
           </button>

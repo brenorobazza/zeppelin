@@ -8,10 +8,10 @@ This repository contains the complete web application, transitioning the diagnos
 
 ## Tech Stack
 
-- **Backend:** Django, Django Rest Framework (DRF)
-- **Database:** PostgreSQL
+- **Backend:** Django 4.1+, Django Rest Framework (DRF)
+- **Database:** PostgreSQL 15+
 - **Asynchronous Tasks:** Celery + Redis
-- **Frontend:** React, Vite
+- **Frontend:** React 18, Vite 5 (with Radar Charts for analytics)
 - **Infrastructure:** Docker & Docker Compose
 
 ---
@@ -28,8 +28,8 @@ This repository contains the complete web application, transitioning the diagnos
 ## Development Environment Setup
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+
+- Python 3.12+
+- Node.js 20+
 - Docker and Docker Compose
 
 ### Setup
@@ -40,8 +40,12 @@ git clone <repo-url>
 cd zeppelin-backend
 
 # Create the virtual environment
-python3.11 -m venv .venv
+# On Unix:
+python -m venv .venv
 source .venv/bin/activate
+# On Windows:
+# python -m venv .venv
+# .venv\Scripts\activate
 
 # Install all dependencies (Python, pre-commit hooks and frontend)
 ./setup-dev.sh
@@ -65,7 +69,7 @@ Follow these steps to get the entire Zeppelin stack (Backend + Frontend) running
    ```bash
    cp .env.example .env
    ```
-   *(Update the variables inside `.env` according to your environment).*
+   *(Update the variables inside `.env`. For local development via proxy, keep `VITE_API_BASE_URL` empty).*
 
 2. **Start the environment with Docker**
    ```bash
@@ -84,11 +88,17 @@ Follow these steps to get the entire Zeppelin stack (Backend + Frontend) running
    ```
    *This will load the 71 official questions and required adoption levels into the database.*
 
-5. **Access Zeppelin**
+5. **(Optional) Load demo data**
+   ```bash
+   make seed-demo
+   ```
+   *This will populate a sample organization with answers to test the analytics dashboard.*
+
+6. **Access Zeppelin**
    * **Web Interface (React):** [http://localhost:5173](http://localhost:5173)
    * **API / Backend Admin:** [http://localhost:8000/admin](http://localhost:8000/admin)
 
-6. **Stop the environment**
+7. **Stop the environment**
    ```bash
    make down
    ```
@@ -102,6 +112,7 @@ Follow these steps to get the entire Zeppelin stack (Backend + Frontend) running
 | `make up`        | Starts the containers defined in `docker-compose.yml`.                      |
 | `make build`     | Rebuilds images and starts containers. Use after adding new dependencies.   |
 | `make seed-db`   | Populates the database with the 71 official questions and base structures.  |
+| `make seed-demo` | Populates the database with demo answers for testing analytics.             |
 | `make down`      | Stops and removes containers, preserving volumes.                           |
 | `make destroy`   | Stops and removes containers **and** volumes (erases persisted data).       |
 | `make superuser` | Runs the `create_superuser.sh` script to create a Django admin.             |
