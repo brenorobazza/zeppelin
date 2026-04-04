@@ -1,3 +1,36 @@
+/**
+ * ASSESSMENT PAGE - ZEPPELIN
+ * 
+ * This page manages the Continuous Software Engineering (CSE) maturity diagnostic.
+ * 
+ * ARCHITECTURE & LOGIC:
+ * - Questionnaire Structure: 71 questions grouped by 4 Stairway to Heaven (StH) stages.
+ * - Theoretical Ordering: Fixed progression (AO -> CI -> CD -> RD).
+ * - Componentization: Deconstructed into specialized components (Tabs, Header, Body, Table) 
+ *   located in `components/assessment/`.
+ * 
+ * NAVIGATION RULES (Circular & Progressive):
+ * 1. Intra-stage Strictness: Users cannot skip questions within a single stage. The 'Next'
+ *    button is disabled until an answer is selected.
+ * 2. Inter-stage Flexibility: Users can jump between stages using the top tabs. Clicking a 
+ *    tab redirects to the first unanswered question of that specific stage.
+ * 3. Smart Circular Routing: Upon completing the last question of ANY stage, the system 
+ *    automatically scans all OTHER stages in circular order (S_current+1, S_current+2...) 
+ *    to find the next incomplete one.
+ * 4. "Review Missing" State: If a user finishes a stage but skipped questions in previous 
+ *    stages, the button text changes to "Review Missing" and routes them backwards.
+ * 5. Completion: The 'Finish' action is only available when 100% of the 71 questions 
+ *    are answered. If everything is complete, 'Next Stage' serves as a review navigation 
+ *    until the absolute last question of the final stage.
+ * 
+ * EDGE CASES HANDLED:
+ * - Keyboard Race Conditions: Uses `useRef` (answersRef, activeStageRef) to ensure the 
+ *   'Enter' key logic always reads the most recent data, even if React state hasn't 
+ *   finished re-rendering.
+ * - Data Leakage: Strict cycle-based filtering in `getSavedAnswers` to ensure responses 
+ *   from previous diagnostics don't pollute new cycles.
+ */
+
 import { useEffect, useMemo, useState, useRef } from "react";
 import { getStatements, getAdoptedLevels, saveAnswer, getSavedAnswers, createQuestionnaireCycle } from "../services/questionnaire";
 import { AssessmentTabs } from "../components/assessment/AssessmentTabs";
