@@ -1,10 +1,10 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
+  - family-names: "Robazza"
+    given-names: "Breno"
   - family-names: "Seixas Adler"
     given-names: "Alexandre Leandro"
-  - family-names: "Salvador Robazza"
-    given-names: "Breno Luigi"
   - family-names: "Félix Borges"
     given-names: "Pedro Antônio"
 title: "Zeppelin: A Diagnostic Instrument for Continuous Software Engineering"
