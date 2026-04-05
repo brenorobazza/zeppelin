@@ -162,19 +162,36 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
     );
   }, [stages, groupedQuestions, answers]);
 
-  async function handleSetAnswer(optionId) {
-    if (!currentQuestion) return;
+  // Use refs for everything used in keyboard shortcuts to avoid stale closures
+  const onFinishRef = useRef(onFinish);
+  const optionsRef = useRef([]);
+
+  useEffect(() => {
+    onFinishRef.current = onFinish;
+  }, [onFinish]);
+
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
+
+  const handleSetAnswer = async (optionId) => {
+    const curStage = activeStageRef.current;
+    const curLocalIdx = currentLocalIndexRef.current;
+    const curGrouped = groupedQuestionsRef.current;
+    const currentQ = curGrouped[curStage]?.[curLocalIdx];
+
+    if (!currentQ) return;
     
     // Toggle logic: if the option is already selected, we remove it (null)
-    const isCurrentlySelected = answersRef.current[currentQuestion.id] === optionId;
+    const isCurrentlySelected = answersRef.current[currentQ.id] === optionId;
     const newAnswers = { ...answersRef.current };
     let newValue = optionId;
 
     if (isCurrentlySelected) {
-      delete newAnswers[currentQuestion.id];
+      delete newAnswers[currentQ.id];
       newValue = null;
     } else {
-      newAnswers[currentQuestion.id] = optionId;
+      newAnswers[currentQ.id] = optionId;
     }
 
     setAnswers(newAnswers);
@@ -183,12 +200,12 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
     try {
       // Only send auto-save if a real value was selected
       if (newValue !== null) {
-        await saveAnswer(currentQuestion.id, newValue, organizationId, questionnaireId);
+        await saveAnswer(currentQ.id, newValue, organizationId, questionnaireId);
       }
     } catch (err) {
       console.error("Auto-save failed:", err);
     }
-  }
+  };
 
   function getNavState(currentAnswers, currentStage, currentStages, currentGrouped) {
       const allComplete = currentStages.every(s => currentGrouped[s].every(q => currentAnswers[q.id]));
@@ -213,7 +230,7 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
       return { isComplete: true, nextStage: null };
   }
 
-  function handleNext() {
+  const handleNext = () => {
     const curStage = activeStageRef.current;
     const curLocalIdx = currentLocalIndexRef.current;
     const curStages = stagesRef.current;
@@ -235,23 +252,24 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
             if (currentStageIndex < curStages.length - 1) {
                 setActiveStage(curStages[currentStageIndex + 1]);
                 setCurrentLocalIndex(0);
-            } else if (onFinish) {
-                onFinish();
+            } else if (onFinishRef.current) {
+                onFinishRef.current();
             }
         }
     }
-  }
+  };
 
-  function handleBack() {
+  const handleBack = () => {
     setCurrentLocalIndex((value) => Math.max(0, value - 1));
-  }
+  };
 
   useEffect(() => {
     function handleKeyDown(event) {
       if (event.key >= "1" && event.key <= "5") {
         const index = parseInt(event.key, 10) - 1;
-        if (options[index]) {
-          handleSetAnswer(options[index].id);
+        const currentOptions = optionsRef.current;
+        if (currentOptions[index]) {
+          handleSetAnswer(currentOptions[index].id);
         }
       }
 
@@ -273,7 +291,7 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [options, onFinish]);
+  }, []); // Run only once, use refs inside handleKeyDown
 
   if (loading) {
     return (
