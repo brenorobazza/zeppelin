@@ -636,7 +636,7 @@ class QuestionnaireAnalyticsService:
 
         if organization:
             org_questionnaires = Questionnaire.objects.filter(
-                employee_questionnaire__employee_organization=organization
+                employee_questionnaire__employee_organization_id=organization.id
             )
             for q in org_questionnaires:
                 if q.id not in questionnaires:

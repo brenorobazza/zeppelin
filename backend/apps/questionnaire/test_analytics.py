@@ -171,7 +171,10 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
                 "all_answers": self.all_answers,
                 "current_answers": self.current_answers,
             },
-        ):
+        ), patch(
+            "apps.questionnaire.analytics.Questionnaire.objects.filter"
+        ) as mock_filter:
+            mock_filter.return_value = []
             payload = self.service.get_dashboard_payload(request)
 
         self.assertEqual(payload["organization"]["name"], "Zeppelin Labs")
