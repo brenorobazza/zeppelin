@@ -61,7 +61,7 @@ jobs:
     - name: Set up Node.js (if frontend exists)
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22'
       if: hashFiles('frontend/package.json') != ''
 
     - name: Install frontend dependencies
