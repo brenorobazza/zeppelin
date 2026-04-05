@@ -1,0 +1,68 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Seixas Adler"
+    given-names: "Alexandre Leandro"
+  - family-names: "Salvador Robazza"
+    given-names: "Breno Luigi"
+  - family-names: "Félix Borges"
+    given-names: "Pedro Antônio"
+title: "Zeppelin: A Diagnostic Instrument for Continuous Software Engineering"
+version: 0.1.0
+date-released: 2026-04-05
+url: "https://github.com/brenorobazza/zeppelin-backend"
+repository-code: "https://github.com/brenorobazza/zeppelin-backend"
+license: Apache-2.0
+keywords:
+  - Continuous Software Engineering
+  - Software Maturity
+  - Stairway to Heaven
+  - Diagnostic Instrument
+  - Web Application
+contact:
+  - name: "Professor Breno Bernard Nicolau de França"
+    affiliation: "University of Campinas (UNICAMP)"
+references:
+  - type: data
+    authors:
+      - family-names: "Araujo"
+        given-names: "Alline Dias de"
+      - family-names: "França"
+        given-names: "Breno Bernard Nicolau de"
+    title: "Replication Data for: Diagnosis and recommendations for CI/CD practices based on the zeppelin instrument"
+    year: 2025
+    doi: "10.25824/redu/GVNP7C"
+    publisher:
+      name: "Repositório de Dados de Pesquisa da Unicamp"
+  - type: article
+    authors:
+      - family-names: "Santos Jr"
+        given-names: "G. D."
+      - family-names: "França"
+        given-names: "B. B. N."
+    title: "Flying over Brazilian Organizations with Zeppelin"
+    year: 2022
+  - type: article
+    authors:
+      - family-names: "Barcellos"
+        given-names: "Monalessa Perini"
+    title: "Towards a Framework for Continuous Software Engineering"
+    year: 2020
+  - type: article
+    authors:
+      - family-names: "Fitzgerald"
+        given-names: "Brian"
+      - family-names: "Stol"
+        given-names: "Klaas-Jan"
+    title: "Continuous software engineering: A roadmap and agenda"
+    year: 2017
+  - type: article
+    authors:
+      - family-names: "Holmström Olsson"
+        given-names: "Helena"
+      - family-names: "Alahyari"
+        given-names: "Hiva"
+      - family-names: "Bosch"
+        given-names: "Jan"
+    title: "Climbing the 'Stairway to Heaven'"
+    year: 2012

@@ -18,10 +18,12 @@ This repository contains the complete web application, transitioning the diagnos
 
 ## References
 
-1. Monalessa Perini Barcellos. 2020. Towards a Framework for Continuous Software Engineering. In Proceedings of the 34th Brazilian Symposium on Software Engineering.
-2. Brian Fitzgerald and Klaas-Jan Stol. 2017. Continuous software engineering: A roadmap and agenda.
-3. Helena Holmström Olsson, Hiva Alahyari, and Jan Bosch. 2012. Climbing the "Stairway to Heaven".
-4. Jan Ole Johanssen, Anja Kleebaum, Barbara Paech, and Bernd Bruegge. 2019. Continuous software engineering and its support by usage and decision knowledge: An interview study with practitioners.
+1. Araujo, Alline Dias de; França, Breno Bernard Nicolau de, 2025, "Replication Data for: Diagnosis and recommendations for CI/CD practices based on the zeppelin instrument", https://doi.org/10.25824/redu/GVNP7C, Repositório de Dados de Pesquisa da Unicamp, V1.
+2. Monalessa Perini Barcellos. 2020. Towards a Framework for Continuous Software Engineering. In Proceedings of the 34th Brazilian Symposium on Software Engineering.
+3. Brian Fitzgerald and Klaas-Jan Stol. 2017. Continuous software engineering: A roadmap and agenda.
+4. Helena Holmström Olsson, Hiva Alahyari, and Jan Bosch. 2012. Climbing the "Stairway to Heaven".
+5. Jan Ole Johanssen, Anja Kleebaum, Barbara Paech, and Bernd Bruegge. 2019. Continuous software engineering and its support by usage and decision knowledge: An interview study with practitioners.
+6. Santos Jr, G. D.; França, B. B. N. 2022. "Flying over Brazilian Organizations with Zeppelin".
 
 ---
 
