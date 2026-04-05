@@ -23,25 +23,27 @@ contact:
   - name: "Professor Breno Bernard Nicolau de França"
     affiliation: "University of Campinas (UNICAMP)"
 references:
-  - type: data
+  - type: thesis
     authors:
       - family-names: "Araujo"
         given-names: "Alline Dias de"
-      - family-names: "França"
-        given-names: "Breno Bernard Nicolau de"
-    title: "Replication Data for: Diagnosis and recommendations for CI/CD practices based on the zeppelin instrument"
+    title: "Diagnosis and Recommendations for CI/CD Practices based on the Zeppelin Instrument"
     year: 2025
-    doi: "10.25824/redu/GVNP7C"
-    publisher:
-      name: "Repositório de Dados de Pesquisa da Unicamp"
-  - type: article
+    thesis-type: "Master's Dissertation"
+    institution:
+      name: "University of Campinas (UNICAMP)"
+  - type: conference-paper
     authors:
-      - family-names: "Santos Jr"
-        given-names: "G. D."
-      - family-names: "França"
-        given-names: "B. B. N."
-    title: "Flying over Brazilian Organizations with Zeppelin"
-    year: 2022
+      - family-names: "dos Santos Júnior"
+        given-names: "Paulo Sérgio"
+      - family-names: "Perini Barcellos"
+        given-names: "Monalessa"
+      - family-names: "Borges Ruy"
+        given-names: "Fabiano"
+    title: "Tell me: Am I going to Heaven? A Diagnosis Instrument of Continuous Software Engineering Practices Adoption"
+    year: 2021
+    collection-title: "Proceedings of the 25th International Conference on Evaluation and Assessment in Software Engineering (EASE '21)"
+    doi: "10.1145/3463274.3463324"
   - type: article
     authors:
       - family-names: "Barcellos"

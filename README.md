@@ -18,12 +18,12 @@ This repository contains the complete web application, transitioning the diagnos
 
 ## References
 
-1. Araujo, Alline Dias de; França, Breno Bernard Nicolau de, 2025, "Replication Data for: Diagnosis and recommendations for CI/CD practices based on the zeppelin instrument", https://doi.org/10.25824/redu/GVNP7C, Repositório de Dados de Pesquisa da Unicamp, V1.
-2. Monalessa Perini Barcellos. 2020. Towards a Framework for Continuous Software Engineering. In Proceedings of the 34th Brazilian Symposium on Software Engineering.
-3. Brian Fitzgerald and Klaas-Jan Stol. 2017. Continuous software engineering: A roadmap and agenda.
-4. Helena Holmström Olsson, Hiva Alahyari, and Jan Bosch. 2012. Climbing the "Stairway to Heaven".
-5. Jan Ole Johanssen, Anja Kleebaum, Barbara Paech, and Bernd Bruegge. 2019. Continuous software engineering and its support by usage and decision knowledge: An interview study with practitioners.
-6. Santos Jr, G. D.; França, B. B. N. 2022. "Flying over Brazilian Organizations with Zeppelin".
+1. ARAUJO, Alline Dias de. "Diagnosis and Recommendations for CI/CD Practices based on the Zeppelin Instrument". 2025. Dissertation (Master in Computer Science) – University of Campinas (UNICAMP), Institute of Computing.
+2. DOS SANTOS JÚNIOR, Paulo Sérgio; PERINI BARCELLOS, Monalessa; BORGES RUY, Fabiano. "Tell me: Am I going to Heaven? A Diagnosis Instrument of Continuous Software Engineering Practices Adoption". In: Proceedings of the 25th International Conference on Evaluation and Assessment in Software Engineering (EASE '21). 2021. DOI: https://doi.org/10.1145/3463274.3463324.
+3. BARCELLOS, Monalessa Perini. "Towards a Framework for Continuous Software Engineering". In: Proceedings of the 34th Brazilian Symposium on Software Engineering. 2020.
+4. FITZGERALD, Brian; STOL, Klaas-Jan. "Continuous software engineering: A roadmap and agenda". 2017.
+5. OLSSON, Helena Holmström; ALAHYARI, Hiva; BOSCH, Jan. "Climbing the 'Stairway to Heaven'". 2012.
+6. JOHANSSEN, Jan Ole et al. "Continuous software engineering and its support by usage and decision knowledge: An interview study with practitioners". 2019.
 
 ---
 
