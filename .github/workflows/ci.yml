@@ -77,8 +77,8 @@ jobs:
         npm run build
       if: hashFiles('frontend/package.json') != ''
 
-    # - name: Run frontend tests
-    #   run: |
-    #     cd frontend
-    #     npm test -- --coverage --watchAll=false
-    #   if: hashFiles('frontend/package.json') != ''
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm test
+      if: hashFiles('frontend/package.json') != ''
