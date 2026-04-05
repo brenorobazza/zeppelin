@@ -165,12 +165,26 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
   async function handleSetAnswer(optionId) {
     if (!currentQuestion) return;
     
-    const newAnswers = { ...answersRef.current, [currentQuestion.id]: optionId };
+    // Toggle logic: if the option is already selected, we remove it (null)
+    const isCurrentlySelected = answersRef.current[currentQuestion.id] === optionId;
+    const newAnswers = { ...answersRef.current };
+    let newValue = optionId;
+
+    if (isCurrentlySelected) {
+      delete newAnswers[currentQuestion.id];
+      newValue = null;
+    } else {
+      newAnswers[currentQuestion.id] = optionId;
+    }
+
     setAnswers(newAnswers);
     answersRef.current = newAnswers;
 
     try {
-      await saveAnswer(currentQuestion.id, optionId, organizationId, questionnaireId);
+      // Only send auto-save if a real value was selected
+      if (newValue !== null) {
+        await saveAnswer(currentQuestion.id, newValue, organizationId, questionnaireId);
+      }
     } catch (err) {
       console.error("Auto-save failed:", err);
     }
@@ -242,6 +256,9 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
       }
 
       if (event.key === "Enter") {
+        // Prevent default browser click on focused option buttons when advancing
+        event.preventDefault();
+
         const curStage = activeStageRef.current;
         const curLocalIdx = currentLocalIndexRef.current;
         const curAnswers = answersRef.current;
