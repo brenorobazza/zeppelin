@@ -238,6 +238,9 @@ export default function App() {
             triggerRefresh();
             goToScreen("results");
           }}
+          onExitForm={() => {
+            triggerRefresh();
+          }}
           onFormStateChange={setDisableGlobalSelectors}
         />
       )
@@ -307,6 +310,7 @@ export default function App() {
         usingMockData={analytics.usingMockData}
         analyticsError={analytics.error}
         disableGlobalSelectors={disableGlobalSelectors}
+        hideCycleSelector={screen === "assessment"}
       >
         {page.component}
       </PlatformLayout>

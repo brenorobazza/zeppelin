@@ -98,6 +98,7 @@ export function PlatformLayout({
   usingMockData = false,
   analyticsError = "",
   disableGlobalSelectors = false,
+  hideCycleSelector = false,
   children
 }) {
   return (
@@ -157,7 +158,7 @@ export function PlatformLayout({
             <small>{subtitle}</small>
           </div>
           <div className="topbar-actions">
-            {cycleOptions.length > 0 && onCycleChange ? (
+            {!hideCycleSelector && cycleOptions.length > 0 && onCycleChange ? (
               <label className="topbar-control">
                 <span>Assessment cycle</span>
                 {disableGlobalSelectors ? (

@@ -30,13 +30,18 @@ describe("PlatformLayout Navigation Policy", () => {
     expect(cycleSelect).not.toBeDisabled();
   });
 
-  it("should disable both organization and cycle selectors when disableGlobalSelectors is true", () => {
+  it("should render fixed labels instead of selectors when disableGlobalSelectors is true", () => {
     render(<PlatformLayout {...mockProps} disableGlobalSelectors={true} />);
     
-    const orgSelect = screen.getByDisplayValue("Org A");
-    const cycleSelect = screen.getByDisplayValue("C1 - Cycle 1");
+    // Check for the fixed labels
+    const orgLabel = screen.getByText("Org A");
+    const cycleLabel = screen.getByText("Cycle 1");
 
-    expect(orgSelect).toBeDisabled();
-    expect(cycleSelect).toBeDisabled();
+    expect(orgLabel).toHaveClass("org-label-fixed");
+    expect(cycleLabel).toHaveClass("cycle-label-fixed");
+    
+    // Ensure the selects are gone
+    expect(screen.queryByDisplayValue("Org A")).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue("C1 - Cycle 1")).not.toBeInTheDocument();
   });
 });

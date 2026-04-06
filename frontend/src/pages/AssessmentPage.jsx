@@ -365,6 +365,7 @@ export function AssessmentPage({
   onCycleCreated,
   onViewResults,
   onFinish,
+  onExitForm,
   onFormStateChange
 }) {
   const [currentView, setCurrentView] = useState("list"); // "list" | "form"
@@ -420,7 +421,10 @@ export function AssessmentPage({
         organizationId={organizationId}
         questionnaireId={questionnaireId}
         onFinish={onFinish}
-        onBackToList={() => setCurrentView("list")}
+        onBackToList={() => {
+          setCurrentView("list");
+          if (onExitForm) onExitForm();
+        }}
       />
     );
   }
