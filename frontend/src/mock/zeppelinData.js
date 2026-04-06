@@ -175,6 +175,87 @@ export const practiceThemes = [
   }
 ];
 
+export const dimensionOverview = {
+  dimensions: [
+    {
+      key: "development",
+      name: "Development",
+      ciScore: 68,
+      cdScore: 68,
+      organizationScore: 68,
+      ciPracticeCount: 3,
+      cdPracticeCount: 1,
+      practiceCount: 4
+    },
+    {
+      key: "quality",
+      name: "Quality",
+      ciScore: 68,
+      cdScore: 0,
+      organizationScore: 60,
+      ciPracticeCount: 7,
+      cdPracticeCount: 1,
+      practiceCount: 8
+    },
+    {
+      key: "software-management",
+      name: "Software Management",
+      ciScore: 68,
+      cdScore: 53,
+      organizationScore: 58,
+      ciPracticeCount: 2,
+      cdPracticeCount: 4,
+      practiceCount: 6
+    },
+    {
+      key: "technical-solution",
+      name: "Technical Solution",
+      ciScore: 68,
+      cdScore: null,
+      organizationScore: 68,
+      ciPracticeCount: 2,
+      cdPracticeCount: 0,
+      practiceCount: 2
+    },
+    {
+      key: "knowledge",
+      name: "Knowledge",
+      ciScore: 68,
+      cdScore: 68,
+      organizationScore: 68,
+      ciPracticeCount: 1,
+      cdPracticeCount: 3,
+      practiceCount: 4
+    },
+    {
+      key: "business",
+      name: "Business",
+      ciScore: null,
+      cdScore: 36,
+      organizationScore: 36,
+      ciPracticeCount: 0,
+      cdPracticeCount: 4,
+      practiceCount: 4
+    },
+    {
+      key: "user-customer",
+      name: "User/Customer",
+      ciScore: null,
+      cdScore: 19,
+      organizationScore: 19,
+      ciPracticeCount: 0,
+      cdPracticeCount: 4,
+      practiceCount: 4
+    }
+  ],
+  summary: {
+    ciScore: 68,
+    cdScore: 41,
+    organizationScore: 55,
+    statementCount: 32
+  }
+};
+
 export const adoptionLevels = [
   {
     key: "not-adopted",
@@ -230,7 +311,10 @@ export const recommendations = [
   {
     id: 1,
     questionId: "CI.03",
+    questionDescription: "Code is integrated constantly and automatically.",
     stage: "CI",
+    dimensionName: "Continuous Integration",
+    elementName: "Continuous integration cadence",
     track: "Adopt now",
     currentLevel: "Not adopted",
     title: "Increase integration frequency with smaller commits",
@@ -248,7 +332,11 @@ export const recommendations = [
   {
     id: 2,
     questionId: "CI.11",
+    questionDescription:
+      "Data is collected for metrics that make it possible to evaluate the continuous integration process.",
     stage: "CI",
+    dimensionName: "Continuous Integration",
+    elementName: "Software measurement",
     track: "Consolidate",
     currentLevel: "Realized at project/product level",
     title: "Collect CI metrics that actually guide improvement",
@@ -264,7 +352,11 @@ export const recommendations = [
   {
     id: 3,
     questionId: "CI.15",
+    questionDescription:
+      "Practices are in place to share knowledge and lessons learned about continuous integration.",
     stage: "CI",
+    dimensionName: "Knowledge Sharing and Collaboration",
+    elementName: "Sharing knowledge",
     track: "Consolidate",
     currentLevel: "Realized at project/product level",
     title: "Formalize knowledge sharing around CI",
@@ -280,7 +372,11 @@ export const recommendations = [
   {
     id: 4,
     questionId: "CD.02",
+    questionDescription:
+      "There is collaboration between development and operations to sustain the deployment flow.",
     stage: "CD",
+    dimensionName: "Continuous Deployment",
+    elementName: "Dev and Ops collaboration",
     track: "Adopt now",
     currentLevel: "Abandoned",
     title: "Rebuild the flow between development and operations",
@@ -298,7 +394,11 @@ export const recommendations = [
   {
     id: 5,
     questionId: "CD.03",
+    questionDescription:
+      "The release process is automated and traceable across the delivery pipeline.",
     stage: "CD",
+    dimensionName: "Continuous Deployment",
+    elementName: "Release automation",
     track: "Adopt now",
     currentLevel: "Not adopted",
     title: "Automate release generation and traceability",
@@ -316,7 +416,11 @@ export const recommendations = [
   {
     id: 6,
     questionId: "CD.04",
+    questionDescription:
+      "Business and operations feedback are used to continuously refine delivery priorities.",
     stage: "CD",
+    dimensionName: "Business Alignment",
+    elementName: "Learning from usage data and feedback",
     track: "Consolidate",
     currentLevel: "Realized at project/product level",
     title: "Close the business-operation feedback loop",
@@ -332,7 +436,11 @@ export const recommendations = [
   {
     id: 7,
     questionId: "CD.07",
+    questionDescription:
+      "New features can be exposed quickly to customers for early validation and learning.",
     stage: "CD",
+    dimensionName: "Continuous Deployment",
+    elementName: "Controlled rollout",
     track: "Consolidate",
     currentLevel: "Realized at project/product level",
     title: "Expose new features for faster customer validation",
@@ -348,7 +456,11 @@ export const recommendations = [
   {
     id: 8,
     questionId: "CD.13",
+    questionDescription:
+      "Delivery flow metrics are collected and used to evaluate the continuous deployment process.",
     stage: "CD",
+    dimensionName: "Continuous Deployment",
+    elementName: "Delivery measurement",
     track: "Consolidate",
     currentLevel: "Realized at project/product level",
     title: "Use DORA-style metrics to evaluate delivery flow",
@@ -364,7 +476,11 @@ export const recommendations = [
   {
     id: 9,
     questionId: "CD.17",
+    questionDescription:
+      "Knowledge and lessons learned about continuous deployment are actively shared across teams.",
     stage: "CD",
+    dimensionName: "Knowledge Sharing and Collaboration",
+    elementName: "Deployment knowledge sharing",
     track: "Consolidate",
     currentLevel: "Realized at project/product level",
     title: "Create a repeatable knowledge-sharing routine for CD",

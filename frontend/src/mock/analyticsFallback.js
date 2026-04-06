@@ -2,6 +2,7 @@ import {
   adoptionLevels,
   historySeries,
   maturitySnapshot,
+  dimensionOverview,
   practiceThemes,
   recommendations,
   recommendationTracks,
@@ -33,16 +34,22 @@ function mapRecommendation(item) {
   return {
     id: item.id,
     questionId: item.questionId,
+    questionDescription: item.questionDescription || item.title || "",
     stage: item.stage,
     track: item.track,
     currentLevel: item.currentLevel,
     title: item.title,
     recommendation: item.recommendation,
+    catalogRecommendation: item.catalogRecommendation || item.recommendation,
     expectedImpact: item.expectedImpact,
     priority: item.priority,
+    triggerRule: item.triggerRule || "",
+    referenceSource: item.referenceSource || "Mock recommendations catalog",
     nextStep: item.nextStep,
     status: item.status,
-    contextNote: item.contextNote || ""
+    contextNote: item.contextNote || "",
+    dimensionName: item.dimensionName || "",
+    elementName: item.elementName || ""
   };
 }
 
@@ -68,6 +75,7 @@ export const fallbackResultsData = {
   },
   stageScores,
   practiceThemes,
+  dimensionOverview,
   strengths: maturitySnapshot.strengths.map(mapInsight),
   bottlenecks: maturitySnapshot.bottlenecks.map(mapInsight),
   opportunities: recommendations.slice(0, 3).map(mapRecommendation)
@@ -88,6 +96,9 @@ export const fallbackRecommendationsData = {
   })),
   recommendations: recommendations.map(mapRecommendation),
   availableStages: ["CI", "CD"],
+  availablePracticeGroups: Array.from(
+    new Set(recommendations.map((item) => item.dimensionName).filter(Boolean))
+  ),
   availableTracks: recommendationTracks.map((item) => item.key),
   availablePriorities: ["High", "Medium", "Low"]
 };

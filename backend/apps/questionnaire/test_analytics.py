@@ -141,6 +141,15 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
             recommendations[2]["current_level"],
             "Realized at project/product level",
         )
+        self.assertEqual(
+            recommendations[0]["question_description"],
+            "The software architecture is modular in order to allow automated testing.",
+        )
+        self.assertTrue(recommendations[0]["catalog_recommendation"])
+        self.assertEqual(
+            recommendations[0]["reference_source"],
+            "Questionnaire recommendations catalog",
+        )
 
     def test_build_history_cycles_summarizes_two_cycles(self):
         cycles = self.service._build_history_cycles(self.all_answers)
@@ -150,6 +159,11 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         self.assertEqual(cycles[1]["id"], self.current_cycle.id)
         self.assertEqual(cycles[0]["recommendation_count"], 2)
         self.assertEqual(cycles[1]["recommendation_count"], 1)
+
+    def test_resolve_dimension_name_uses_instrument_catalog_for_ci_cd_questions(self):
+        dimension_name = self.service._resolve_dimension_name(self.old_answers[0])
+
+        self.assertEqual(dimension_name, "Development")
 
     def test_dashboard_payload_uses_current_context_data(self):
         organization = SimpleNamespace(

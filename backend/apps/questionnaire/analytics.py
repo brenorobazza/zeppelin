@@ -1,4 +1,7 @@
+import csv
 from collections import defaultdict
+from functools import lru_cache
+from pathlib import Path
 from statistics import mean
 
 from apps.organization.models import Organization
@@ -6,6 +9,26 @@ from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
 from .models import AdoptedLevel, Answer, Questionnaire
+
+
+@lru_cache(maxsize=1)
+def load_recommendations_catalog():
+    catalog_path = (
+        Path(__file__).resolve().parent / "data" / "recommendations_catalog.csv"
+    )
+    if not catalog_path.exists():
+        return {}
+
+    with catalog_path.open(encoding="utf-8-sig", newline="") as catalog_file:
+        reader = csv.DictReader(catalog_file)
+        return {
+            (row.get("Question number") or "").strip(): {
+                "question_description": (row.get("Question Description") or "").strip(),
+                "catalog_recommendation": (row.get("Recommendation") or "").strip(),
+            }
+            for row in reader
+            if (row.get("Question number") or "").strip()
+        }
 
 
 class QuestionnaireAnalyticsService:
@@ -54,6 +77,62 @@ class QuestionnaireAnalyticsService:
         "Entrega Continua": "Continuous Deployment",
         "Experimentacao Continua": "Continuous Experimentation",
     }
+    DIMENSION_ORDER = {
+        "Development": 0,
+        "Quality": 1,
+        "Software Management": 2,
+        "Technical Solution": 3,
+        "Knowledge": 4,
+        "Business": 5,
+        "User/Customer": 6,
+        "Agile Development": 7,
+        "Continuous Integration": 8,
+        "Continuous Deployment": 9,
+        "Continuous Experimentation": 10,
+        "Traditional Development": 11,
+        "Unclassified": 999,
+    }
+    INSTRUMENT_WEIGHT_BY_PERCENTAGE = {
+        0: 0,
+        10: 22,
+        30: 38,
+        60: 68,
+        100: 100,
+    }
+    INSTRUMENT_PRACTICE_CATALOG = {
+        "CI.01": {"dimension": "Development", "element": "Modularized architecture and design"},
+        "CI.02": {"dimension": "Development", "element": "Modularized architecture and design"},
+        "CI.03": {"dimension": "Software Management", "element": "Continuos integration of work"},
+        "CI.04": {"dimension": "Quality", "element": "Automated Tests"},
+        "CI.05": {"dimension": "Quality", "element": "Automated Tests"},
+        "CI.06": {"dimension": "Quality", "element": "Regular Builds"},
+        "CI.07": {"dimension": "Quality", "element": "Regular Builds"},
+        "CI.08": {"dimension": "Technical Solution", "element": "Version control"},
+        "CI.09": {"dimension": "Technical Solution", "element": "Branching strategies"},
+        "CI.10": {"dimension": "Quality", "element": "Pull-Request"},
+        "CI.11": {"dimension": "Quality", "element": "Code coverage"},
+        "CI.12": {"dimension": "Quality", "element": "Audits"},
+        "CI.13": {"dimension": "Software Management", "element": "Agile Practice"},
+        "CI.14": {"dimension": "Development", "element": "Continuous planning activities"},
+        "CI.15": {"dimension": "Knowledge", "element": "Sharing Knowledge"},
+        "CD.01": {"dimension": "User/Customer", "element": "Involved users other stakeholders"},
+        "CD.02": {"dimension": "Quality", "element": "Audits"},
+        "CD.03": {"dimension": "Software Management", "element": "Continuos deployment of releases"},
+        "CD.04": {"dimension": "Business", "element": "Management commitement"},
+        "CD.05": {"dimension": "Development", "element": "Modularized architecture and design"},
+        "CD.06": {"dimension": "User/Customer", "element": "Proactive customers"},
+        "CD.07": {"dimension": "User/Customer", "element": "Learning from usage data and feedback"},
+        "CD.08": {"dimension": "Business", "element": "Appropriate product ideia"},
+        "CD.09": {"dimension": "Business", "element": "Management commitement"},
+        "CD.10": {"dimension": "Business", "element": "Management commitement"},
+        "CD.11": {"dimension": "User/Customer", "element": "Involved users other stakeholders"},
+        "CD.12": {"dimension": "Software Management", "element": "Continuos delivery"},
+        "CD.13": {"dimension": "Software Management", "element": "Continuos deployment of releases"},
+        "CD.14": {"dimension": "Knowledge", "element": "Capturing decisions and rationale"},
+        "CD.15": {"dimension": "Software Management", "element": "Agile Practice"},
+        "CD.16": {"dimension": "Knowledge", "element": "Continuos learning"},
+        "CD.17": {"dimension": "Knowledge", "element": "Sharing Knowledge"},
+    }
     # Agrupa as recomendações em trilhas simples de roadmap.
     RECOMMENDATION_TRACKS = (
         {
@@ -76,6 +155,7 @@ class QuestionnaireAnalyticsService:
     # Carrega os níveis de adoção uma única vez para reutilização ao longo dos cálculos.
     def __init__(self):
         self.adopted_levels = list(AdoptedLevel.objects.order_by("percentage"))
+        self.recommendations_catalog = load_recommendations_catalog()
 
     # Monta a resposta resumida do dashboard, focada em resultado geral do ciclo atual.
     def get_dashboard_payload(self, request):
@@ -148,6 +228,7 @@ class QuestionnaireAnalyticsService:
             },
             "stage_scores": stage_scores,
             "dimensions": self._build_dimension_results(answers),
+            "dimension_overview": self._build_dimension_stage_overview(answers),
             "strengths": self._build_strengths(answers),
             "bottlenecks": self._build_bottlenecks(answers),
             "opportunities": recommendations[:5],
@@ -194,6 +275,13 @@ class QuestionnaireAnalyticsService:
                 "available_tracks": [
                     item["key"] for item in self.RECOMMENDATION_TRACKS
                 ],
+                "available_practice_groups": sorted(
+                    {
+                        item["dimension_name"]
+                        for item in recommendations
+                        if item["dimension_name"]
+                    }
+                ),
                 "available_priorities": ["High", "Medium", "Low"],
             },
             "tracks": grouped_tracks,
@@ -557,6 +645,77 @@ class QuestionnaireAnalyticsService:
             key=lambda item: (-item["score"], item["name"]),
         )
 
+    def _build_dimension_stage_overview(self, answers):
+        grouped = defaultdict(
+            lambda: {
+                "organization": [],
+                "CI": [],
+                "CD": [],
+            }
+        )
+
+        for answer in answers:
+            statement_code = getattr(answer.statement_answer, "code", "") or ""
+            if statement_code not in self.INSTRUMENT_PRACTICE_CATALOG:
+                continue
+
+            dimension_name = self._resolve_dimension_name(answer)
+            stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
+            stage_short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
+            score = self._instrument_weight(answer)
+
+            grouped[dimension_name]["organization"].append(score)
+            if stage_short_name in {"CI", "CD"}:
+                grouped[dimension_name][stage_short_name].append(score)
+
+        items = []
+        ci_aggregate = []
+        cd_aggregate = []
+        organization_aggregate = []
+
+        for dimension_name, buckets in grouped.items():
+            ci_scores = buckets["CI"]
+            cd_scores = buckets["CD"]
+            org_scores = buckets["organization"]
+
+            ci_aggregate.extend(ci_scores)
+            cd_aggregate.extend(cd_scores)
+            organization_aggregate.extend(org_scores)
+
+            items.append(
+                {
+                    "key": slugify(dimension_name),
+                    "name": dimension_name,
+                    "ci_score": round(mean(ci_scores)) if ci_scores else None,
+                    "cd_score": round(mean(cd_scores)) if cd_scores else None,
+                    "organization_score": round(mean(org_scores)) if org_scores else 0,
+                    "ci_practice_count": len(ci_scores),
+                    "cd_practice_count": len(cd_scores),
+                    "practice_count": len(org_scores),
+                }
+            )
+
+        items.sort(
+            key=lambda item: (
+                self.DIMENSION_ORDER.get(item["name"], 500),
+                item["name"],
+            )
+        )
+
+        return {
+            "dimensions": items,
+            "summary": {
+                "ci_score": round(mean(ci_aggregate)) if ci_aggregate else None,
+                "cd_score": round(mean(cd_aggregate)) if cd_aggregate else None,
+                "organization_score": (
+                    round(mean(organization_aggregate))
+                    if organization_aggregate
+                    else 0
+                ),
+                "statement_count": len(organization_aggregate),
+            },
+        }
+
     # Gera recomendações para práticas abaixo do limiar de 60 por cento.
     def _build_recommendations(self, answers):
         items = []
@@ -575,24 +734,31 @@ class QuestionnaireAnalyticsService:
 
         for answer in candidates:
             level = answer.adopted_level_answer
+            statement = answer.statement_answer
             stage_name = getattr(
-                answer.statement_answer.sth_stage,
+                statement.sth_stage,
                 "name",
                 None,
             )
             track = "Adopt now" if level.percentage <= 10 else "Consolidate"
             priority = "High" if level.percentage <= 10 else "Medium"
+            catalog_entry = self.recommendations_catalog.get(statement.code, {})
+            element_name = self._resolve_element_name(answer)
 
             items.append(
                 {
                     "id": answer.id,
-                    "question_id": answer.statement_answer.code,
+                    "question_id": statement.code,
+                    "question_description": (
+                        catalog_entry.get("question_description") or statement.text
+                    ),
                     "stage_name": stage_name,
                     "stage_short_name": self.STAGE_SHORT_NAMES.get(
                         stage_name,
                         stage_name,
                     ),
                     "dimension_name": self._resolve_dimension_name(answer),
+                    "element_name": element_name,
                     "track": track,
                     "priority": priority,
                     "current_level": level.name,
@@ -608,6 +774,15 @@ class QuestionnaireAnalyticsService:
                     "next_step": self._next_step(
                         answer,
                         track,
+                    ),
+                    "catalog_recommendation": catalog_entry.get(
+                        "catalog_recommendation", ""
+                    ),
+                    "trigger_rule": self._recommendation_rule(level, track),
+                    "reference_source": (
+                        "Questionnaire recommendations catalog"
+                        if catalog_entry.get("catalog_recommendation")
+                        else "Generated from analytics rules"
                     ),
                     "status": "Suggested",
                 }
@@ -745,6 +920,11 @@ class QuestionnaireAnalyticsService:
     # Resolve a dimensao exibida na interface mesmo quando o catalogo
     # oficial informa apenas o stage da pergunta.
     def _resolve_dimension_name(self, answer):
+        statement_code = getattr(answer.statement_answer, "code", "") or ""
+        instrument_entry = self.INSTRUMENT_PRACTICE_CATALOG.get(statement_code)
+        if instrument_entry:
+            return instrument_entry["dimension"]
+
         dimension = getattr(
             getattr(answer.statement_answer, "pe_element", None),
             "dimension",
@@ -761,7 +941,6 @@ class QuestionnaireAnalyticsService:
         if stage_name:
             return self.DIMENSION_LABELS.get(stage_name, stage_name)
 
-        statement_code = getattr(answer.statement_answer, "code", "") or ""
         if statement_code.startswith("AO."):
             return "Agile Development"
         if statement_code.startswith("CI."):
@@ -771,6 +950,22 @@ class QuestionnaireAnalyticsService:
         if statement_code.startswith("IS."):
             return "Continuous Experimentation"
         return "Unclassified"
+
+    def _resolve_element_name(self, answer):
+        element_name = getattr(getattr(answer.statement_answer, "pe_element", None), "name", None)
+        if element_name:
+            return element_name
+
+        statement_code = getattr(answer.statement_answer, "code", "") or ""
+        instrument_entry = self.INSTRUMENT_PRACTICE_CATALOG.get(statement_code)
+        if instrument_entry:
+            return instrument_entry["element"]
+
+        return None
+
+    def _instrument_weight(self, answer):
+        percentage = getattr(answer.adopted_level_answer, "percentage", 0)
+        return self.INSTRUMENT_WEIGHT_BY_PERCENTAGE.get(percentage, percentage)
 
     # Encurta textos longos para caber melhor nos cards e listas.
     def _compact_statement(self, text, limit=110):
@@ -797,6 +992,18 @@ class QuestionnaireAnalyticsService:
     def _recommendation_title(self, answer):
         code = answer.statement_answer.code or "Practice"
         return f"{code} - strengthen this practice"
+
+    def _recommendation_rule(self, level, track):
+        if track == "Adopt now":
+            return (
+                f"{level.name} practices should first be established as a stable "
+                "working routine."
+            )
+
+        return (
+            f"{level.name} practices should now be expanded from local usage to "
+            "process-level capability."
+        )
 
     # Gera a explicação principal da recomendação em linguagem natural.
     def _recommendation_copy(self, answer, track):

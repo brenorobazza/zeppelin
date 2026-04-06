@@ -5,6 +5,145 @@ import {
   mapStagesToJourney
 } from "./stairwayStages";
 
+function formatDimensionValue(value) {
+  return value == null ? "-" : `${value}%`;
+}
+
+function buildRadarPoints(dimensions, radius, center) {
+  if (!dimensions.length) return "";
+
+  return dimensions
+    .map((item, index) => {
+      const angle = (Math.PI * 2 * index) / dimensions.length - Math.PI / 2;
+      const scaledRadius = ((item.organizationScore || 0) / 100) * radius;
+      const x = center + Math.cos(angle) * scaledRadius;
+      const y = center + Math.sin(angle) * scaledRadius;
+      return `${x},${y}`;
+    })
+    .join(" ");
+}
+
+function buildRadarAxes(dimensions, radius, center) {
+  return dimensions.map((item, index) => {
+    const angle = (Math.PI * 2 * index) / dimensions.length - Math.PI / 2;
+    const x = center + Math.cos(angle) * radius;
+    const y = center + Math.sin(angle) * radius;
+    return {
+      key: item.key,
+      x,
+      y,
+      labelX: center + Math.cos(angle) * (radius + 40),
+      labelY: center + Math.sin(angle) * (radius + 40),
+      label: item.name
+    };
+  });
+}
+
+function splitRadarLabel(label, maxChars = 16) {
+  if (!label) return [""];
+
+  const words = label.split(" ");
+  const lines = [];
+  let currentLine = "";
+
+  words.forEach((word) => {
+    const nextLine = currentLine ? `${currentLine} ${word}` : word;
+    if (nextLine.length <= maxChars) {
+      currentLine = nextLine;
+      return;
+    }
+
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    currentLine = word;
+  });
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}
+
+function DimensionRadar({ dimensions }) {
+  if (!dimensions.length) {
+    return <div className="empty-state">No dimension comparison is available for this cycle.</div>;
+  }
+
+  const size = 560;
+  const center = size / 2;
+  const radius = 170;
+  const axes = buildRadarAxes(dimensions, radius, center);
+  const polygonPoints = buildRadarPoints(dimensions, radius, center);
+  const rings = [0.25, 0.5, 0.75, 1];
+
+  return (
+    <div className="dimension-radar-card">
+      <svg viewBox={`0 0 ${size} ${size}`} className="dimension-radar" aria-label="Organization dimension radar">
+        {rings.map((ring) => (
+          <circle
+            key={ring}
+            cx={center}
+            cy={center}
+            r={radius * ring}
+            className="dimension-radar__ring"
+          />
+        ))}
+
+        {axes.map((axis) => (
+          <line
+            key={axis.key}
+            x1={center}
+            y1={center}
+            x2={axis.x}
+            y2={axis.y}
+            className="dimension-radar__axis"
+          />
+        ))}
+
+        <polygon points={polygonPoints} className="dimension-radar__shape" />
+
+        {axes.map((axis) => (
+          <text
+            key={`${axis.key}-label`}
+            x={axis.labelX}
+            y={axis.labelY}
+            className="dimension-radar__label"
+            textAnchor={axis.labelX < center - 10 ? "end" : axis.labelX > center + 10 ? "start" : "middle"}
+          >
+            {splitRadarLabel(axis.label).map((line, index) => (
+              <tspan
+                key={`${axis.key}-line-${index}`}
+                x={axis.labelX}
+                dy={index === 0 ? 0 : 14}
+              >
+                {line}
+              </tspan>
+            ))}
+          </text>
+        ))}
+
+        <text x={center} y={center - radius - 6} className="dimension-radar__tick" textAnchor="middle">
+          100%
+        </text>
+        <text x={center} y={center - radius * 0.75 - 6} className="dimension-radar__tick" textAnchor="middle">
+          75%
+        </text>
+        <text x={center} y={center - radius * 0.5 - 6} className="dimension-radar__tick" textAnchor="middle">
+          50%
+        </text>
+        <text x={center} y={center - radius * 0.25 - 6} className="dimension-radar__tick" textAnchor="middle">
+          25%
+        </text>
+        <text x={center} y={center + 14} className="dimension-radar__tick" textAnchor="middle">
+          0%
+        </text>
+      </svg>
+    </div>
+  );
+}
+
 function formatStageSpread(leadingStage, constrainingStage) {
   if (!leadingStage || !constrainingStage) return "Not available";
   return `${leadingStage.score - constrainingStage.score} points`;
@@ -134,6 +273,7 @@ export function ResultsPage({ data, overview, loading }) {
   const constrainingStage = getConstrainingStage(stages);
   const analyticalNarrative = buildAnalyticalNarrative(leadingStage, constrainingStage);
   const practiceGroups = view.practiceThemes || [];
+  const dimensionOverview = view.dimensionOverview || { dimensions: [], summary: {} };
   const adoptionLevels = overviewData.adoptionLevels || [];
 
   const diagnosticFacts = [
@@ -264,6 +404,65 @@ export function ResultsPage({ data, overview, loading }) {
             ))}
           </div>
         </article>
+      </section>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h3>Dimension adoption overview</h3>
+            <p>
+              This section reproduces the most useful part of the spreadsheet analysis in a
+              web-friendly format, comparing CI, CD and organization-level adoption by dimension.
+            </p>
+          </div>
+        </div>
+
+        <div className="two-column-grid dimension-overview-grid">
+          <article className="panel dimension-overview-panel">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Dimension</th>
+                  <th>CI</th>
+                  <th>CD</th>
+                  <th>Organization</th>
+                  <th>CSE practices</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dimensionOverview.dimensions.map((item) => (
+                  <tr key={item.key}>
+                    <td>
+                      <strong>{item.name}</strong>
+                    </td>
+                    <td>{formatDimensionValue(item.ciScore)}</td>
+                    <td>{formatDimensionValue(item.cdScore)}</td>
+                    <td>{formatDimensionValue(item.organizationScore)}</td>
+                    <td>{item.practiceCount}</td>
+                  </tr>
+                ))}
+                <tr>
+                  <td>
+                    <strong>Degree of adoption</strong>
+                  </td>
+                  <td>{formatDimensionValue(dimensionOverview.summary.ciScore)}</td>
+                  <td>{formatDimensionValue(dimensionOverview.summary.cdScore)}</td>
+                  <td>{formatDimensionValue(dimensionOverview.summary.organizationScore)}</td>
+                  <td>{dimensionOverview.summary.statementCount || 0}</td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article className="panel support-panel">
+            <h3>Organization dimension radar</h3>
+            <p>
+              The radar highlights which dimensions currently show stronger or weaker adoption when
+              the organization is read as a whole.
+            </p>
+            <DimensionRadar dimensions={dimensionOverview.dimensions} />
+          </article>
+        </div>
       </section>
 
       <section className="panel">

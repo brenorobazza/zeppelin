@@ -70,17 +70,22 @@ function mapRecommendation(item) {
   return {
     id: item.id,
     questionId: item.question_id,
+    questionDescription: item.question_description || "",
     stage: item.stage_short_name || item.stage_name || "",
     track: item.track,
     currentLevel: item.current_level,
     title: item.title,
     recommendation: item.recommendation,
+    catalogRecommendation: item.catalog_recommendation || "",
     expectedImpact: item.expected_impact,
     priority: item.priority,
     nextStep: item.next_step,
+    triggerRule: item.trigger_rule || "",
+    referenceSource: item.reference_source || "",
     status: item.status,
     contextNote: item.context_note || "",
-    dimensionName: item.dimension_name || ""
+    dimensionName: item.dimension_name || "",
+    elementName: item.element_name || ""
   };
 }
 
@@ -146,6 +151,24 @@ function normalizeResults(payload) {
       overallLevel: payload.summary.overall_level
     },
     stageScores: payload.stage_scores.map(mapStageScore),
+    dimensionOverview: {
+      dimensions: (payload.dimension_overview?.dimensions || []).map((item) => ({
+        key: item.key,
+        name: item.name,
+        ciScore: item.ci_score,
+        cdScore: item.cd_score,
+        organizationScore: item.organization_score,
+        ciPracticeCount: item.ci_practice_count,
+        cdPracticeCount: item.cd_practice_count,
+        practiceCount: item.practice_count
+      })),
+      summary: {
+        ciScore: payload.dimension_overview?.summary?.ci_score ?? null,
+        cdScore: payload.dimension_overview?.summary?.cd_score ?? null,
+        organizationScore: payload.dimension_overview?.summary?.organization_score ?? 0,
+        statementCount: payload.dimension_overview?.summary?.statement_count ?? 0
+      }
+    },
     practiceThemes: payload.dimensions.map((item) => ({
       key: item.key,
       name: item.name,
@@ -185,6 +208,7 @@ function normalizeRecommendations(payload) {
     recommendationTracks,
     recommendations: payload.items.map(mapRecommendation),
     availableStages: payload.filters.available_stages || [],
+    availablePracticeGroups: payload.filters.available_practice_groups || [],
     availableTracks: payload.filters.available_tracks || [],
     availablePriorities: payload.filters.available_priorities || []
   };

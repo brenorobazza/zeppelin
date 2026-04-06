@@ -2,8 +2,8 @@ import { fallbackDashboardData } from "../mock/analyticsFallback";
 import { mapStagesToJourney } from "./stairwayStages";
 
 function formatScope(stages) {
-  const activeStages = stages.filter((stage) => stage.available).map((stage) => stage.shortName);
-  return activeStages.length ? activeStages.join(" / ") : "Not available";
+  const activeStages = stages.filter((stage) => stage.available).map((stage) => stage.name);
+  return activeStages.length ? activeStages.join(", ") : "Not available";
 }
 
 function buildSummaryIntro(currentLevel, scope) {
@@ -18,17 +18,26 @@ function buildStageInterpretation(stage) {
   return `${stage.answeredPractices || 0} assessed statements currently inform the interpretation of this stage.`;
 }
 
+function buildCoverageSummary(stages) {
+  const covered = stages.filter((stage) => stage.available);
+  const missing = stages.filter((stage) => !stage.available);
+  return {
+    headline: `${covered.length}/${stages.length} stages answered`,
+    missingLabel: missing.length ? missing.map((stage) => stage.shortName).join(", ") : "None"
+  };
+}
+
 export function DashboardPage({ data, loading }) {
   // A Tela 1 foi reduzida para funcionar como resumo diagnostico inicial, sem excesso de agregacoes.
   const view = data || fallbackDashboardData;
   const stages = mapStagesToJourney(view.stageScores);
   const stageScope = formatScope(stages);
   const summaryIntro = buildSummaryIntro(view.maturitySnapshot.overallLevel, stageScope);
+  const coverage = buildCoverageSummary(stages);
 
   const assessmentContext = [
     { label: "Assessment cycle", value: view.maturitySnapshot.cycleLabel },
-    { label: "Assessed statements", value: view.maturitySnapshot.answeredPractices },
-    { label: "Assessment scope", value: stageScope }
+    { label: "Assessed statements", value: view.maturitySnapshot.answeredPractices }
   ];
 
   if (loading && !data) {
@@ -65,6 +74,14 @@ export function DashboardPage({ data, loading }) {
                   <strong>{item.value}</strong>
                 </article>
               ))}
+
+              <article className="context-card context-card--coverage">
+                <span>Assessment coverage</span>
+                <strong>{coverage.headline}</strong>
+                <p>
+                  <strong>Missing:</strong> {coverage.missingLabel}
+                </p>
+              </article>
             </div>
           </div>
 

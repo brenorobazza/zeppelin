@@ -138,6 +138,7 @@ export function RecommendationsPage({ data, loading }) {
   // Esta e a tela que transforma o diagnostico em um roadmap acionavel.
   const view = data || fallbackRecommendationsData;
   const [stage, setStage] = useState("All");
+  const [practiceGroup, setPracticeGroup] = useState("All");
   const [priority, setPriority] = useState("All");
 
   // Os filtros apenas mudam a leitura visual; os dados originais continuam intactos.
@@ -145,10 +146,12 @@ export function RecommendationsPage({ data, loading }) {
     () =>
       view.recommendations.filter((item) => {
         const matchesStage = stage === "All" || item.stage === stage;
+        const matchesPracticeGroup =
+          practiceGroup === "All" || item.dimensionName === practiceGroup;
         const matchesPriority = priority === "All" || item.priority === priority;
-        return matchesStage && matchesPriority;
+        return matchesStage && matchesPracticeGroup && matchesPriority;
       }),
-    [view.recommendations, stage, priority]
+    [view.recommendations, stage, practiceGroup, priority]
   );
 
   // Depois do filtro, reorganizamos os itens dentro das trilhas do roadmap.
@@ -228,6 +231,18 @@ export function RecommendationsPage({ data, loading }) {
                 ))}
               </select>
             </label>
+
+            <label className="roadmap-filter-field">
+              <span>Filter by practice group</span>
+              <select value={practiceGroup} onChange={(event) => setPracticeGroup(event.target.value)}>
+                <option value="All">All practice groups</option>
+                {view.availablePracticeGroups?.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           <div className="roadmap-toolbar__meta">
@@ -288,8 +303,24 @@ export function RecommendationsPage({ data, loading }) {
 
                   <dl className="roadmap-card__details">
                     <div>
+                      <dt>Original practice statement</dt>
+                      <dd>{item.questionDescription || "Not available"}</dd>
+                    </div>
+                    <div>
+                      <dt>Practice group</dt>
+                      <dd>{item.dimensionName || "Not available"}</dd>
+                    </div>
+                    <div>
+                      <dt>Element</dt>
+                      <dd>{item.elementName || "Not available"}</dd>
+                    </div>
+                    <div>
                       <dt>Current adoption level</dt>
                       <dd>{normalizeCurrentLevel(item.currentLevel)}</dd>
+                    </div>
+                    <div>
+                      <dt>Rule that triggered this recommendation</dt>
+                      <dd>{item.triggerRule || "Derived from the current maturity level."}</dd>
                     </div>
                     <div>
                       <dt>Expected outcome</dt>
@@ -303,7 +334,18 @@ export function RecommendationsPage({ data, loading }) {
                       <dt>Status</dt>
                       <dd>{normalizeStatus(item.status)}</dd>
                     </div>
+                    <div>
+                      <dt>Source</dt>
+                      <dd>{item.referenceSource || "Analytics engine"}</dd>
+                    </div>
                   </dl>
+
+                  {item.catalogRecommendation ? (
+                    <details className="roadmap-reference">
+                      <summary>Detailed recommendation from the instrument</summary>
+                      <p>{item.catalogRecommendation}</p>
+                    </details>
+                  ) : null}
                 </div>
               ))
             )}
