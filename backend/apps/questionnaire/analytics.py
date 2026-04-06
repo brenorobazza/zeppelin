@@ -100,9 +100,18 @@ class QuestionnaireAnalyticsService:
         100: 100,
     }
     INSTRUMENT_PRACTICE_CATALOG = {
-        "CI.01": {"dimension": "Development", "element": "Modularized architecture and design"},
-        "CI.02": {"dimension": "Development", "element": "Modularized architecture and design"},
-        "CI.03": {"dimension": "Software Management", "element": "Continuos integration of work"},
+        "CI.01": {
+            "dimension": "Development",
+            "element": "Modularized architecture and design",
+        },
+        "CI.02": {
+            "dimension": "Development",
+            "element": "Modularized architecture and design",
+        },
+        "CI.03": {
+            "dimension": "Software Management",
+            "element": "Continuos integration of work",
+        },
         "CI.04": {"dimension": "Quality", "element": "Automated Tests"},
         "CI.05": {"dimension": "Quality", "element": "Automated Tests"},
         "CI.06": {"dimension": "Quality", "element": "Regular Builds"},
@@ -113,22 +122,46 @@ class QuestionnaireAnalyticsService:
         "CI.11": {"dimension": "Quality", "element": "Code coverage"},
         "CI.12": {"dimension": "Quality", "element": "Audits"},
         "CI.13": {"dimension": "Software Management", "element": "Agile Practice"},
-        "CI.14": {"dimension": "Development", "element": "Continuous planning activities"},
+        "CI.14": {
+            "dimension": "Development",
+            "element": "Continuous planning activities",
+        },
         "CI.15": {"dimension": "Knowledge", "element": "Sharing Knowledge"},
-        "CD.01": {"dimension": "User/Customer", "element": "Involved users other stakeholders"},
+        "CD.01": {
+            "dimension": "User/Customer",
+            "element": "Involved users other stakeholders",
+        },
         "CD.02": {"dimension": "Quality", "element": "Audits"},
-        "CD.03": {"dimension": "Software Management", "element": "Continuos deployment of releases"},
+        "CD.03": {
+            "dimension": "Software Management",
+            "element": "Continuos deployment of releases",
+        },
         "CD.04": {"dimension": "Business", "element": "Management commitement"},
-        "CD.05": {"dimension": "Development", "element": "Modularized architecture and design"},
+        "CD.05": {
+            "dimension": "Development",
+            "element": "Modularized architecture and design",
+        },
         "CD.06": {"dimension": "User/Customer", "element": "Proactive customers"},
-        "CD.07": {"dimension": "User/Customer", "element": "Learning from usage data and feedback"},
+        "CD.07": {
+            "dimension": "User/Customer",
+            "element": "Learning from usage data and feedback",
+        },
         "CD.08": {"dimension": "Business", "element": "Appropriate product ideia"},
         "CD.09": {"dimension": "Business", "element": "Management commitement"},
         "CD.10": {"dimension": "Business", "element": "Management commitement"},
-        "CD.11": {"dimension": "User/Customer", "element": "Involved users other stakeholders"},
+        "CD.11": {
+            "dimension": "User/Customer",
+            "element": "Involved users other stakeholders",
+        },
         "CD.12": {"dimension": "Software Management", "element": "Continuos delivery"},
-        "CD.13": {"dimension": "Software Management", "element": "Continuos deployment of releases"},
-        "CD.14": {"dimension": "Knowledge", "element": "Capturing decisions and rationale"},
+        "CD.13": {
+            "dimension": "Software Management",
+            "element": "Continuos deployment of releases",
+        },
+        "CD.14": {
+            "dimension": "Knowledge",
+            "element": "Capturing decisions and rationale",
+        },
         "CD.15": {"dimension": "Software Management", "element": "Agile Practice"},
         "CD.16": {"dimension": "Knowledge", "element": "Continuos learning"},
         "CD.17": {"dimension": "Knowledge", "element": "Sharing Knowledge"},
@@ -708,9 +741,7 @@ class QuestionnaireAnalyticsService:
                 "ci_score": round(mean(ci_aggregate)) if ci_aggregate else None,
                 "cd_score": round(mean(cd_aggregate)) if cd_aggregate else None,
                 "organization_score": (
-                    round(mean(organization_aggregate))
-                    if organization_aggregate
-                    else 0
+                    round(mean(organization_aggregate)) if organization_aggregate else 0
                 ),
                 "statement_count": len(organization_aggregate),
             },
@@ -952,7 +983,9 @@ class QuestionnaireAnalyticsService:
         return "Unclassified"
 
     def _resolve_element_name(self, answer):
-        element_name = getattr(getattr(answer.statement_answer, "pe_element", None), "name", None)
+        element_name = getattr(
+            getattr(answer.statement_answer, "pe_element", None), "name", None
+        )
         if element_name:
             return element_name
 
