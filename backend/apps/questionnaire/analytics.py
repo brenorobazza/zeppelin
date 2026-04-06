@@ -190,6 +190,13 @@ class QuestionnaireAnalyticsService:
         self.adopted_levels = list(AdoptedLevel.objects.order_by("percentage"))
         self.recommendations_catalog = load_recommendations_catalog()
 
+    def _get_recommendations_catalog(self):
+        catalog = getattr(self, "recommendations_catalog", None)
+        if catalog is None:
+            catalog = load_recommendations_catalog()
+            self.recommendations_catalog = catalog
+        return catalog
+
     # Monta a resposta resumida do dashboard, focada em resultado geral do ciclo atual.
     def get_dashboard_payload(self, request):
         context = self._resolve_context(request)
@@ -750,6 +757,7 @@ class QuestionnaireAnalyticsService:
     # Gera recomendações para práticas abaixo do limiar de 60 por cento.
     def _build_recommendations(self, answers):
         items = []
+        recommendations_catalog = self._get_recommendations_catalog()
         candidates = [
             answer for answer in answers if answer.adopted_level_answer.percentage < 60
         ]
@@ -773,7 +781,7 @@ class QuestionnaireAnalyticsService:
             )
             track = "Adopt now" if level.percentage <= 10 else "Consolidate"
             priority = "High" if level.percentage <= 10 else "Medium"
-            catalog_entry = self.recommendations_catalog.get(statement.code, {})
+            catalog_entry = recommendations_catalog.get(statement.code, {})
             element_name = self._resolve_element_name(answer)
 
             items.append(
