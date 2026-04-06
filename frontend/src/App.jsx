@@ -16,7 +16,6 @@ import {
 } from "./services/analytics";
 
 // Lê o hash da URL e traduz isso para a "tela atual" da aplicação.
-// A ideia aqui é manter uma navegação simples, fácil de seguir e suficiente para o TCC.
 function getScreenFromHash() {
   const hash = window.location.hash.replace("#", "");
   if (hash === "create-account") return "create-account";
@@ -46,7 +45,7 @@ export default function App() {
   // Reúne os filtros que controlam a análise: empresa, ciclo e escopo.
   const [analyticsFilters, setAnalyticsFilters] = useState(getAnalyticsFiltersFromUrl);
 
-  // Centraliza todos os dados usados pelas telas principais do TCC.
+  // Centraliza todos os dados usados pelas telas principais.
   // Também informa se a tela está carregando, se está usando mock e se ocorreu erro.
   const [analytics, setAnalytics] = useState(() => ({
     ...getFallbackAnalyticsBundle(),
@@ -56,6 +55,7 @@ export default function App() {
   }));
 
   const [refreshKey, setRefreshKey] = useState(0);
+  const [disableGlobalSelectors, setDisableGlobalSelectors] = useState(false);
   const lastScreenRef = useRef(screen);
 
   function triggerRefresh() {
@@ -74,6 +74,7 @@ export default function App() {
     function syncNavigationState() {
       setScreen(getScreenFromHash());
       setAnalyticsFilters(getAnalyticsFiltersFromUrl());
+      setDisableGlobalSelectors(false); // Reset on navigation
     }
 
     window.addEventListener("hashchange", syncNavigationState);
@@ -84,7 +85,7 @@ export default function App() {
     };
   }, []);
 
-  // Apenas estas telas dependem do backend analítico do TCC.
+  // Apenas estas telas dependem do backend analítico.
   const isPlatformScreen = [
     "dashboard",
     "assessment",
@@ -101,7 +102,6 @@ export default function App() {
     let ignore = false;
 
     async function syncAnalytics() {
-      // Mantém o que já estava em tela e apenas marca que uma nova busca está em andamento.
       setAnalytics((current) => ({
         ...current,
         loading: true,
@@ -109,7 +109,6 @@ export default function App() {
       }));
 
       try {
-        // Busca todas as seções em paralelo para manter a consistência entre as telas.
         const bundle = await loadAnalyticsBundle(analyticsFilters);
 
         if (ignore) return;
@@ -123,7 +122,6 @@ export default function App() {
       } catch (error) {
         if (ignore) return;
 
-        // Sessão inválida: volta para o login.
         if (error.status === 401) {
           setUser(null);
           window.location.hash = "login";
@@ -131,7 +129,6 @@ export default function App() {
           return;
         }
 
-        // Falha de backend: entra em modo demonstração para a interface continuar utilizável.
         setAnalytics({
           ...getFallbackAnalyticsBundle(),
           loading: false,
@@ -241,6 +238,7 @@ export default function App() {
             triggerRefresh();
             goToScreen("results");
           }}
+          onFormStateChange={setDisableGlobalSelectors}
         />
       )
     },
@@ -308,6 +306,7 @@ export default function App() {
         onCycleChange={(value) => updateAnalyticsFilters({ questionnaireId: value })}
         usingMockData={analytics.usingMockData}
         analyticsError={analytics.error}
+        disableGlobalSelectors={disableGlobalSelectors}
       >
         {page.component}
       </PlatformLayout>

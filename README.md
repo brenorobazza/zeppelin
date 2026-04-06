@@ -96,18 +96,24 @@ Follow these steps to get the entire Zeppelin stack (Backend + Frontend) running
    ```
    *This will populate a sample organization with answers to test the analytics dashboard.*
 
-6. **Access Zeppelin**
+6. Access Zeppelin
    * **Web Interface (React):** [http://localhost:5173](http://localhost:5173)
    * **API / Backend Admin:** [http://localhost:8000/admin](http://localhost:8000/admin)
-
-7. **Stop the environment**
-   ```bash
-   make down
-   ```
+   * **API Documentation (Swagger):** [http://localhost:8000/](http://localhost:8000/)
 
 ---
 
-## ⚙️ Makefile Commands
+## API & Integration
+
+The project uses OAuth2 for secure API communication. To test the API endpoints manually:
+
+1. **Postman Collection:** An official collection is available at `docs/zeppelin-api-collection.json`.
+2. **Authentication:** Use the `Login (Get Tokens)` request in Postman. The `access_token` is automatically managed if you use the provided environment.
+3. **Automatic Setup:** The `make seed-db` command automatically creates the necessary OAuth2 Application (`Zeppelin Web`) required for the authentication flow to work.
+
+---
+
+## Makefile Commands
 
 | Command          | Description                                                                 |
 | ---------------- | --------------------------------------------------------------------------- |

@@ -30,8 +30,7 @@ router.register(
 )
 router.register(r"answer", AnswerViewSet, basename="answer")
 
-# A partir daqui entram as rotas analiticas criadas para o TCC.
-# Cada rota atende uma tela principal do frontend.
+# Rotas analíticas para o dashboard e relatórios.
 urlpatterns = [
     path("questionnaire/", include(router.urls)),
     path(

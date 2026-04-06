@@ -8,9 +8,6 @@ from django.utils.text import slugify
 from .models import AdoptedLevel, Answer, Questionnaire
 
 
-# Este serviço concentra a camada analítica criada para o TCC.
-# Ele recebe respostas já persistidas e monta estruturas prontas
-# para as telas principais: dashboard, results, recommendations e history.
 class QuestionnaireAnalyticsService:
     # Estágios usados como recorte principal da análise do frontend atual.
     CI_CD_STAGE_NAMES = (

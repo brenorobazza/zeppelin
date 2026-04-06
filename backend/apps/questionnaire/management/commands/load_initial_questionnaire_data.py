@@ -4,6 +4,8 @@ import os
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User
+from oauth2_provider.models import Application
 from apps.questionnaire.models import AdoptedLevel, Statement
 from apps.sth.models import Stage
 
@@ -114,6 +116,23 @@ class Command(BaseCommand):
                 )
                 if created:
                     statements_created += 1
+
+        # 4. Criar Aplicacao OAuth2 para permitir logins via API/Postman
+        if not Application.objects.exists():
+            admin_user = User.objects.filter(is_superuser=True).first()
+            if not admin_user:
+                admin_user = User.objects.first()
+
+            if admin_user:
+                Application.objects.create(
+                    name="Zeppelin Web",
+                    user=admin_user,
+                    client_type=Application.CLIENT_CONFIDENTIAL,
+                    authorization_grant_type=Application.GRANT_PASSWORD,
+                )
+                self.stdout.write(
+                    self.style.SUCCESS("OAuth2 application 'Zeppelin Web' created.")
+                )
 
         self.stdout.write(
             self.style.SUCCESS(

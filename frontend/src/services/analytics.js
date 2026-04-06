@@ -47,7 +47,7 @@ async function fetchAnalyticsSection(section, filters) {
   return parseResponse(response, `Failed to load ${section} analytics.`);
 }
 
-// Ajuda a encontrar rapidamente o score de CI ou CD dentro da lista de estágios.
+// Busca o score de um estágio específico pelo nome curto.
 function findStageScore(stageScores, shortName) {
   return stageScores.find((item) => item.short_name === shortName)?.score || 0;
 }

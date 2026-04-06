@@ -11,7 +11,7 @@ destroy:
 superuser:
 	sh ./backend/create_superuser.sh
 
-# Alimenta o banco com as 71 perguntas oficiais do TCC.
+# Alimenta o banco com as 71 perguntas oficiais.
 seed-db:
 	docker-compose exec app python manage.py load_initial_questionnaire_data
 
@@ -30,7 +30,7 @@ frontend-test:
 	cd frontend && npm test
 
 # --- TESTING & QUALITY ---
-# Roda os testes do backend (camada analitica do TCC).
+# Roda os testes do backend (camada analitica).
 test-backend:
 	docker-compose exec -e SECRET_KEY=zeppelin-test -e DB_ENGINE_TEST=django.db.backends.sqlite3 app python manage.py test apps.questionnaire.test_analytics --settings=zeppelin.settings.test
 

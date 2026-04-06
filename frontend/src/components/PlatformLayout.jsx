@@ -11,7 +11,7 @@ function NavIcon({ children, className = "", viewBox = "0 0 24 24" }) {
   );
 }
 
-// Itens fixos da navegacao principal. Eles refletem a ordem de leitura pensada para o TCC.
+// Itens fixos da navegacao principal.
 const navItems = [
   {
     key: "dashboard",
@@ -97,6 +97,7 @@ export function PlatformLayout({
   onCycleChange,
   usingMockData = false,
   analyticsError = "",
+  disableGlobalSelectors = false,
   children
 }) {
   return (
@@ -133,17 +134,21 @@ export function PlatformLayout({
           <div>
             {organizationOptions.length > 1 && onOrganizationChange ? (
               <label className="topbar-control-inline">
-                <select 
-                  value={selectedOrganizationId} 
-                  onChange={(event) => onOrganizationChange(event.target.value)}
-                  className="org-select"
-                >
-                  {organizationOptions.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
+                {disableGlobalSelectors ? (
+                  <span className="org-label-fixed">{organization}</span>
+                ) : (
+                  <select 
+                    value={selectedOrganizationId} 
+                    onChange={(event) => onOrganizationChange(event.target.value)}
+                    className="org-select"
+                  >
+                    {organizationOptions.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </label>
             ) : (
               <p>{organization}</p>
@@ -153,17 +158,22 @@ export function PlatformLayout({
           </div>
           <div className="topbar-actions">
             {cycleOptions.length > 0 && onCycleChange ? (
-              // Permite trocar o ciclo avaliado sem sair da mesma pagina.
               <label className="topbar-control">
                 <span>Assessment cycle</span>
-                <select value={selectedCycleId} onChange={(event) => onCycleChange(event.target.value)}>
-                  <option value="">Latest cycle</option>
-                  {cycleOptions.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.shortLabel} - {item.label}
-                    </option>
-                  ))}
-                </select>
+                {disableGlobalSelectors ? (
+                  <span className="cycle-label-fixed">
+                    {cycleOptions.find(c => c.id === selectedCycleId)?.label || "Latest cycle"}
+                  </span>
+                ) : (
+                  <select value={selectedCycleId} onChange={(event) => onCycleChange(event.target.value)}>
+                    <option value="">Latest cycle</option>
+                    {cycleOptions.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.shortLabel} - {item.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </label>
             ) : null}
 

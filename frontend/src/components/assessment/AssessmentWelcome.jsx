@@ -1,22 +1,8 @@
 import departingImg from "../../assets/departing.png";
 
-export function AssessmentWelcome({ organizations, organizationId, onChangeOrganization, handleStartNew }) {
+export function AssessmentWelcome({ handleStartNew }) {
   return (
     <section className="panel" style={{ textAlign: "center", padding: "4rem 2rem" }}>
-      {organizations.length > 1 && (
-        <div style={{ marginBottom: "2rem", display: "flex", justifyContent: "center", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontWeight: "bold" }}>Organization:</span>
-          <select 
-            value={organizationId} 
-            onChange={(e) => onChangeOrganization && onChangeOrganization(e.target.value)}
-            style={{ padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc", fontSize: "1rem" }}
-          >
-            {organizations.map(org => (
-              <option key={org.id} value={org.id}>{org.name}</option>
-            ))}
-          </select>
-        </div>
-      )}
       <div style={{ 
         width: "300px", 
         height: "150px", 

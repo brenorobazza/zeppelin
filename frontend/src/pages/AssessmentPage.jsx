@@ -38,7 +38,6 @@ import { AssessmentProgressHeader } from "../components/assessment/AssessmentPro
 import { AssessmentQuestionBody } from "../components/assessment/AssessmentQuestionBody";
 import { AssessmentWelcome } from "../components/assessment/AssessmentWelcome";
 import { AssessmentHistoryTable } from "../components/assessment/AssessmentHistoryTable";
-import { AssessmentOrgSelectorModal } from "../components/assessment/AssessmentOrgSelectorModal";
 
 const STAGE_ORDER = {
   "Agile R&D Organization": 1,
@@ -305,8 +304,6 @@ function AssessmentForm({ organizationId, questionnaireId, onFinish, onBackToLis
     return (
       <section className="panel">
         <h3>No questions found.</h3>
-        <p>You were not supposed to see this.</p>
-        {/* Dev, run make seed-db */}
       </section>
     );
   }
@@ -367,11 +364,20 @@ export function AssessmentPage({
   onChangeOrganization,
   onCycleCreated,
   onViewResults,
-  onFinish 
+  onFinish,
+  onFormStateChange
 }) {
-  const [currentView, setCurrentView] = useState("list"); // "list" | "modal" | "form"
-  const [selectedOrgId, setSelectedOrgId] = useState("");
+  const [currentView, setCurrentView] = useState("list"); // "list" | "form"
   const [isCreatingCycle, setIsCreatingCycle] = useState(false);
+
+  useEffect(() => {
+    if (onFormStateChange) {
+      onFormStateChange(currentView === "form" || isCreatingCycle);
+    }
+    return () => {
+      if (onFormStateChange) onFormStateChange(false);
+    };
+  }, [currentView, isCreatingCycle, onFormStateChange]);
 
   async function startNewCycleForOrganization(targetOrgId) {
     setIsCreatingCycle(true);
@@ -396,18 +402,7 @@ export function AssessmentPage({
   }
 
   function handleStartNew() {
-    if (organizations.length > 1) {
-      setCurrentView("modal");
-    } else {
-      const defaultOrgId = organizations.length === 1 ? String(organizations[0].id) : organizationId;
-      startNewCycleForOrganization(defaultOrgId);
-    }
-  }
-
-  function handleSelectOrganization() {
-    if (selectedOrgId) {
-      startNewCycleForOrganization(selectedOrgId);
-    }
+    startNewCycleForOrganization(organizationId);
   }
 
   if (isCreatingCycle) {
@@ -430,23 +425,9 @@ export function AssessmentPage({
     );
   }
 
-  if (currentView === "modal") {
-    return (
-      <AssessmentOrgSelectorModal 
-        organizations={organizations} 
-        selectedOrgId={selectedOrgId} 
-        setSelectedOrgId={setSelectedOrgId} 
-        handleSelectOrganization={handleSelectOrganization} 
-      />
-    );
-  }
-
   if (cycleOptions.length === 0) {
     return (
       <AssessmentWelcome 
-        organizations={organizations} 
-        organizationId={organizationId} 
-        onChangeOrganization={onChangeOrganization} 
         handleStartNew={handleStartNew} 
       />
     );
@@ -459,9 +440,6 @@ export function AssessmentPage({
       onCycleCreated={onCycleCreated} 
       onViewResults={onViewResults} 
       setCurrentView={setCurrentView} 
-      organizations={organizations} 
-      organizationId={organizationId} 
-      onChangeOrganization={onChangeOrganization} 
       handleStartNew={handleStartNew} 
     />
   );

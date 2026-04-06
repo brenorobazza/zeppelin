@@ -1,0 +1,290 @@
+{
+	"info": {
+		"_postman_id": "zeppelin-tcc-api-collection",
+		"name": "Zeppelin TCC API",
+		"description": "Coleção de APIs para o projeto Zeppelin (TCC). Inclui fluxos de autenticação, gestão de organizações e preenchimento de questionários.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Register New User & Org",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\",\n    \"organization_name\": \"Zeppelin Labs\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register",
+								""
+							]
+						},
+						"description": "Cria um novo usuário, uma nova organização e vincula ambos automaticamente."
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Get Tokens)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.access_token) {",
+									"    pm.environment.set(\"access_token\", response.access_token);",
+									"    pm.environment.set(\"refresh_token\", response.refresh_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login-api/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login-api",
+								""
+							]
+						},
+						"description": "Realiza o login e salva o access_token no ambiente do Postman."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Organizations & Employees",
+			"item": [
+				{
+					"name": "List My Organizations",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/organization/organization/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"organization",
+								"organization",
+								""
+							]
+						},
+						"description": "Lista as organizações vinculadas ao e-mail do usuário autenticado."
+					},
+					"response": []
+				},
+				{
+					"name": "Create New Organization",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Secondary Labs\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/organization/organization/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"organization",
+								"organization",
+								""
+							]
+						},
+						"description": "Cria uma nova organização (ainda sem vínculo com o usuário)."
+					},
+					"response": []
+				},
+				{
+					"name": "Link User to Organization",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Seu Nome\",\n    \"e_mail\": \"user@example.com\",\n    \"organization\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/employee/employee/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"employee",
+								"employee",
+								""
+							]
+						},
+						"description": "Cria o vínculo de Employee. Use o ID da organização criada anteriormente e o seu e-mail de login."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Questionnaire",
+			"item": [
+				{
+					"name": "Create New Cycle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/questionnaire/questionnaire/?organization_id=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"questionnaire",
+								"questionnaire",
+								""
+							],
+							"query": [
+								{
+									"key": "organization_id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Save Answer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"statement_answer\": 1,\n    \"adopted_level_answer\": 5,\n    \"organization_answer\": 1,\n    \"questionnaire_answer\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/questionnaire/answer/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"questionnaire",
+								"answer",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000"
+		}
+	]
+}

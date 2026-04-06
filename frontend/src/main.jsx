@@ -3,8 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./styles/global.css";
 
-// Ponto de entrada da aplicacao React.
-// StrictMode ajuda a detectar problemas durante o desenvolvimento.
+// Ponto de entrada da aplicação React.
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <App />

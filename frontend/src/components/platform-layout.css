@@ -156,6 +156,30 @@
   text-decoration: underline;
 }
 
+.org-label-fixed {
+  color: #60708a;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  background: #f1f5fb;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  cursor: default;
+}
+
+.cycle-label-fixed {
+  color: #173256;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: #f8fbff;
+  border: 1px solid #d5dfed;
+  padding: 0.58rem 0.72rem;
+  border-radius: 10px;
+  display: block;
+  cursor: default;
+}
+
 .platform-topbar p {
   margin: 0;
   color: #1877f2;

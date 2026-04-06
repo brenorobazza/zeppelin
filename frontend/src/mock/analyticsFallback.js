@@ -8,9 +8,7 @@ import {
   stageScores
 } from "./zeppelinData";
 
-// Este arquivo simula a estrutura do backend analitico.
-// Ele permite que as telas do TCC continuem navegaveis mesmo sem API real.
-
+// Simula a estrutura do backend analítico para fins de demonstração.
 function resolveLevelFromScore(score) {
   if (score >= 100) return "Institutionalized";
   if (score >= 60) return "Realized at process level";

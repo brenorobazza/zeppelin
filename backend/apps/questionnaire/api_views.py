@@ -194,7 +194,7 @@ class AnswerViewSet(ModelViewSet):
         )
 
 
-# As views abaixo exp?em a camada analitica do TCC como endpoints REST.
+# As views abaixo expõem a camada analítica como endpoints REST.
 # Cada endpoint alimenta diretamente uma tela do frontend.
 class QuestionnaireDashboardAnalyticsView(APIView):
     authentication_classes = [OAuth2Authentication, CsrfExemptSessionAuthentication]

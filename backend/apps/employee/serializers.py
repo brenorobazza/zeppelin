@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from apps.organization.models import Organization
 from .models import (
     AcademicDegreeCategory,
     AcademicDegree,
@@ -93,6 +94,17 @@ class PositionReadSerializer(serializers.ModelSerializer):
 
 
 class EmployeeWriteSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.none(),
+        source="employee_organization",
+        required=False,
+        allow_null=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["organization"].queryset = Organization.objects.all()
+
     class Meta:
         model = Employee
         exclude = ("polymorphic_ctype",)

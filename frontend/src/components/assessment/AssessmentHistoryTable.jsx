@@ -1,20 +1,9 @@
-export function AssessmentHistoryTable({ cycleOptions, organizationName, onCycleCreated, onViewResults, setCurrentView, organizations, organizationId, onChangeOrganization, handleStartNew }) {
+export function AssessmentHistoryTable({ cycleOptions, organizationName, onCycleCreated, onViewResults, setCurrentView, handleStartNew }) {
   return (
     <section className="panel">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           <h3 style={{ margin: 0 }}>Your previous assessments</h3>
-          {organizations.length > 1 && (
-            <select 
-              value={organizationId} 
-              onChange={(e) => onChangeOrganization && onChangeOrganization(e.target.value)}
-              style={{ padding: "0.4rem", borderRadius: "4px", border: "1px solid #ccc" }}
-            >
-              {organizations.map(org => (
-                <option key={org.id} value={org.id}>{org.name}</option>
-              ))}
-            </select>
-          )}
         </div>
         <button className="btn-primary-ui" onClick={handleStartNew} style={{ borderRadius: "20px", padding: "0.5rem 1.5rem" }}>
           New
