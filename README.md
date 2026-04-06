@@ -31,7 +31,7 @@ This repository contains the complete web application, transitioning the diagnos
 
 ### Prerequisites
 - Python 3.12+
-- Node.js 20+
+- Node.js 22+
 - Docker and Docker Compose
 
 ### Setup
@@ -53,25 +53,24 @@ source .venv/bin/activate
 ./setup-dev.sh
 ```
 
-### Pre-commit
-The project uses [pre-commit](https://pre-commit.com/) to ensure code quality. After running `setup-dev.sh`, the hook is automatically installed and will run **Black** and **Flake8** on every `git commit`.
+### Quality Assurance
+The project uses pre-commit hooks and a comprehensive testing suite to ensure code quality.
 
-```bash
-# To run manually across all files:
-pre-commit run --all-files
-```
+- **Frontend Testing:** Powered by Vitest and React Testing Library. Documentation available at `docs/frontend-testing.md`.
+- **Backend Testing:** Django unit tests for analytics and core logic.
+- **Unified Validation:** Use `make verify` to run all checks (linting, backend tests, and frontend tests) before pushing code.
 
 ---
 
 ## Quick Start (Docker)
 
-Follow these steps to get the entire Zeppelin stack (Backend + Frontend) running in under 5 minutes:
+Follow these steps to get the entire Zeppelin stack (Backend + Frontend) running:
 
-1. **Copy the `.env` file and configure your settings**
+1. **Copy the .env file and configure your settings**
    ```bash
    cp .env.example .env
    ```
-   *(Update the variables inside `.env`. For local development via proxy, keep `VITE_API_BASE_URL` empty).*
+   *(Update the variables inside .env. For local development via proxy, keep VITE_API_BASE_URL empty).*
 
 2. **Start the environment with Docker**
    ```bash
@@ -88,28 +87,22 @@ Follow these steps to get the entire Zeppelin stack (Backend + Frontend) running
    ```bash
    make seed-db
    ```
-   *This will load the 71 official questions and required adoption levels into the database.*
+   *This will load the 71 official questions, adoption levels, and OAuth2 setup into the database.*
 
-5. **(Optional) Load demo data**
-   ```bash
-   make seed-demo
-   ```
-   *This will populate a sample organization with answers to test the analytics dashboard.*
-
-6. Access Zeppelin
+5. Access Zeppelin
    * **Web Interface (React):** [http://localhost:5173](http://localhost:5173)
    * **API / Backend Admin:** [http://localhost:8000/admin](http://localhost:8000/admin)
    * **API Documentation (Swagger):** [http://localhost:8000/](http://localhost:8000/)
 
 ---
 
-## API & Integration
+## API and Integration
 
 The project uses OAuth2 for secure API communication. To test the API endpoints manually:
 
 1. **Postman Collection:** An official collection is available at `docs/zeppelin-api-collection.json`.
 2. **Authentication:** Use the `Login (Get Tokens)` request in Postman. The `access_token` is automatically managed if you use the provided environment.
-3. **Automatic Setup:** The `make seed-db` command automatically creates the necessary OAuth2 Application (`Zeppelin Web`) required for the authentication flow to work.
+3. **Automatic Setup:** The `make seed-db` command automatically creates the necessary OAuth2 Application (Zeppelin Web) required for the authentication flow to work.
 
 ---
 
@@ -117,10 +110,14 @@ The project uses OAuth2 for secure API communication. To test the API endpoints 
 
 | Command          | Description                                                                 |
 | ---------------- | --------------------------------------------------------------------------- |
-| `make up`        | Starts the containers defined in `docker-compose.yml`.                      |
+| `make up`        | Starts the containers defined in docker-compose.yml.                      |
 | `make build`     | Rebuilds images and starts containers. Use after adding new dependencies.   |
+| `make verify`    | **Main QA Command:** Runs linting, backend tests, and frontend tests.       |
+| `make test-backend` | Runs Django unit tests for analytics and business logic.                 |
+| `make test-frontend`| Runs Vitest suite for React components and routing logic.                |
+| `make lint`      | Runs pre-commit hooks (Black, Flake8) manually across all files.            |
 | `make seed-db`   | Populates the database with the 71 official questions and base structures.  |
 | `make seed-demo` | Populates the database with demo answers for testing analytics.             |
 | `make down`      | Stops and removes containers, preserving volumes.                           |
-| `make destroy`   | Stops and removes containers **and** volumes (erases persisted data).       |
-| `make superuser` | Runs the `create_superuser.sh` script to create a Django admin.             |
+| `make destroy`   | Stops and removes containers and volumes (erases persisted data).           |
+| `make superuser` | Runs the create_superuser.sh script to create a Django admin.             |
