@@ -1,6 +1,14 @@
 import { fallbackDashboardData } from "../mock/analyticsFallback";
 import { mapStagesToJourney } from "./stairwayStages";
 
+const MATURITY_SCALE = [
+  { value: 0, label: "Not adopted" },
+  { value: 10, label: "Abandoned" },
+  { value: 30, label: "Project/Product" },
+  { value: 60, label: "Process" },
+  { value: 100, label: "Institutionalized" }
+];
+
 function formatScope(stages) {
   const activeStages = stages.filter((stage) => stage.available).map((stage) => stage.name);
   return activeStages.length ? activeStages.join(", ") : "Not available";
@@ -15,15 +23,84 @@ function buildStageInterpretation(stage) {
     return "This stage is not represented in the current analytics payload.";
   }
 
-  return `${stage.answeredPractices || 0} assessed statements currently inform the interpretation of this stage.`;
+  const answered = stage.answeredPractices || 0;
+  const total = stage.totalPractices || answered;
+
+  if (answered === total) {
+    return `${answered} assessed statements inform the interpretation of this stage.`;
+  }
+
+  return `${answered} of ${total} statements were answered in this stage. Unanswered statements count as zero in this summary.`;
+}
+
+function renderScaleLabel(label) {
+  return label.replace("/", "/\u2009");
+}
+
+function MaturityScale({ score, currentLevel, available }) {
+  if (!available) {
+    return (
+      <div className="maturity-scale maturity-scale--missing">
+        <p>No scale is available because this stage is not represented in the current payload.</p>
+      </div>
+    );
+  }
+
+  const safeScore = Math.max(0, Math.min(100, score || 0));
+
+  return (
+    <div className="maturity-scale" aria-label={`Maturity scale for score ${safeScore}`}>
+      <div className="maturity-scale__header">
+        <span>Maturity scale</span>
+        <strong>{safeScore}/100</strong>
+      </div>
+
+      <div className="maturity-scale__track" aria-hidden="true">
+        <div className="maturity-scale__line" />
+        {MATURITY_SCALE.map((item) => (
+          <span
+            key={item.value}
+            className="maturity-scale__tick"
+            style={{ left: `${item.value}%` }}
+          />
+        ))}
+        <span
+          className="maturity-scale__marker"
+          style={{ left: `${safeScore}%` }}
+          title={`Score ${safeScore}`}
+        />
+      </div>
+
+      <div className="maturity-scale__labels">
+        {MATURITY_SCALE.map((item) => (
+          <div
+            key={item.value}
+            className={`maturity-scale__label ${safeScore >= item.value ? "is-reached" : ""}`.trim()}
+          >
+            <strong>{item.value}</strong>
+            <span>{renderScaleLabel(item.label)}</span>
+          </div>
+        ))}
+      </div>
+
+      <p className="maturity-scale__reading">Current position: {currentLevel}</p>
+    </div>
+  );
 }
 
 function buildCoverageSummary(stages) {
-  const covered = stages.filter((stage) => stage.available);
-  const missing = stages.filter((stage) => !stage.available);
+  const represented = stages.filter(
+    (stage) => stage.available && (stage.answeredPractices || 0) > 0
+  );
+  const missing = stages.filter(
+    (stage) => !stage.available || (stage.answeredPractices || 0) === 0
+  );
+
   return {
-    headline: `${covered.length}/${stages.length} stages answered`,
-    missingLabel: missing.length ? missing.map((stage) => stage.shortName).join(", ") : "None"
+    headline: `${represented.length}/${stages.length} stages represented`,
+    detail: missing.length
+      ? `Missing evidence in: ${missing.map((stage) => stage.shortName).join(", ")}`
+      : "All stages contain at least one answered statement in this cycle."
   };
 }
 
@@ -37,7 +114,10 @@ export function DashboardPage({ data, loading }) {
 
   const assessmentContext = [
     { label: "Assessment cycle", value: view.maturitySnapshot.cycleLabel },
-    { label: "Assessed statements", value: view.maturitySnapshot.answeredPractices }
+    {
+      label: "Questionnaire status",
+      value: view.maturitySnapshot.questionnaireStatus || "Incomplete"
+    }
   ];
 
   if (loading && !data) {
@@ -78,9 +158,7 @@ export function DashboardPage({ data, loading }) {
               <article className="context-card context-card--coverage">
                 <span>Assessment coverage</span>
                 <strong>{coverage.headline}</strong>
-                <p>
-                  <strong>Missing:</strong> {coverage.missingLabel}
-                </p>
+                <p>{coverage.detail}</p>
               </article>
             </div>
           </div>
@@ -102,7 +180,8 @@ export function DashboardPage({ data, loading }) {
             <h3>Stage-level diagnostic overview</h3>
             <p>
               The stage-level reading below positions the organization within the Stairway to
-              Heaven model without introducing additional aggregate indicators.
+              Heaven model. Scores range from 0 to 100, and unanswered statements are counted as
+              zero in this dashboard summary.
             </p>
           </div>
         </div>
@@ -123,9 +202,11 @@ export function DashboardPage({ data, loading }) {
                 <strong>{stage.available ? stage.score : "N/A"}</strong>
               </div>
 
-              <div className="progress">
-                <span style={{ width: `${stage.available ? stage.score : 0}%` }} />
-              </div>
+              <MaturityScale
+                score={stage.score}
+                currentLevel={stage.currentLevel}
+                available={stage.available}
+              />
 
               <p>{buildStageInterpretation(stage)}</p>
             </article>

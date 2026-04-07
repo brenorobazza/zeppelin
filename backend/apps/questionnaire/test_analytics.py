@@ -128,6 +128,18 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
 
         self.assertEqual(score, 55)
 
+    def test_score_for_answers_treats_missing_responses_as_zero_when_total_is_provided(
+        self,
+    ):
+        score = self.service._score_for_answers(self.current_answers, expected_total=4)
+
+        self.assertEqual(score, 28)
+
+    def test_questionnaire_status_returns_incomplete_when_answers_are_missing(self):
+        status = self.service._questionnaire_status(answered_count=2, expected_total=4)
+
+        self.assertEqual(status, "Incomplete")
+
     def test_build_recommendations_generates_tracks_from_low_maturity_answers(self):
         recommendations = self.service._build_recommendations(self.all_answers)
 
@@ -184,6 +196,11 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
                 "stage_scope": "ci_cd",
                 "all_answers": self.all_answers,
                 "current_answers": self.current_answers,
+                "expected_statement_count": 4,
+                "expected_stage_counts": {
+                    "Continuous Integration": 2,
+                    "Continuous Deployment": 2,
+                },
             },
         ), patch(
             "apps.questionnaire.analytics.Questionnaire.objects.filter"
@@ -193,9 +210,47 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
 
         self.assertEqual(payload["organization"]["name"], "Zeppelin Labs")
         self.assertEqual(payload["cycle"]["id"], self.current_cycle.id)
+        self.assertEqual(payload["snapshot"]["overall_score"], 28)
+        self.assertEqual(
+            payload["snapshot"]["overall_level"],
+            "Realized at project/product level",
+        )
         self.assertEqual(payload["snapshot"]["answered_practices"], 2)
+        self.assertEqual(payload["snapshot"]["questionnaire_status"], "Incomplete")
         self.assertEqual(payload["snapshot"]["recommendation_count"], 1)
         self.assertEqual(len(payload["stage_scores"]), 2)
+        self.assertEqual(payload["stage_scores"][0]["score"], 50)
+        self.assertEqual(payload["stage_scores"][1]["score"], 5)
+
+    def test_results_payload_reports_questionnaire_status(self):
+        organization = SimpleNamespace(
+            id=1,
+            name="Zeppelin Labs",
+            organization_type=SimpleNamespace(name="Software"),
+            organization_size=None,
+            age=48,
+        )
+        request = SimpleNamespace(query_params={}, user=None)
+
+        with patch.object(
+            self.service,
+            "_resolve_context",
+            return_value={
+                "organization": organization,
+                "questionnaire": self.current_cycle,
+                "stage_scope": "ci_cd",
+                "all_answers": self.all_answers,
+                "current_answers": self.current_answers,
+                "expected_statement_count": 4,
+                "expected_stage_counts": {
+                    "Continuous Integration": 2,
+                    "Continuous Deployment": 2,
+                },
+            },
+        ):
+            payload = self.service.get_results_payload(request)
+
+        self.assertEqual(payload["summary"]["questionnaire_status"], "Incomplete")
 
 
 # Esta suite valida se as views expostas ao frontend respondem com o contrato esperado.

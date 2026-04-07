@@ -98,6 +98,7 @@ function mapStageScore(item) {
     score: item.score,
     currentLevel: item.current_level,
     answeredPractices: item.answered_practices,
+    totalPractices: item.total_practices ?? item.answered_practices,
     strengthCount: item.strength_count,
     bottleneckCount: item.bottleneck_count
   };
@@ -114,6 +115,7 @@ function normalizeDashboard(payload) {
       organizationType: payload.organization.type || "",
       cycleLabel: payload.cycle.label,
       answeredPractices: payload.snapshot.answered_practices,
+      questionnaireStatus: payload.snapshot.questionnaire_status || "Incomplete",
       overallScore: payload.snapshot.overall_score,
       overallLevel: payload.snapshot.overall_level,
       ciScore: findStageScore(stageScores, "CI"),
@@ -145,6 +147,7 @@ function normalizeResults(payload) {
     selectedCycleLabel: payload.cycle?.label || "",
     summary: {
       answeredPractices: payload.summary.answered_practices,
+      questionnaireStatus: payload.summary.questionnaire_status || "Incomplete",
       stageGap: payload.summary.stage_gap,
       calibratedProfile: payload.organization.type || "Current organization profile",
       overallScore: payload.summary.overall_score,

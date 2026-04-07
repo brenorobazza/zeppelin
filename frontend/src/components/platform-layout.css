@@ -674,6 +674,116 @@
   line-height: 1;
 }
 
+.maturity-scale {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.8rem 0.85rem;
+  border: 1px solid #e0e8f4;
+  border-radius: 14px;
+  background: #fbfdff;
+}
+
+.maturity-scale--missing {
+  padding: 0.85rem;
+}
+
+.maturity-scale--missing p {
+  margin: 0;
+}
+
+.maturity-scale__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.maturity-scale__header span {
+  color: #60708a;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.maturity-scale__header strong {
+  color: #123764;
+  font-size: 1rem;
+}
+
+.maturity-scale__track {
+  position: relative;
+  height: 18px;
+}
+
+.maturity-scale__line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d9e3f2, #c9daff);
+  transform: translateY(-50%);
+}
+
+.maturity-scale__tick {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #b5c4d9;
+  border: 2px solid #fbfdff;
+  transform: translate(-50%, -50%);
+}
+
+.maturity-scale__marker {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #1877f2;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.15);
+  transform: translate(-50%, -50%);
+}
+
+.maturity-scale__labels {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.maturity-scale__label {
+  display: grid;
+  gap: 0.14rem;
+  color: #6f8099;
+}
+
+.maturity-scale__label strong {
+  color: #324a70;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.maturity-scale__label span {
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.maturity-scale__label.is-reached strong,
+.maturity-scale__label.is-reached span {
+  color: #123764;
+}
+
+.maturity-scale__reading {
+  margin: 0;
+  color: #4b5d79;
+  font-size: 0.88rem;
+}
+
 .support-panel {
   align-content: start;
 }
@@ -1297,6 +1407,10 @@
 
   .level-row {
     grid-template-columns: 1fr;
+  }
+
+  .maturity-scale__labels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .platform-topbar {

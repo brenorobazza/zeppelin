@@ -55,7 +55,10 @@ function mapRecommendation(item) {
 
 // Dashboard em modo demonstracao.
 export const fallbackDashboardData = {
-  maturitySnapshot,
+  maturitySnapshot: {
+    ...maturitySnapshot,
+    questionnaireStatus: "Incomplete"
+  },
   stageScores,
   adoptionLevels,
   strengths: maturitySnapshot.strengths.map(mapInsight),
@@ -68,6 +71,7 @@ export const fallbackDashboardData = {
 export const fallbackResultsData = {
   summary: {
     answeredPractices: maturitySnapshot.answeredPractices,
+    questionnaireStatus: "Incomplete",
     stageGap: Math.abs(maturitySnapshot.ciScore - maturitySnapshot.cdScore),
     calibratedProfile: maturitySnapshot.calibratedProfile,
     overallScore: maturitySnapshot.overallScore,

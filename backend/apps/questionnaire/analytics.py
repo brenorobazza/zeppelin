@@ -8,7 +8,7 @@ from apps.organization.models import Organization
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
-from .models import AdoptedLevel, Answer, Questionnaire
+from .models import AdoptedLevel, Answer, Questionnaire, Statement
 
 
 @lru_cache(maxsize=1)
@@ -203,10 +203,22 @@ class QuestionnaireAnalyticsService:
         answers = context["current_answers"]
         selected_answers = context.get("selected_answers", answers)
         selected_cycle_empty = context.get("selected_cycle_empty", False)
-        stage_scores = self._build_stage_scores(answers)
+        expected_statement_count = context.get("expected_statement_count", len(answers))
+        expected_stage_counts = context.get("expected_stage_counts")
+        stage_scores = self._build_stage_scores(
+            answers,
+            expected_stage_counts=expected_stage_counts,
+        )
         recommendations = self._build_recommendations(answers)
         history_cycles = self._build_history_cycles(
             context["all_answers"], context["organization"]
+        )
+        overall_score = self._score_for_answers(
+            answers,
+            expected_total=expected_statement_count,
+        )
+        questionnaire_status = self._questionnaire_status(
+            len(answers), expected_statement_count
         )
 
         return {
@@ -218,11 +230,10 @@ class QuestionnaireAnalyticsService:
             "scope": context["stage_scope"],
             "selected_cycle_empty": selected_cycle_empty,
             "snapshot": {
-                "overall_score": self._score_for_answers(answers),
-                "overall_level": self._resolve_average_level(
-                    self._score_for_answers(answers)
-                ),
+                "overall_score": overall_score,
+                "overall_level": self._resolve_average_level(overall_score),
                 "answered_practices": len(answers),
+                "questionnaire_status": questionnaire_status,
                 "recommendation_count": len(recommendations),
                 "executive_summary": self._build_executive_summary(stage_scores),
                 "overall_delta": self._history_delta(
@@ -243,9 +254,13 @@ class QuestionnaireAnalyticsService:
         answers = context["current_answers"]
         selected_answers = context.get("selected_answers", answers)
         selected_cycle_empty = context.get("selected_cycle_empty", False)
+        expected_statement_count = context.get("expected_statement_count", len(answers))
         stage_scores = self._build_stage_scores(answers)
         recommendations = self._build_recommendations(answers)
         overall_score = self._score_for_answers(answers)
+        questionnaire_status = self._questionnaire_status(
+            len(answers), expected_statement_count
+        )
 
         stage_values = [item["score"] for item in stage_scores]
         stage_gap = (
@@ -264,6 +279,7 @@ class QuestionnaireAnalyticsService:
                 "overall_score": overall_score,
                 "overall_level": self._resolve_average_level(overall_score),
                 "answered_practices": len(answers),
+                "questionnaire_status": questionnaire_status,
                 "stage_gap": stage_gap,
             },
             "stage_scores": stage_scores,
@@ -384,6 +400,10 @@ class QuestionnaireAnalyticsService:
         if not current_answers:
             current_answers = all_answers
 
+        expected_statement_count, expected_stage_counts = self._build_statement_targets(
+            stage_scope
+        )
+
         return {
             "organization": organization,
             "questionnaire": questionnaire,
@@ -392,6 +412,8 @@ class QuestionnaireAnalyticsService:
             "selected_answers": selected_answers,
             "selected_cycle_empty": selected_cycle_empty,
             "current_answers": current_answers,
+            "expected_statement_count": expected_statement_count,
+            "expected_stage_counts": expected_stage_counts,
         }
 
     # Descobre a organização a partir da URL ou do usuário autenticado.
@@ -520,15 +542,24 @@ class QuestionnaireAnalyticsService:
         }
 
     # Calcula a pontuação média do conjunto de respostas.
-    def _score_for_answers(self, answers):
+    def _score_for_answers(self, answers, expected_total=None):
         percentages = [
             answer.adopted_level_answer.percentage
             for answer in answers
             if answer.adopted_level_answer is not None
         ]
-        if not percentages:
+        total = len(percentages)
+        if expected_total is not None:
+            total = max(total, expected_total)
+
+        if total == 0:
             return 0
-        return round(mean(percentages))
+        return round(sum(percentages) / total)
+
+    def _questionnaire_status(self, answered_count, expected_total):
+        if expected_total <= 0:
+            return "Incomplete"
+        return "Complete" if answered_count >= expected_total else "Incomplete"
 
     # Traduz um score numérico para o nível de adoção mais próximo.
     def _resolve_average_level(self, score):
@@ -542,7 +573,7 @@ class QuestionnaireAnalyticsService:
         return closest.name
 
     # Agrupa as respostas por estágio e calcula os indicadores de cada grupo.
-    def _build_stage_scores(self, answers):
+    def _build_stage_scores(self, answers, expected_stage_counts=None):
         grouped = defaultdict(list)
         for answer in answers:
             stage = getattr(answer.statement_answer, "sth_stage", None)
@@ -550,8 +581,23 @@ class QuestionnaireAnalyticsService:
             grouped[stage_name].append(answer)
 
         items = []
-        for stage_name, stage_answers in grouped.items():
-            score = self._score_for_answers(stage_answers)
+        stage_names = list(grouped.keys())
+        if expected_stage_counts:
+            stage_names = list(
+                dict.fromkeys([*expected_stage_counts.keys(), *stage_names]).keys()
+            )
+
+        for stage_name in stage_names:
+            stage_answers = grouped.get(stage_name, [])
+            expected_total = (
+                expected_stage_counts.get(stage_name)
+                if expected_stage_counts is not None
+                else None
+            )
+            score = self._score_for_answers(
+                stage_answers,
+                expected_total=expected_total,
+            )
             items.append(
                 {
                     "key": slugify(stage_name),
@@ -563,6 +609,9 @@ class QuestionnaireAnalyticsService:
                     "score": score,
                     "current_level": self._resolve_average_level(score),
                     "answered_practices": len(stage_answers),
+                    "total_practices": expected_total
+                    if expected_total is not None
+                    else len(stage_answers),
                     "strength_count": len(
                         [
                             answer
@@ -584,6 +633,22 @@ class QuestionnaireAnalyticsService:
             items,
             key=lambda item: self.STAGE_ORDER.get(item["name"], 999),
         )
+
+    def _build_statement_targets(self, stage_scope):
+        queryset = Statement.objects.select_related("sth_stage")
+
+        if stage_scope == "ci_cd":
+            queryset = queryset.filter(sth_stage__name__in=self.CI_CD_STAGE_NAMES)
+
+        stage_counts = defaultdict(int)
+        total = 0
+
+        for statement in queryset:
+            stage_name = getattr(statement.sth_stage, "name", None) or "Unknown stage"
+            stage_counts[stage_name] += 1
+            total += 1
+
+        return total, dict(stage_counts)
 
     # Conta quantas práticas caem em cada nível de adoção.
     def _build_adoption_distribution(self, answers):

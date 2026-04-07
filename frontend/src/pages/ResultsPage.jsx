@@ -277,9 +277,11 @@ export function ResultsPage({ data, overview, loading }) {
   const adoptionLevels = overviewData.adoptionLevels || [];
 
   const diagnosticFacts = [
-    { label: "Assessed statements", value: view.summary.answeredPractices },
-    { label: "Spread across stages", value: formatStageSpread(leadingStage, constrainingStage) },
-    { label: "Practice groups reviewed", value: practiceGroups.length }
+    {
+      label: "Questionnaire status",
+      value: view.summary.questionnaireStatus || "Incomplete"
+    },
+    { label: "Spread across stages", value: formatStageSpread(leadingStage, constrainingStage) }
   ];
 
   if (loading && !data) {
@@ -320,7 +322,7 @@ export function ResultsPage({ data, overview, loading }) {
           <p>{analyticalNarrative}</p>
         </article>
 
-        <div className="assessment-context-grid assessment-context-grid--compact">
+        <div className="assessment-context-grid">
           {diagnosticFacts.map((item) => (
             <article key={item.label} className="context-card">
               <span>{item.label}</span>
