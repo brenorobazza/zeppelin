@@ -1,28 +1,82 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { registerAccount, searchOrganizations } from "../services/auth";
+
 import "./join-organization-page.css";
 
-const MOCK_ORGANIZATIONS = [
-  "Zeppelin Labs",
-  "Zeppelin Digital",
-  "Acme Corp",
-  "Nexus Logistics",
-  "Blue Orbit",
-  "Rocket Dynamics"
-];
-
-export function JoinOrganizationPage() {
+export function JoinOrganizationPage({ accountData, onCreateOrganization, onBackToLogin }) {
   const [query, setQuery] = useState("");
-  const [selectedOrganization, setSelectedOrganization] = useState("");
+  const [results, setResults] = useState([]);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const normalizedQuery = query.trim().toLowerCase();
 
-  const matches = useMemo(() => {
-    if (normalizedQuery.length < 3) return [];
+  useEffect(() => {
+    let ignore = false;
 
-    return MOCK_ORGANIZATIONS.filter((name) =>
-      name.toLowerCase().includes(normalizedQuery)
-    );
+    async function loadOrganizations() {
+      if (normalizedQuery.length < 3) {
+        setResults([]);
+        return;
+      }
+
+      setIsSearching(true);
+      setError("");
+
+      try {
+        const data = await searchOrganizations(normalizedQuery);
+        if (ignore) return;
+        setResults(data);
+      } catch (err) {
+        if (ignore) return;
+        setError(err.message || "Could not load organizations.");
+      } finally {
+        if (!ignore) {
+          setIsSearching(false);
+        }
+      }
+    }
+
+    loadOrganizations();
+    return () => {
+      ignore = true;
+    };
   }, [normalizedQuery]);
+
+  async function handleFinalizeRegistration() {
+    setError("");
+    setSuccess("");
+
+    if (!accountData?.username || !accountData?.email || !accountData?.password) {
+      setError("Create your account first to continue.");
+      return;
+    }
+
+    if (!selectedOrganizationId) {
+      setError("Select an organization before finishing your registration.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await registerAccount({
+        username: accountData.username,
+        email: accountData.email,
+        password: accountData.password,
+        role: accountData.role || "",
+        organization_id: selectedOrganizationId
+      });
+
+      setSuccess("Registration completed successfully. Your account is now linked to an organization.");
+    } catch (err) {
+      setError(err.message || "Could not complete registration.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <main className="join-org-shell">
@@ -50,7 +104,8 @@ export function JoinOrganizationPage() {
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
-                  setSelectedOrganization("");
+                  setSelectedOrganizationId(null);
+                  setSuccess("");
                 }}
                 placeholder="Start typing your company name..."
               />
@@ -60,21 +115,25 @@ export function JoinOrganizationPage() {
               Type at least 3 characters to see matching organizations
             </p>
 
+            {error ? <p className="join-org-hint join-org-hint-error">{error}</p> : null}
+
             {normalizedQuery.length >= 3 ? (
               <ul className="join-org-results" aria-label="Organization suggestions">
-                {matches.length > 0 ? (
-                  matches.map((organizationName) => (
-                    <li key={organizationName}>
+                {isSearching ? (
+                  <li className="join-org-empty">Searching organizations...</li>
+                ) : results.length > 0 ? (
+                  results.map((organization) => (
+                    <li key={organization.id}>
                       <button
                         type="button"
                         className={
-                          selectedOrganization === organizationName
+                          selectedOrganizationId === organization.id
                             ? "join-org-option is-selected"
                             : "join-org-option"
                         }
-                        onClick={() => setSelectedOrganization(organizationName)}
+                        onClick={() => setSelectedOrganizationId(organization.id)}
                       >
-                        {organizationName}
+                        {organization.name}
                       </button>
                     </li>
                   ))
@@ -82,6 +141,28 @@ export function JoinOrganizationPage() {
                   <li className="join-org-empty">No organizations found.</li>
                 )}
               </ul>
+            ) : null}
+
+            {selectedOrganizationId ? (
+              <button
+                type="button"
+                className="join-org-finalize-btn"
+                onClick={handleFinalizeRegistration}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Finalizing..." : "Finalize registration"}
+              </button>
+            ) : null}
+
+            {success ? <p className="join-org-success">{success}</p> : null}
+            {success && typeof onBackToLogin === "function" ? (
+              <button
+                type="button"
+                className="join-org-finalize-btn"
+                onClick={() => onBackToLogin()}
+              >
+                Continue to sign in
+              </button>
             ) : null}
           </div>
 
@@ -97,7 +178,17 @@ export function JoinOrganizationPage() {
             <div className="join-org-create-copy">
               <h2>Can't find your organization?</h2>
               <p>Create a new organization profile and invite your team members to join.</p>
-              <button type="button" className="join-org-create-btn">
+              <button
+                type="button"
+                className="join-org-create-btn"
+                onClick={() => {
+                  if (typeof onCreateOrganization === "function") {
+                    onCreateOrganization();
+                    return;
+                  }
+                  window.location.hash = "organization-registration";
+                }}
+              >
                 Create New Organization
               </button>
             </div>
@@ -105,8 +196,18 @@ export function JoinOrganizationPage() {
 
           <footer className="join-org-card-footer">
             <p>Your data is secure and encrypted</p>
-            <button type="button" className="join-org-help-btn">
-              Need help?
+            <button
+              type="button"
+              className="join-org-help-btn"
+              onClick={() => {
+                if (typeof onBackToLogin === "function") {
+                  onBackToLogin();
+                  return;
+                }
+                window.location.hash = "login";
+              }}
+            >
+              {onBackToLogin ? "Back to sign in" : "Need help?"}
             </button>
           </footer>
         </section>
@@ -116,7 +217,6 @@ export function JoinOrganizationPage() {
           organization administrators.
         </p>
 
-        <p className="join-org-todo">TODO: integrar endpoint real para autocomplete e criação de organização.</p>
       </section>
     </main>
   );

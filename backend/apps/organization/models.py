@@ -91,6 +91,24 @@ class Organization(Base):
     description = models.TextField(
         help_text="organization's description", blank=True, null=True
     )
+    years_experience_range = models.CharField(
+        max_length=50,
+        help_text="organization years of software development experience",
+        blank=True,
+        null=True,
+    )
+    organization_sector = models.CharField(
+        max_length=200,
+        help_text="organization sector",
+        blank=True,
+        null=True,
+    )
+    target_audience = models.CharField(
+        max_length=200,
+        help_text="organization target audience",
+        blank=True,
+        null=True,
+    )
     organization_size = models.ForeignKey(
         Size,
         on_delete=models.CASCADE,
