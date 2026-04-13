@@ -9,7 +9,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from apps.employee.models import Employee
-from apps.organization.models import Organization
+from apps.organization.models import (
+    Organization,
+    OrganizationCategory,
+    OrganizationType,
+    Size,
+    State,
+)
 from django.db import transaction
 from oauth2_provider.models import Application, AccessToken, RefreshToken
 from oauthlib.common import generate_token
@@ -52,6 +58,14 @@ class LoginPageView(View):
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
+    YEARS_TO_AGE = {
+        "Less than 1 year": 1,
+        "1-3 years": 2,
+        "4-7 years": 5,
+        "8-12 years": 10,
+        "More than 12 years": 13,
+    }
+
     @transaction.atomic
     def post(self, request):
         username = _collapse_whitespace(request.data.get("username"))
@@ -63,6 +77,18 @@ class RegisterView(APIView):
         org_description = _collapse_whitespace(
             request.data.get("organization_description", "")
         )
+        years = _collapse_whitespace(request.data.get("years", ""))
+        state_name = _collapse_whitespace(request.data.get("state", ""))
+        organization_type_name = _collapse_whitespace(
+            request.data.get("organization_type", "")
+        )
+        organization_sector = _collapse_whitespace(
+            request.data.get("organization_sector", "")
+        )
+        organization_size_name = _collapse_whitespace(
+            request.data.get("organization_size", "")
+        )
+        target_audience = _collapse_whitespace(request.data.get("target_audience", ""))
 
         if not username or not password:
             return Response({"error": "username and password are required"}, status=400)
@@ -91,6 +117,63 @@ class RegisterView(APIView):
                 organization = Organization.objects.create(
                     name=org_name, description=org_description
                 )
+
+                fields_to_update = []
+
+                if years:
+                    organization.years_experience_range = years
+                    organization.age = self.YEARS_TO_AGE.get(years)
+                    fields_to_update.extend(["years_experience_range", "age"])
+
+                if state_name:
+                    state, _ = State.objects.get_or_create(name=state_name)
+                    organization.location = state
+                    fields_to_update.append("location")
+
+                if organization_size_name:
+                    size, _ = Size.objects.get_or_create(name=organization_size_name)
+                    organization.organization_size = size
+                    fields_to_update.append("organization_size")
+
+                if organization_type_name:
+                    category = None
+                    if organization_sector:
+                        category, _ = OrganizationCategory.objects.get_or_create(
+                            name=organization_sector
+                        )
+
+                    defaults = {
+                        "description": organization_type_name,
+                        "category_organization_type": category,
+                    }
+                    organization_type, _ = OrganizationType.objects.get_or_create(
+                        name=organization_type_name,
+                        defaults=defaults,
+                    )
+
+                    if (
+                        category
+                        and organization_type.category_organization_type_id
+                        != category.id
+                    ):
+                        organization_type.category_organization_type = category
+                        organization_type.save(
+                            update_fields=["category_organization_type"]
+                        )
+
+                    organization.organization_type = organization_type
+                    fields_to_update.append("organization_type")
+
+                if organization_sector:
+                    organization.organization_sector = organization_sector
+                    fields_to_update.append("organization_sector")
+
+                if target_audience:
+                    organization.target_audience = target_audience
+                    fields_to_update.append("target_audience")
+
+                if fields_to_update:
+                    organization.save(update_fields=fields_to_update)
 
         user = User.objects.create_user(
             username=username, email=email, password=password

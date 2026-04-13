@@ -9,6 +9,7 @@ import { RecommendationsPage } from "./pages/RecommendationsPage";
 import { ResultsPage } from "./pages/ResultsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { JoinOrganizationPage } from "./pages/JoinOrganizationPage";
+import { OrganizationRegistrationPage } from "./pages/OrganizationRegistrationPage";
 import {
   getAnalyticsFiltersFromUrl,
   getFallbackAnalyticsBundle,
@@ -21,6 +22,7 @@ function getScreenFromHash() {
   const hash = window.location.hash.replace("#", "");
   if (hash === "create-account") return "create-account";
   if (hash === "join-organization") return "join-organization";
+  if (hash === "organization-registration") return "organization-registration";
   if (hash === "dashboard") return "dashboard";
   if (hash === "assessment") return "assessment";
   if (hash === "results") return "results";
@@ -58,6 +60,7 @@ export default function App() {
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [disableGlobalSelectors, setDisableGlobalSelectors] = useState(false);
+  const [registrationUserData, setRegistrationUserData] = useState(null);
   const lastScreenRef = useRef(screen);
 
   function triggerRefresh() {
@@ -167,6 +170,11 @@ export default function App() {
     setScreen("join-organization");
   }
 
+  function goToOrganizationRegistration() {
+    window.location.hash = "organization-registration";
+    setScreen("organization-registration");
+  }
+
   function goToScreen(nextScreen) {
     window.location.hash = nextScreen;
     setScreen(nextScreen);
@@ -212,13 +220,32 @@ export default function App() {
     return (
       <CreateAccountPage
         onBackToLogin={goToLogin}
-        onAccountCreated={goToJoinOrganization}
+        onAccountCreated={(accountData) => {
+          setRegistrationUserData(accountData);
+          goToJoinOrganization();
+        }}
       />
     );
   }
 
   if (screen === "join-organization") {
-    return <JoinOrganizationPage />;
+    return (
+      <JoinOrganizationPage
+        accountData={registrationUserData}
+        onCreateOrganization={goToOrganizationRegistration}
+        onBackToLogin={goToLogin}
+      />
+    );
+  }
+
+  if (screen === "organization-registration") {
+    return (
+      <OrganizationRegistrationPage
+        accountData={registrationUserData}
+        onBack={goToJoinOrganization}
+        onSubmitSuccess={goToLogin}
+      />
+    );
   }
 
   // Mapeia cada tela principal para título, subtítulo e componente.

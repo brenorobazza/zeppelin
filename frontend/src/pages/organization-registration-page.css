@@ -1,0 +1,246 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+.org-registration-shell {
+  min-height: 100svh;
+  background: #f9fafb;
+  color: #111827;
+  font-family: "Inter", sans-serif;
+}
+
+.org-registration-topbar {
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.org-registration-topbar-content {
+  width: min(100%, 900px);
+  margin: 0 auto;
+  min-height: 80px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.org-registration-brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.org-registration-brand-copy h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.org-registration-brand-copy p {
+  margin: 2px 0 0;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.org-registration-time {
+  margin: 0 0 0 auto;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.org-registration-page {
+  width: min(100%, 900px);
+  margin: 0 auto;
+  padding: 28px 16px;
+}
+
+.org-registration-progress-line {
+  margin-bottom: 22px;
+}
+
+.org-registration-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.org-registration-progress-labels span:first-child {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.org-registration-progress-labels span:last-child {
+  color: #6b7280;
+}
+
+.org-registration-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.org-registration-progress-value {
+  width: 100%;
+  height: 100%;
+  background: #2563eb;
+}
+
+.org-registration-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.org-registration-card-head {
+  padding: 24px;
+  background: #eff6ff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.org-registration-card-head h2 {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: -0.02em;
+}
+
+.org-registration-card-head p {
+  margin: 10px 0 0;
+  color: #4b5563;
+  font-size: 16px;
+}
+
+.org-registration-form {
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.org-registration-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.org-registration-form label span {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.org-registration-form label em {
+  color: #9ca3af;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.org-registration-form label small {
+  color: #9ca3af;
+  font-size: 12px;
+  margin-top: -4px;
+}
+
+.org-registration-form .org-registration-important {
+  color: #2563eb;
+}
+
+.org-registration-form input,
+.org-registration-form select {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  font-size: 16px;
+  padding: 0 12px;
+}
+
+.org-registration-form input:focus,
+.org-registration-form select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.org-registration-error {
+  margin: 4px 0 0;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.org-registration-success {
+  margin: 4px 0 0;
+  color: #0a6d2f;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.org-registration-actions {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 8px;
+  padding-top: 18px;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+}
+
+.org-registration-back,
+.org-registration-submit {
+  min-height: 48px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.org-registration-back {
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+}
+
+.org-registration-submit {
+  border: 0;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.org-registration-submit:hover {
+  background: #1d4ed8;
+}
+
+.org-registration-submit:disabled {
+  opacity: 0.72;
+  cursor: wait;
+}
+
+.org-registration-footnote {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 36px;
+  min-height: 68px;
+  display: grid;
+  place-items: center;
+  color: #6b7280;
+  font-size: 14px;
+  text-align: center;
+  padding: 0 16px;
+}
+
+@media (max-width: 840px) {
+  .org-registration-card-head h2 {
+    font-size: 28px;
+  }
+
+  .org-registration-actions {
+    grid-template-columns: 1fr;
+  }
+}
