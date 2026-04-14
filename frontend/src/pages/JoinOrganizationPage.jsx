@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
-import { registerAccount, searchOrganizations } from "../services/auth";
+import { searchOrganizations } from "../services/auth";
 
 import "./join-organization-page.css";
 
-export function JoinOrganizationPage({ accountData, onCreateOrganization, onBackToLogin }) {
+export function JoinOrganizationPage({
+  accountData,
+  onCreateOrganization,
+  onBackToLogin,
+  onFinalizeJoin,
+}) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [selectedOrganizationId, setSelectedOrganizationId] = useState(null);
@@ -62,12 +67,14 @@ export function JoinOrganizationPage({ accountData, onCreateOrganization, onBack
 
     setIsSubmitting(true);
     try {
-      await registerAccount({
-        username: accountData.username,
-        email: accountData.email,
-        password: accountData.password,
-        role: accountData.role || "",
-        organization_id: selectedOrganizationId
+      if (typeof onFinalizeJoin !== "function") {
+        setError("Join flow is not configured.");
+        return;
+      }
+
+      await onFinalizeJoin({
+        accountData,
+        organizationId: selectedOrganizationId,
       });
 
       setSuccess("Registration completed successfully. Your account is now linked to an organization.");
@@ -177,7 +184,7 @@ export function JoinOrganizationPage({ accountData, onCreateOrganization, onBack
 
             <div className="join-org-create-copy">
               <h2>Can't find your organization?</h2>
-              <p>Create a new organization profile and invite your team members to join.</p>
+              <p>Create a new organization profile.</p>
               <button
                 type="button"
                 className="join-org-create-btn"
@@ -195,7 +202,6 @@ export function JoinOrganizationPage({ accountData, onCreateOrganization, onBack
           </section>
 
           <footer className="join-org-card-footer">
-            <p>Your data is secure and encrypted</p>
             <button
               type="button"
               className="join-org-help-btn"

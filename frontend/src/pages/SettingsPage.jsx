@@ -1,17 +1,38 @@
 import { useEffect, useState } from "react";
+import { addOrganization } from "../services/auth";
 import {
   deleteOrganizationMember,
   loadOrganizationSettings,
+  quitOrganizationMembership,
+  setCurrentOrganization,
   updateCurrentUserProfile,
 } from "../services/settings";
+import { OrganizationOverviewCard } from "../components/OrganizationOverviewCard";
 
-export function SettingsPage({ organizationId, onProfileUpdated, onSelfRemoved }) {
+export function SettingsPage({
+  organizationId,
+  organizationOptions = [],
+  onProfileUpdated,
+  onSelfRemoved,
+  onCreateOrganization,
+  onOrganizationQuit,
+  onOrganizationJoined,
+  currentOrganizationId,
+  onCurrentOrganizationChanged,
+}) {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [isQuittingOrganization, setIsQuittingOrganization] = useState(false);
+  const [joiningOrganizationId, setJoiningOrganizationId] = useState(null);
+  const [switchingCurrentOrganizationId, setSwitchingCurrentOrganizationId] = useState(null);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState(
+    organizationId ? String(organizationId) : ""
+  );
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const canQuitOrganization = organizationOptions.length > 1;
   const [profileForm, setProfileForm] = useState({
     firstName: "",
     lastName: "",
@@ -57,6 +78,12 @@ export function SettingsPage({ organizationId, onProfileUpdated, onSelfRemoved }
     return () => {
       ignore = true;
     };
+  }, [organizationId]);
+
+  useEffect(() => {
+    if (organizationId) {
+      setSelectedOrganizationId(String(organizationId));
+    }
   }, [organizationId]);
 
   function handleProfileChange(event) {
@@ -162,6 +189,102 @@ export function SettingsPage({ organizationId, onProfileUpdated, onSelfRemoved }
     }
   }
 
+  async function handleQuitOrganization() {
+    if (!selectedOrganizationId) {
+      setError("No organization selected.");
+      return;
+    }
+
+    if (!window.confirm("Do you want to quit this organization?")) {
+      return;
+    }
+
+    setIsQuittingOrganization(true);
+    setError("");
+    setFeedback("");
+
+    try {
+      const payload = await quitOrganizationMembership(selectedOrganizationId);
+      setFeedback("Your membership in this organization was removed.");
+
+      if (typeof onOrganizationQuit === "function") {
+        onOrganizationQuit(payload);
+      }
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setIsQuittingOrganization(false);
+    }
+  }
+
+  async function handleJoinOrganization(organizationToJoin) {
+    if (!organizationToJoin?.id) {
+      setError("Invalid organization selected.");
+      return;
+    }
+
+    setJoiningOrganizationId(String(organizationToJoin.id));
+    setError("");
+    setFeedback("");
+
+    try {
+      const payload = await addOrganization({ organization_id: organizationToJoin.id });
+
+      setFeedback(payload.message || "Organization linked to your profile.");
+      if (typeof onOrganizationJoined === "function") {
+        onOrganizationJoined({
+          organization_id: payload.organization_id || organizationToJoin.id,
+          organization_name: payload.organization_name || organizationToJoin.name,
+          organization_sector:
+            payload.organization_sector ||
+            organizationToJoin.organization_sector ||
+            organizationToJoin.sector ||
+            "",
+        });
+      }
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setJoiningOrganizationId(null);
+    }
+  }
+
+  async function handleSetCurrentOrganization(organizationToSet) {
+    if (!organizationToSet?.id) {
+      setError("Invalid organization selected.");
+      return;
+    }
+
+    const nextId = String(organizationToSet.id);
+    if (nextId === String(currentOrganizationId || "")) {
+      return;
+    }
+
+    setSwitchingCurrentOrganizationId(nextId);
+    setError("");
+    setFeedback("");
+
+    try {
+      const payload = await setCurrentOrganization(nextId);
+      setFeedback(payload.current_organization_name
+        ? `Current organization updated to ${payload.current_organization_name}.`
+        : "Current organization updated.");
+
+      if (typeof onCurrentOrganizationChanged === "function") {
+        onCurrentOrganizationChanged({
+          organization_id: payload.current_organization_id || organizationToSet.id,
+          organization_name: payload.current_organization_name || organizationToSet.name,
+        });
+      }
+
+      setSelectedOrganizationId(nextId);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setSwitchingCurrentOrganizationId(null);
+    }
+  }
+
   if (!organizationId) {
     return (
       <section className="panel">
@@ -200,38 +323,23 @@ export function SettingsPage({ organizationId, onProfileUpdated, onSelfRemoved }
 
   return (
     <>
-      <section className="panel">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow">Organization overview</p>
-            <h3>Current organization context</h3>
-            <p>
-              Review the active organization and the member-removal rule applied in this workspace.
-            </p>
-          </div>
-        </div>
-
-        {feedback ? <p className="feedback success">{feedback}</p> : null}
-
-        <div className="grid-3">
-          <div className="context-card">
-            <span>Organization</span>
-            <strong>{organization.name}</strong>
-          </div>
-          <div className="context-card">
-            <span>Members</span>
-            <strong>{organization.member_count}</strong>
-          </div>
-          <div className="context-card">
-            <span>Your access level</span>
-            <strong>{currentUser.is_admin ? "Admin" : "Standard member"}</strong>
-          </div>
-        </div>
-
-        <p className="settings-rule">
-          You can remove your own membership. Removing another member requires admin privileges.
-        </p>
-      </section>
+      <OrganizationOverviewCard
+        organization={organization}
+        organizationOptions={organizationOptions}
+        currentOrganizationId={currentOrganizationId}
+        selectedOrganizationId={selectedOrganizationId}
+        onSelectOrganization={setSelectedOrganizationId}
+        onSetCurrentOrganization={handleSetCurrentOrganization}
+        currentUser={currentUser}
+        feedback={feedback}
+        onCreateOrganization={onCreateOrganization}
+        onQuitOrganization={handleQuitOrganization}
+        onJoinOrganization={handleJoinOrganization}
+        isQuitting={isQuittingOrganization}
+        joiningOrganizationId={joiningOrganizationId}
+        switchingCurrentOrganizationId={switchingCurrentOrganizationId}
+        canQuitOrganization={canQuitOrganization}
+      />
 
       <section className="panel">
         <div className="section-head">

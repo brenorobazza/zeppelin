@@ -1,11 +1,16 @@
 from django.urls import path
 from .views import (
+    AddOrganizationApiView,
+    CurrentOrganizationApiView,
     CurrentUserProfileApiView,
     ForgotPasswordApiView,
+    JoinOrganizationApiView,
     LoginApiView,
     LoginPageView,
+    OrganizationRegistrationApiView,
     OrganizationSettingsApiView,
     OrganizationSettingsMemberApiView,
+    QuitOrganizationApiView,
     RegisterView,
 )
 
@@ -25,6 +30,15 @@ urlpatterns = [
         OrganizationSettingsMemberApiView.as_view(),
         name="organization-settings-member-api",
     ),
+    path(
+        "organization-settings/quit/",
+        QuitOrganizationApiView.as_view(),
+        name="organization-settings-quit-api",
+    ),
+    path("join-organization/", JoinOrganizationApiView.as_view()),
+    path("organization-registration/", OrganizationRegistrationApiView.as_view()),
+    path("add-organization/", AddOrganizationApiView.as_view()),
+    path("current-organization/", CurrentOrganizationApiView.as_view()),
     path(
         "profile/", CurrentUserProfileApiView.as_view(), name="current-user-profile-api"
     ),

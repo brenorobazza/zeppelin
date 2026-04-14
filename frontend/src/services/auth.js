@@ -1,5 +1,20 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
 
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let index = 0; index < cookies.length; index += 1) {
+      const cookie = cookies[index].trim();
+      if (cookie.substring(0, name.length + 1) === `${name}=`) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
 function normalizeOrganizationName(value) {
   return (value || "")
     .trim()
@@ -43,6 +58,46 @@ export async function registerAccount(payload) {
   });
 
   return parseResponse(response, "Falha ao criar conta.");
+}
+
+export async function joinOrganization(payload) {
+  const response = await fetch(`${API_BASE}/auth/join-organization/`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  return parseResponse(response, "Falha ao vincular organizacao.");
+}
+
+export async function submitOrganizationRegistration(payload) {
+  const response = await fetch(`${API_BASE}/auth/organization-registration/`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  return parseResponse(response, "Falha ao salvar dados da organizacao.");
+}
+
+export async function addOrganization(payload) {
+  const response = await fetch(`${API_BASE}/auth/add-organization/`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCookie("csrftoken")
+    },
+    body: JSON.stringify(payload)
+  });
+
+  return parseResponse(response, "Falha ao adicionar organizacao.");
 }
 
 export async function searchOrganizations(query) {

@@ -1509,6 +1509,304 @@
   color: #4a5d7a;
 }
 
+.settings-overview-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: -1rem -1rem 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #dce6f4;
+  background: linear-gradient(90deg, #eff6ff 0%, #ffffff 85%);
+  border-radius: 16px 16px 0 0;
+}
+
+.settings-overview-head h3 {
+  margin: 0;
+  color: #142946;
+  font-size: 1.08rem;
+}
+
+.settings-overview-head p {
+  margin: 0.15rem 0 0;
+  color: #5f6f8a;
+  font-size: 0.84rem;
+}
+
+.settings-overview-head__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 0.62rem;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+}
+
+.settings-overview-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.settings-overview-group {
+  display: grid;
+  gap: 0.62rem;
+}
+
+.settings-overview-label {
+  margin: 0;
+  color: #374151;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.settings-current-org-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  border: 2px solid #2563eb;
+  border-radius: 12px;
+  background: #eff6ff;
+  padding: 0.92rem 0.95rem;
+}
+
+.settings-current-org-card__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.82rem;
+}
+
+.settings-current-org-card__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.6rem;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.settings-current-org-card__identity strong {
+  display: block;
+  color: #111827;
+}
+
+.settings-current-org-card__identity p {
+  margin: 0.1rem 0 0;
+  color: #4b5563;
+  font-size: 0.8rem;
+}
+
+.settings-current-org-card__status {
+  display: inline-flex;
+  margin-top: 0.22rem;
+  color: #15803d;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.settings-current-org-card__switch {
+  display: inline-flex;
+  gap: 0.36rem;
+  align-items: center;
+}
+
+.settings-organization-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.settings-organization-option {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 0.74rem 0.82rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.72rem;
+  align-items: center;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.settings-organization-option:hover {
+  border-color: #bfdbfe;
+  background: #f8fbff;
+}
+
+.settings-organization-option.is-selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.settings-organization-option__left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.settings-organization-option__select {
+  border: 0;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+.settings-organization-option__actions {
+  display: inline-flex;
+  align-items: center;
+}
+
+.settings-organization-option__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.settings-organization-option__radio {
+  width: 0.94rem;
+  height: 0.94rem;
+  border-radius: 999px;
+  border: 1.5px solid #b9c3d5;
+  background: #ffffff;
+}
+
+.settings-organization-option__radio.is-selected {
+  border-color: #2563eb;
+  background: radial-gradient(circle, #2563eb 0 56%, #ffffff 58% 100%);
+}
+
+.settings-organization-option__icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 0.45rem;
+  background: #e8edf5;
+  color: #5f6f8a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-organization-option strong {
+  display: block;
+  color: #111827;
+  font-size: 0.9rem;
+}
+
+.settings-organization-option p {
+  margin: 0.08rem 0 0;
+  color: #6b7280;
+  font-size: 0.74rem;
+}
+
+.settings-organization-option__current {
+  color: #15803d;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.settings-org-search-wrap {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.settings-org-search-input {
+  width: 100%;
+  border: 1px solid #c9d7ea;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #142946;
+  font-size: 0.9rem;
+  padding: 0.62rem 0.7rem;
+}
+
+.settings-org-search-input:focus {
+  outline: 2px solid rgba(37, 99, 235, 0.18);
+  border-color: #2563eb;
+}
+
+.settings-org-search-hint {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.74rem;
+}
+
+.settings-org-search-results {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.settings-org-search-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid #d6e1f2;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.settings-org-search-card strong {
+  display: block;
+  color: #111827;
+  font-size: 0.9rem;
+}
+
+.settings-org-search-card p {
+  margin: 0.1rem 0 0;
+  color: #64748b;
+  font-size: 0.74rem;
+}
+
+.settings-org-search-empty,
+.settings-org-search-error {
+  margin: 0;
+  border: 1px dashed #d6e1f2;
+  border-radius: 10px;
+  padding: 0.62rem 0.7rem;
+  color: #64748b;
+  background: #f8fbff;
+  font-size: 0.82rem;
+}
+
+.settings-org-search-error {
+  border-color: #fca5a5;
+  color: #b91c1c;
+  background: #fff5f5;
+}
+
+.settings-overview-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.62rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #e2e9f5;
+}
+
+.settings-overview-actions .btn-primary-ui,
+.settings-overview-actions .btn-secondary-ui {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.settings-overview-actions__tooltip {
+  display: inline-flex;
+  width: 100%;
+}
+
+.settings-overview-actions__danger {
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
 .settings-member-list {
   display: grid;
   gap: 0.75rem;
@@ -1671,6 +1969,15 @@
 
   .section-head {
     flex-direction: column;
+  }
+
+  .settings-overview-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-org-search-card {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .settings-member-card__head,
