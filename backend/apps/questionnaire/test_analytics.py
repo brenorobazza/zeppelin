@@ -290,9 +290,7 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
             if item["element_name"] == "Modularized architecture and design"
         )
         cd_row = next(
-            item
-            for item in overview["rows"]
-            if item["element_name"] == "Audits"
+            item for item in overview["rows"] if item["element_name"] == "Audits"
         )
 
         self.assertEqual(ci_row["dimension_name"], "Development")
