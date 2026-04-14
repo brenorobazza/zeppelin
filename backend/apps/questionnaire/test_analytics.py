@@ -252,6 +252,55 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
 
         self.assertEqual(payload["summary"]["questionnaire_status"], "Incomplete")
 
+    def test_adoption_level_stage_overview_reproduces_ci_cd_counts(self):
+        overview = self.service._build_adoption_level_stage_overview(self.all_answers)
+
+        self.assertEqual(overview["totals"]["ci_count"], 2)
+        self.assertEqual(overview["totals"]["cd_count"], 2)
+        self.assertEqual(overview["totals"]["organization_count"], 4)
+        self.assertEqual(overview["degree_of_adoption"]["ci_score"], 50)
+        self.assertEqual(overview["degree_of_adoption"]["cd_score"], 30)
+        self.assertEqual(overview["degree_of_adoption"]["organization_score"], 40)
+
+        not_adopted_row = next(
+            item for item in overview["levels"] if item["label"] == "Not adopted"
+        )
+        abandoned_row = next(
+            item for item in overview["levels"] if item["label"] == "Abandoned"
+        )
+        institutionalized_row = next(
+            item for item in overview["levels"] if item["label"] == "Institutionalized"
+        )
+
+        self.assertEqual(not_adopted_row["ci_count"], 1)
+        self.assertEqual(not_adopted_row["cd_count"], 0)
+        self.assertEqual(abandoned_row["cd_count"], 1)
+        self.assertEqual(institutionalized_row["ci_count"], 1)
+
+    def test_dimension_element_overview_groups_rows_by_dimension_and_element(self):
+        overview = self.service._build_dimension_element_overview(self.current_answers)
+
+        self.assertEqual(overview["summary"]["ci_score"], 100)
+        self.assertEqual(overview["summary"]["cd_score"], 22)
+        self.assertEqual(overview["summary"]["organization_score"], 61)
+
+        ci_row = next(
+            item
+            for item in overview["rows"]
+            if item["element_name"] == "Modularized architecture and design"
+        )
+        cd_row = next(
+            item
+            for item in overview["rows"]
+            if item["element_name"] == "Audits"
+        )
+
+        self.assertEqual(ci_row["dimension_name"], "Development")
+        self.assertEqual(ci_row["ci_score"], 100)
+        self.assertIsNone(ci_row["cd_score"])
+        self.assertEqual(cd_row["dimension_name"], "Quality")
+        self.assertEqual(cd_row["cd_score"], 22)
+
 
 # Esta suite valida se as views expostas ao frontend respondem com o contrato esperado.
 class QuestionnaireAnalyticsApiTests(SimpleTestCase):

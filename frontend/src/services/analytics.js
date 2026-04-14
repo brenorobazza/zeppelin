@@ -153,6 +153,28 @@ function normalizeResults(payload) {
       overallScore: payload.summary.overall_score,
       overallLevel: payload.summary.overall_level
     },
+    adoptionLevelStageOverview: {
+      levels: (payload.adoption_level_stage_overview?.levels || []).map((item) => ({
+        key: item.key,
+        label: item.label,
+        weight: item.weight,
+        ciCount: item.ci_count,
+        cdCount: item.cd_count,
+        organizationCount: item.organization_count
+      })),
+      totals: {
+        ciCount: payload.adoption_level_stage_overview?.totals?.ci_count ?? 0,
+        cdCount: payload.adoption_level_stage_overview?.totals?.cd_count ?? 0,
+        organizationCount:
+          payload.adoption_level_stage_overview?.totals?.organization_count ?? 0
+      },
+      degreeOfAdoption: {
+        ciScore: payload.adoption_level_stage_overview?.degree_of_adoption?.ci_score ?? null,
+        cdScore: payload.adoption_level_stage_overview?.degree_of_adoption?.cd_score ?? null,
+        organizationScore:
+          payload.adoption_level_stage_overview?.degree_of_adoption?.organization_score ?? null
+      }
+    },
     stageScores: payload.stage_scores.map(mapStageScore),
     dimensionOverview: {
       dimensions: (payload.dimension_overview?.dimensions || []).map((item) => ({
@@ -170,6 +192,21 @@ function normalizeResults(payload) {
         cdScore: payload.dimension_overview?.summary?.cd_score ?? null,
         organizationScore: payload.dimension_overview?.summary?.organization_score ?? 0,
         statementCount: payload.dimension_overview?.summary?.statement_count ?? 0
+      }
+    },
+    elementOverview: {
+      rows: (payload.element_overview?.rows || []).map((item) => ({
+        key: item.key,
+        dimensionName: item.dimension_name,
+        elementName: item.element_name,
+        ciScore: item.ci_score,
+        cdScore: item.cd_score,
+        organizationScore: item.organization_score
+      })),
+      summary: {
+        ciScore: payload.element_overview?.summary?.ci_score ?? null,
+        cdScore: payload.element_overview?.summary?.cd_score ?? null,
+        organizationScore: payload.element_overview?.summary?.organization_score ?? 0
       }
     },
     practiceThemes: payload.dimensions.map((item) => ({

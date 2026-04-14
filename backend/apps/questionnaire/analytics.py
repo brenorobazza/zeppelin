@@ -283,8 +283,12 @@ class QuestionnaireAnalyticsService:
                 "stage_gap": stage_gap,
             },
             "stage_scores": stage_scores,
+            "adoption_level_stage_overview": self._build_adoption_level_stage_overview(
+                answers
+            ),
             "dimensions": self._build_dimension_results(answers),
             "dimension_overview": self._build_dimension_stage_overview(answers),
+            "element_overview": self._build_dimension_element_overview(answers),
             "strengths": self._build_strengths(answers),
             "bottlenecks": self._build_bottlenecks(answers),
             "opportunities": recommendations[:5],
@@ -817,6 +821,145 @@ class QuestionnaireAnalyticsService:
                 ),
                 "statement_count": len(organization_aggregate),
             },
+        }
+
+    def _build_adoption_level_stage_overview(self, answers):
+        stage_level_counts = {
+            "CI": defaultdict(int),
+            "CD": defaultdict(int),
+        }
+
+        for answer in answers:
+            statement_code = getattr(answer.statement_answer, "code", "") or ""
+            if statement_code not in self.INSTRUMENT_PRACTICE_CATALOG:
+                continue
+
+            stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
+            stage_short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
+            if stage_short_name not in {"CI", "CD"}:
+                continue
+
+            level_name = getattr(answer.adopted_level_answer, "name", "") or ""
+            stage_level_counts[stage_short_name][level_name] += 1
+
+        rows = []
+        total_ci = 0
+        total_cd = 0
+        total_organization = 0
+        weighted_ci = 0
+        weighted_cd = 0
+        weighted_organization = 0
+
+        for level in self.adopted_levels:
+            weight = self.INSTRUMENT_WEIGHT_BY_PERCENTAGE.get(
+                level.percentage,
+                level.percentage,
+            )
+            ci_count = stage_level_counts["CI"].get(level.name, 0)
+            cd_count = stage_level_counts["CD"].get(level.name, 0)
+            organization_count = ci_count + cd_count
+
+            total_ci += ci_count
+            total_cd += cd_count
+            total_organization += organization_count
+            weighted_ci += ci_count * weight
+            weighted_cd += cd_count * weight
+            weighted_organization += organization_count * weight
+
+            rows.append(
+                {
+                    "key": slugify(level.name),
+                    "label": level.name,
+                    "weight": weight,
+                    "ci_count": ci_count,
+                    "cd_count": cd_count,
+                    "organization_count": organization_count,
+                }
+            )
+
+        return {
+            "levels": rows,
+            "totals": {
+                "ci_count": total_ci,
+                "cd_count": total_cd,
+                "organization_count": total_organization,
+            },
+            "degree_of_adoption": {
+                "ci_score": round(weighted_ci / total_ci) if total_ci else None,
+                "cd_score": round(weighted_cd / total_cd) if total_cd else None,
+                "organization_score": (
+                    round(weighted_organization / total_organization)
+                    if total_organization
+                    else None
+                ),
+            },
+        }
+
+    def _build_dimension_element_overview(self, answers):
+        grouped = defaultdict(
+            lambda: {
+                "organization": [],
+                "CI": [],
+                "CD": [],
+            }
+        )
+
+        for answer in answers:
+            statement_code = getattr(answer.statement_answer, "code", "") or ""
+            if statement_code not in self.INSTRUMENT_PRACTICE_CATALOG:
+                continue
+
+            dimension_name = self._resolve_dimension_name(answer)
+            element_name = self._resolve_element_name(answer) or "Unclassified element"
+            stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
+            stage_short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
+            score = self._instrument_weight(answer)
+
+            grouped[(dimension_name, element_name)]["organization"].append(score)
+            if stage_short_name in {"CI", "CD"}:
+                grouped[(dimension_name, element_name)][stage_short_name].append(score)
+
+        element_order = {}
+        order_index = 0
+        for code, item in self.INSTRUMENT_PRACTICE_CATALOG.items():
+            dimension_name = item.get("dimension") or "Unclassified"
+            element_name = item.get("element") or "Unclassified element"
+            key = (dimension_name, element_name)
+            if key not in element_order:
+                element_order[key] = order_index
+                order_index += 1
+
+        rows = []
+        for (dimension_name, element_name), buckets in grouped.items():
+            ci_scores = buckets["CI"]
+            cd_scores = buckets["CD"]
+            org_scores = buckets["organization"]
+
+            rows.append(
+                {
+                    "key": slugify(f"{dimension_name}-{element_name}"),
+                    "dimension_name": dimension_name,
+                    "element_name": element_name,
+                    "ci_score": round(mean(ci_scores)) if ci_scores else None,
+                    "cd_score": round(mean(cd_scores)) if cd_scores else None,
+                    "organization_score": round(mean(org_scores)) if org_scores else 0,
+                }
+            )
+
+        rows.sort(
+            key=lambda item: (
+                self.DIMENSION_ORDER.get(item["dimension_name"], 500),
+                element_order.get(
+                    (item["dimension_name"], item["element_name"]),
+                    9999,
+                ),
+                item["element_name"],
+            )
+        )
+
+        return {
+            "rows": rows,
+            "summary": self._build_dimension_stage_overview(answers)["summary"],
         }
 
     # Gera recomendações para práticas abaixo do limiar de 60 por cento.

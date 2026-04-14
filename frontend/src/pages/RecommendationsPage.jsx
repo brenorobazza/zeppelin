@@ -29,10 +29,11 @@ function getRoadmapLaneCopy(lane) {
   };
 }
 
-function buildRoadmapSummary(total, stage, priority) {
+function buildRoadmapSummary(total, stage, practiceGroup) {
   const stageLabel = stage === "All" ? "all stages" : `stage ${stage}`;
-  const priorityLabel = priority === "All" ? "all priorities" : `${priority.toLowerCase()} priority`;
-  return `Showing ${total} recommendations for ${stageLabel} and ${priorityLabel}.`;
+  const groupLabel =
+    practiceGroup === "All" ? "all practice groups" : `practice group ${practiceGroup}`;
+  return `Showing ${total} recommendations for ${stageLabel} and ${groupLabel}.`;
 }
 
 function buildRecommendationTitle(item) {
@@ -139,7 +140,6 @@ export function RecommendationsPage({ data, loading }) {
   const view = data || fallbackRecommendationsData;
   const [stage, setStage] = useState("All");
   const [practiceGroup, setPracticeGroup] = useState("All");
-  const [priority, setPriority] = useState("All");
 
   // Os filtros apenas mudam a leitura visual; os dados originais continuam intactos.
   const filtered = useMemo(
@@ -148,10 +148,9 @@ export function RecommendationsPage({ data, loading }) {
         const matchesStage = stage === "All" || item.stage === stage;
         const matchesPracticeGroup =
           practiceGroup === "All" || item.dimensionName === practiceGroup;
-        const matchesPriority = priority === "All" || item.priority === priority;
-        return matchesStage && matchesPracticeGroup && matchesPriority;
+        return matchesStage && matchesPracticeGroup;
       }),
-    [view.recommendations, stage, practiceGroup, priority]
+    [view.recommendations, stage, practiceGroup]
   );
 
   // Depois do filtro, reorganizamos os itens dentro das trilhas do roadmap.
@@ -160,7 +159,7 @@ export function RecommendationsPage({ data, loading }) {
     ...getRoadmapLaneCopy(lane),
     items: filtered.filter((item) => item.track === lane.key)
   }));
-  const roadmapSummary = buildRoadmapSummary(filtered.length, stage, priority);
+  const roadmapSummary = buildRoadmapSummary(filtered.length, stage, practiceGroup);
 
   if (loading && !data) {
     return <section className="panel">Loading the improvement roadmap...</section>;
@@ -206,27 +205,17 @@ export function RecommendationsPage({ data, loading }) {
         <div className="section-head">
           <div>
             <h3>Recommended actions for the current cycle</h3>
-            <p>Review the suggested actions by stage and priority.</p>
+            <p>Review the suggested actions by stage and practice group.</p>
           </div>
         </div>
 
         <div className="roadmap-toolbar">
-          <div className="roadmap-filters">
+          <div className="roadmap-filters roadmap-filters--two">
             <label className="roadmap-filter-field">
               <span>Filter by stage</span>
               <select value={stage} onChange={(event) => setStage(event.target.value)}>
                 <option value="All">All stages</option>
                 {view.availableStages.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="roadmap-filter-field">
-              <span>Filter by priority</span>
-              <select value={priority} onChange={(event) => setPriority(event.target.value)}>
-                <option value="All">All priorities</option>
-                {view.availablePriorities.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>

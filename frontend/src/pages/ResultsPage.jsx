@@ -9,6 +9,56 @@ function formatDimensionValue(value) {
   return value == null ? "-" : `${value}%`;
 }
 
+const PERCENTAGE_SCALE = [0, 20, 40, 60, 80, 100];
+
+function PercentageScale({
+  score = null,
+  title = "Percentage scale",
+  className = "",
+  showHeader = true,
+  showMarker = false
+}) {
+  const safeScore =
+    typeof score === "number" ? Math.max(0, Math.min(100, score)) : null;
+
+  return (
+    <div className={["maturity-scale", "maturity-scale--percentage", className].filter(Boolean).join(" ")}>
+      {showHeader ? (
+        <div className="maturity-scale__header">
+          <span>{title}</span>
+          {showMarker && safeScore != null ? <strong>{safeScore}/100</strong> : null}
+        </div>
+      ) : null}
+
+      <div className="maturity-scale__track" aria-hidden="true">
+        <div className="maturity-scale__line" />
+        {PERCENTAGE_SCALE.map((tick) => (
+          <span
+            key={tick}
+            className="maturity-scale__tick"
+            style={{ left: `${tick}%` }}
+          />
+        ))}
+        {showMarker && safeScore != null ? (
+          <span
+            className="maturity-scale__marker"
+            style={{ left: `${safeScore}%` }}
+            title={`Score ${safeScore}`}
+          />
+        ) : null}
+      </div>
+
+      <div className="maturity-scale__labels maturity-scale__labels--percentage">
+        {PERCENTAGE_SCALE.map((tick) => (
+          <div key={tick} className="maturity-scale__label is-reached">
+            <strong>{tick}%</strong>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function buildRadarPoints(dimensions, radius, center) {
   if (!dimensions.length) return "";
 
@@ -21,6 +71,20 @@ function buildRadarPoints(dimensions, radius, center) {
       return `${x},${y}`;
     })
     .join(" ");
+}
+
+function buildRadarVertices(dimensions, radius, center) {
+  return dimensions.map((item, index) => {
+    const angle = (Math.PI * 2 * index) / dimensions.length - Math.PI / 2;
+    const scaledRadius = ((item.organizationScore || 0) / 100) * radius;
+    return {
+      key: item.key,
+      label: item.name,
+      score: item.organizationScore || 0,
+      x: center + Math.cos(angle) * scaledRadius,
+      y: center + Math.sin(angle) * scaledRadius
+    };
+  });
 }
 
 function buildRadarAxes(dimensions, radius, center) {
@@ -76,6 +140,7 @@ function DimensionRadar({ dimensions }) {
   const radius = 170;
   const axes = buildRadarAxes(dimensions, radius, center);
   const polygonPoints = buildRadarPoints(dimensions, radius, center);
+  const vertices = buildRadarVertices(dimensions, radius, center);
   const rings = [0.25, 0.5, 0.75, 1];
 
   return (
@@ -103,6 +168,18 @@ function DimensionRadar({ dimensions }) {
         ))}
 
         <polygon points={polygonPoints} className="dimension-radar__shape" />
+
+        {vertices.map((vertex) => (
+          <circle
+            key={`${vertex.key}-point`}
+            cx={vertex.x}
+            cy={vertex.y}
+            r="4"
+            className="dimension-radar__point"
+          >
+            <title>{`${vertex.label}: ${vertex.score}%`}</title>
+          </circle>
+        ))}
 
         {axes.map((axis) => (
           <text
@@ -155,21 +232,6 @@ function buildAnalyticalNarrative(leadingStage, constrainingStage) {
   }
 
   return `The current diagnosis is more strongly supported in ${leadingStage.name}, while ${constrainingStage.name} concentrates the main restrictions that still limit a more balanced progression across the CSE stages.`;
-}
-
-function buildStageSignal(stage) {
-  if (!stage.available) {
-    return "This stage is not represented in the current analytics payload.";
-  }
-
-  const strengthCount = stage.strengthCount || 0;
-  const bottleneckCount = stage.bottleneckCount || 0;
-
-  if (!strengthCount && !bottleneckCount) {
-    return "No supporting or constraining practices are explicitly identified for this stage.";
-  }
-
-  return `${strengthCount} supporting practices and ${bottleneckCount} constraining practices are currently associated with this stage.`;
 }
 
 function normalizeLevel(level = "") {
@@ -264,6 +326,126 @@ function renderInsightList(items, variant) {
   );
 }
 
+function buildElementOverviewRows(rows) {
+  const countsByDimension = rows.reduce((acc, row) => {
+    acc[row.dimensionName] = (acc[row.dimensionName] || 0) + 1;
+    return acc;
+  }, {});
+
+  let currentDimension = null;
+  return rows.map((row) => {
+    const showDimension = row.dimensionName !== currentDimension;
+    if (showDimension) {
+      currentDimension = row.dimensionName;
+    }
+
+    return {
+      ...row,
+      showDimension,
+      rowSpan: showDimension ? countsByDimension[row.dimensionName] : 0
+    };
+  });
+}
+
+const ADOPTION_LEVEL_COLORS = {
+  "not-adopted": "#4f79c7",
+  abandoned: "#f4a62a",
+  "realized-at-project-product-level": "#ffd561",
+  "realized-at-process-level": "#96c97e",
+  institutionalized: "#4b8b3b",
+  "project-product-level": "#ffd561",
+  "process-level": "#96c97e"
+};
+
+function buildStageAdoptionColumns(overview) {
+  const stageDefinitions = [
+    { key: "ciCount", label: "Continuous Integration", shortLabel: "CI" },
+    { key: "cdCount", label: "Continuous Deployment", shortLabel: "CD" }
+  ];
+
+  return stageDefinitions.map((stage) => {
+    const total = overview.totals?.[stage.key] || 0;
+    const segments = overview.levels.map((level) => {
+      const count = level[stage.key] || 0;
+      return {
+        key: `${stage.key}-${level.key}`,
+        label: level.label,
+        count,
+        percentage: total ? (count / total) * 100 : 0,
+        color: ADOPTION_LEVEL_COLORS[level.key] || "#d8e3f5"
+      };
+    });
+
+    return {
+      ...stage,
+      total,
+      segments
+    };
+  });
+}
+
+function AdoptionLevelStageChart({ overview }) {
+  if (!overview.levels?.length) {
+    return <div className="empty-state">No CI/CD adoption breakdown is available for this cycle.</div>;
+  }
+
+  const columns = buildStageAdoptionColumns(overview);
+
+  return (
+    <div className="adoption-stage-chart">
+      <div className="adoption-stage-chart__plot">
+        <div className="adoption-stage-chart__axis">
+          {[100, 75, 50, 25, 0].map((tick) => (
+            <span key={tick}>{tick}%</span>
+          ))}
+        </div>
+
+        <div className="adoption-stage-chart__bars">
+          {[100, 75, 50, 25].map((tick) => (
+            <div
+              key={tick}
+              className="adoption-stage-chart__gridline"
+              style={{ bottom: `${tick}%` }}
+            />
+          ))}
+
+          {columns.map((column) => (
+            <div key={column.key} className="adoption-stage-chart__bar-group">
+              <div className="adoption-stage-chart__bar">
+                {column.segments.map((segment) => (
+                  <div
+                    key={segment.key}
+                    className="adoption-stage-chart__segment"
+                    style={{
+                      height: `${segment.percentage}%`,
+                      background: segment.color
+                    }}
+                    title={`${column.label}: ${segment.label} (${segment.count} practices)`}
+                  />
+                ))}
+              </div>
+              <strong>{column.label}</strong>
+              <small>{column.total} practices</small>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="adoption-stage-chart__legend">
+        {overview.levels.map((level) => (
+          <div key={level.key} className="adoption-stage-chart__legend-item">
+            <span
+              className="adoption-stage-chart__legend-swatch"
+              style={{ background: ADOPTION_LEVEL_COLORS[level.key] || "#d8e3f5" }}
+            />
+            <small>{level.label}</small>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function ResultsPage({ data, overview, loading }) {
   // A Tela 2 funciona como aprofundamento analitico do diagnostico, sem repetir o resumo inicial.
   const view = data || fallbackResultsData;
@@ -272,9 +454,20 @@ export function ResultsPage({ data, overview, loading }) {
   const leadingStage = getLeadingStage(stages);
   const constrainingStage = getConstrainingStage(stages);
   const analyticalNarrative = buildAnalyticalNarrative(leadingStage, constrainingStage);
-  const practiceGroups = view.practiceThemes || [];
+  const practiceGroups = (view.practiceThemes || []).filter(
+    (group) =>
+      group.name !== "Agile Development" &&
+      group.name !== "Continuous Experimentation"
+  );
   const dimensionOverview = view.dimensionOverview || { dimensions: [], summary: {} };
+  const elementOverview = view.elementOverview || { rows: [], summary: {} };
+  const adoptionLevelStageOverview = view.adoptionLevelStageOverview || {
+    levels: [],
+    totals: {},
+    degreeOfAdoption: {}
+  };
   const adoptionLevels = overviewData.adoptionLevels || [];
+  const elementRows = buildElementOverviewRows(elementOverview.rows || []);
 
   const diagnosticFacts = [
     {
@@ -332,80 +525,123 @@ export function ResultsPage({ data, overview, loading }) {
         </div>
       </section>
 
-      <section className="two-column-grid">
-        <article className="panel">
-          <h3>Stage interpretation</h3>
-          <p>
-            Stages are the primary analytical axis of the diagnostic. The section below shows where
-            support and restriction currently concentrate across the Stairway to Heaven model.
-          </p>
+      <section className="panel support-panel">
+        <h3>Adoption level distribution across assessed statements</h3>
+        <p>
+          This distribution shows how the assessed statements are currently positioned across the
+          adoption levels defined by the diagnostic instrument.
+        </p>
 
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Stage</th>
-                <th>Score</th>
-                <th>Current level</th>
-                <th>Supporting practices</th>
-                <th>Constraining practices</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stages.map((stage) => (
-                <tr key={stage.key}>
-                  <td>
-                    <strong>{stage.name}</strong>
-                  </td>
-                  <td>{stage.available ? stage.score : "N/A"}</td>
-                  <td>{stage.currentLevel}</td>
-                  <td>{stage.available ? stage.strengthCount || 0 : "N/A"}</td>
-                  <td>{stage.available ? stage.bottleneckCount || 0 : "N/A"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="stage-profile-list">
-            {stages.map((stage) => (
-              <article
-                key={`${stage.key}-signal`}
-                className={`stage-profile-item ${stage.available ? "" : "stage-profile-item--missing"}`.trim()}
-              >
-                <div className="stage-profile-item__head">
-                  <div>
-                    <h4>{stage.name}</h4>
-                    <span>{stage.currentLevel}</span>
-                  </div>
-                  <strong>{stage.available ? stage.score : "N/A"}</strong>
-                </div>
-                <p>{buildStageSignal(stage)}</p>
-              </article>
-            ))}
-          </div>
-        </article>
-
-        <article className="panel support-panel">
-          <h3>Adoption level distribution across assessed statements</h3>
-          <p>
-            This distribution shows how the assessed statements are currently positioned across the
-            adoption levels defined by the diagnostic instrument.
-          </p>
-
-          <div className="level-rows">
-            {adoptionLevels.map((item) => (
-              <div key={item.key} className="level-row">
-                <div className="level-row__meta">
-                  <strong>{item.label}</strong>
-                  <small>{item.count} statements</small>
-                </div>
-                <div className="progress">
-                  <span style={{ width: `${item.percentage}%` }} />
-                </div>
-                <strong>{item.percentage}%</strong>
+        <div className="level-rows">
+          {adoptionLevels.map((item) => (
+            <div key={item.key} className="level-row">
+              <div className="level-row__meta">
+                <strong>{item.label}</strong>
+                <small>{item.count} statements</small>
               </div>
-            ))}
+              <PercentageScale
+                score={item.percentage}
+                showMarker
+                className="level-row__scale"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h3>Adoption by level and stage</h3>
+            <p>
+              This view reproduces the CI/CD instrument reading by showing how submitted
+              practices are distributed across adoption levels in Continuous Integration,
+              Continuous Deployment and the combined organizational reading.
+            </p>
           </div>
-        </article>
+        </div>
+
+        <div className="two-column-grid dimension-overview-grid">
+          <article className="panel dimension-overview-panel">
+            {adoptionLevelStageOverview.levels.length ? (
+              <div className="results-adoption-breakdown">
+                <div className="results-adoption-breakdown__section">
+                  <small className="eyebrow">Distribution table</small>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th rowSpan="2">Adoption level</th>
+                        <th colSpan="3">Number of CSE practices</th>
+                      </tr>
+                      <tr>
+                        <th>Continuous Integration</th>
+                        <th>Continuous Deployment</th>
+                        <th>Organization</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {adoptionLevelStageOverview.levels.map((level) => (
+                        <tr key={level.key}>
+                          <td>
+                            <strong>{level.label}</strong>
+                          </td>
+                          <td>{level.ciCount}</td>
+                          <td>{level.cdCount}</td>
+                          <td>{level.organizationCount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="results-adoption-breakdown__section">
+                  <small className="eyebrow">Summary results</small>
+                  <div className="results-adoption-summary">
+                    <article className="results-adoption-summary__card">
+                      <span>Total CSE practices</span>
+                      <div className="results-adoption-summary__values">
+                        <strong>CI: {adoptionLevelStageOverview.totals.ciCount}</strong>
+                        <strong>CD: {adoptionLevelStageOverview.totals.cdCount}</strong>
+                        <strong>
+                          Organization: {adoptionLevelStageOverview.totals.organizationCount}
+                        </strong>
+                      </div>
+                    </article>
+
+                    <article className="results-adoption-summary__card results-adoption-summary__card--highlight">
+                      <span>Degree of adoption</span>
+                      <div className="results-adoption-summary__values">
+                        <strong>
+                          CI: {formatDimensionValue(adoptionLevelStageOverview.degreeOfAdoption.ciScore)}
+                        </strong>
+                        <strong>
+                          CD: {formatDimensionValue(adoptionLevelStageOverview.degreeOfAdoption.cdScore)}
+                        </strong>
+                        <strong>
+                          Organization:{" "}
+                          {formatDimensionValue(
+                            adoptionLevelStageOverview.degreeOfAdoption.organizationScore
+                          )}
+                        </strong>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="empty-state">No CI/CD adoption breakdown is available for this cycle.</p>
+            )}
+          </article>
+
+          <article className="panel support-panel">
+            <h3>Practices adopted by level and CI/CD stage</h3>
+            <p>
+              The chart highlights how the current answered practices are distributed across the
+              adoption levels in Continuous Integration and Continuous Deployment.
+            </p>
+            <AdoptionLevelStageChart overview={adoptionLevelStageOverview} />
+          </article>
+        </div>
       </section>
 
       <section className="panel">
@@ -443,15 +679,6 @@ export function ResultsPage({ data, overview, loading }) {
                     <td>{item.practiceCount}</td>
                   </tr>
                 ))}
-                <tr>
-                  <td>
-                    <strong>Degree of adoption</strong>
-                  </td>
-                  <td>{formatDimensionValue(dimensionOverview.summary.ciScore)}</td>
-                  <td>{formatDimensionValue(dimensionOverview.summary.cdScore)}</td>
-                  <td>{formatDimensionValue(dimensionOverview.summary.organizationScore)}</td>
-                  <td>{dimensionOverview.summary.statementCount || 0}</td>
-                </tr>
               </tbody>
             </table>
           </article>
@@ -465,6 +692,62 @@ export function ResultsPage({ data, overview, loading }) {
             <DimensionRadar dimensions={dimensionOverview.dimensions} />
           </article>
         </div>
+      </section>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h3>Element adoption by dimension</h3>
+            <p>
+              This detailed table expands the dimension reading by showing which analytical
+              elements currently sustain the CI, CD and organization-level adoption scores.
+            </p>
+          </div>
+        </div>
+
+        {elementRows.length ? (
+          <table className="table table--grouped">
+            <thead>
+              <tr>
+                <th rowSpan="2">Dimension</th>
+                <th rowSpan="2">Element</th>
+                <th colSpan="3">Stages of StH</th>
+              </tr>
+              <tr>
+                <th>Continuous Integration</th>
+                <th>Continuous Deployment</th>
+                <th>Organization</th>
+              </tr>
+            </thead>
+            <tbody>
+              {elementRows.map((row) => (
+                <tr key={row.key}>
+                  {row.showDimension ? (
+                    <td rowSpan={row.rowSpan} className="table-group-cell">
+                      <strong>{row.dimensionName}</strong>
+                    </td>
+                  ) : null}
+                  <td>
+                    <strong>{row.elementName}</strong>
+                  </td>
+                  <td>{formatDimensionValue(row.ciScore)}</td>
+                  <td>{formatDimensionValue(row.cdScore)}</td>
+                  <td>{formatDimensionValue(row.organizationScore)}</td>
+                </tr>
+              ))}
+              <tr className="table-summary-row table-summary-row--final">
+                <td colSpan="2">
+                  <strong>Degree of adoption</strong>
+                </td>
+                <td>{formatDimensionValue(elementOverview.summary.ciScore)}</td>
+                <td>{formatDimensionValue(elementOverview.summary.cdScore)}</td>
+                <td>{formatDimensionValue(elementOverview.summary.organizationScore)}</td>
+              </tr>
+            </tbody>
+          </table>
+        ) : (
+          <p className="empty-state">No element-level evidence is available for this cycle.</p>
+        )}
       </section>
 
       <section className="panel">
@@ -490,15 +773,13 @@ export function ResultsPage({ data, overview, loading }) {
                   <strong>{item.score}</strong>
                 </div>
 
-                <div className="progress">
-                  <span style={{ width: `${item.score}%` }} />
-                </div>
+                <PercentageScale
+                  score={item.score}
+                  showMarker
+                  className="dimension-card__scale"
+                />
 
                 <div className="dimension-card__evidence">
-                  <div>
-                    <span>Current reading</span>
-                    <strong>{normalizeLevel(item.currentLevel)}</strong>
-                  </div>
                   <div>
                     <span>What supports this group</span>
                     <strong>{buildPracticeGroupSignal(item, "strength")}</strong>

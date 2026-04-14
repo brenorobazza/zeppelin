@@ -1,8 +1,10 @@
 import {
   adoptionLevels,
+  adoptionLevelStageOverview,
   historySeries,
   maturitySnapshot,
   dimensionOverview,
+  elementOverview,
   practiceThemes,
   recommendations,
   recommendationTracks,
@@ -77,9 +79,11 @@ export const fallbackResultsData = {
     overallScore: maturitySnapshot.overallScore,
     overallLevel: resolveLevelFromScore(maturitySnapshot.overallScore)
   },
+  adoptionLevelStageOverview,
   stageScores,
   practiceThemes,
   dimensionOverview,
+  elementOverview,
   strengths: maturitySnapshot.strengths.map(mapInsight),
   bottlenecks: maturitySnapshot.bottlenecks.map(mapInsight),
   opportunities: recommendations.slice(0, 3).map(mapRecommendation)

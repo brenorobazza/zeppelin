@@ -256,6 +256,183 @@ export const dimensionOverview = {
   }
 };
 
+export const elementOverview = {
+  rows: [
+    {
+      key: "development-modularized-architecture-and-design",
+      dimensionName: "Development",
+      elementName: "Modularized architecture and design",
+      ciScore: 68,
+      cdScore: 68,
+      organizationScore: 68
+    },
+    {
+      key: "quality-audits",
+      dimensionName: "Quality",
+      elementName: "Audits",
+      ciScore: 68,
+      cdScore: 0,
+      organizationScore: 57
+    },
+    {
+      key: "quality-automated-tests",
+      dimensionName: "Quality",
+      elementName: "Automated Tests",
+      ciScore: 68,
+      cdScore: null,
+      organizationScore: 68
+    },
+    {
+      key: "quality-regular-builds",
+      dimensionName: "Quality",
+      elementName: "Regular Builds",
+      ciScore: 68,
+      cdScore: null,
+      organizationScore: 68
+    },
+    {
+      key: "software-management-continuos-delivery",
+      dimensionName: "Software Management",
+      elementName: "Continuos delivery",
+      ciScore: null,
+      cdScore: 48,
+      organizationScore: 48
+    },
+    {
+      key: "software-management-continuos-deployment-of-releases",
+      dimensionName: "Software Management",
+      elementName: "Continuos deployment of releases",
+      ciScore: null,
+      cdScore: 68,
+      organizationScore: 68
+    },
+    {
+      key: "software-management-continuos-integration-of-work",
+      dimensionName: "Software Management",
+      elementName: "Continuos integration of work",
+      ciScore: 68,
+      cdScore: null,
+      organizationScore: 68
+    },
+    {
+      key: "technical-solution-branching-strategies",
+      dimensionName: "Technical Solution",
+      elementName: "Branching strategies",
+      ciScore: 68,
+      cdScore: null,
+      organizationScore: 68
+    },
+    {
+      key: "technical-solution-version-control",
+      dimensionName: "Technical Solution",
+      elementName: "Version control",
+      ciScore: 68,
+      cdScore: null,
+      organizationScore: 68
+    },
+    {
+      key: "knowledge-capturing-decisions-and-rationale",
+      dimensionName: "Knowledge",
+      elementName: "Capturing decisions and rationale",
+      ciScore: null,
+      cdScore: 68,
+      organizationScore: 68
+    },
+    {
+      key: "knowledge-sharing-knowledge",
+      dimensionName: "Knowledge",
+      elementName: "Sharing Knowledge",
+      ciScore: 68,
+      cdScore: 68,
+      organizationScore: 68
+    },
+    {
+      key: "business-appropriate-product-ideia",
+      dimensionName: "Business",
+      elementName: "Appropriate product ideia",
+      ciScore: null,
+      cdScore: 0,
+      organizationScore: 0
+    },
+    {
+      key: "business-management-commitement",
+      dimensionName: "Business",
+      elementName: "Management commitement",
+      ciScore: null,
+      cdScore: 48,
+      organizationScore: 48
+    },
+    {
+      key: "user-customer-proactive-customers",
+      dimensionName: "User/Customer",
+      elementName: "Proactive customers",
+      ciScore: null,
+      cdScore: 19,
+      organizationScore: 19
+    }
+  ],
+  summary: {
+    ciScore: 68,
+    cdScore: 41,
+    organizationScore: 55
+  }
+};
+
+export const adoptionLevelStageOverview = {
+  levels: [
+    {
+      key: "not-adopted",
+      label: "Not adopted",
+      weight: 0,
+      ciCount: 0,
+      cdCount: 4,
+      organizationCount: 4
+    },
+    {
+      key: "abandoned",
+      label: "Abandoned",
+      weight: 22,
+      ciCount: 0,
+      cdCount: 0,
+      organizationCount: 0
+    },
+    {
+      key: "project-product-level",
+      label: "Realized at project/product level",
+      weight: 38,
+      ciCount: 0,
+      cdCount: 6,
+      organizationCount: 6
+    },
+    {
+      key: "process-level",
+      label: "Realized at process level",
+      weight: 68,
+      ciCount: 15,
+      cdCount: 7,
+      organizationCount: 22
+    },
+    {
+      key: "institutionalized",
+      label: "Institutionalized",
+      weight: 100,
+      ciCount: 0,
+      cdCount: 0,
+      organizationCount: 0
+    }
+  ],
+  totals: {
+    ciCount: 15,
+    cdCount: 17,
+    organizationCount: 32
+  },
+  degreeOfAdoption: {
+    ciScore: 68,
+    cdScore: 41,
+    organizationScore: 55
+  }
+};
+
 export const adoptionLevels = [
   {
     key: "not-adopted",
