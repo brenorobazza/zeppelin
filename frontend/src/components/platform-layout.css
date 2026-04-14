@@ -843,19 +843,22 @@
 }
 
 .maturity-scale__labels {
-  display: grid;
-  gap: 0.55rem;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  position: relative;
+  min-height: 2.85rem;
+  margin-top: 0.15rem;
 }
 
 .maturity-scale__labels--percentage {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  min-height: 1.4rem;
 }
 
 .maturity-scale__label {
+  position: absolute;
   display: grid;
   gap: 0.14rem;
+  max-width: 96px;
   color: #6f8099;
+  transform: translateX(-50%);
 }
 
 .maturity-scale__label strong {
@@ -867,6 +870,7 @@
 .maturity-scale__label span {
   font-size: 0.72rem;
   line-height: 1.25;
+  text-wrap: balance;
 }
 
 .maturity-scale__label.is-reached strong,
@@ -882,6 +886,7 @@
 
 .maturity-scale--percentage .maturity-scale__label {
   gap: 0;
+  max-width: none;
 }
 
 .maturity-scale--percentage .maturity-scale__label span {
@@ -890,6 +895,34 @@
 
 .maturity-scale--percentage .maturity-scale__label strong {
   font-size: 0.74rem;
+}
+
+.maturity-scale:not(.maturity-scale--percentage) .maturity-scale__labels {
+  min-height: 3.45rem;
+}
+
+.maturity-scale:not(.maturity-scale--percentage) .maturity-scale__label {
+  max-width: 72px;
+}
+
+.maturity-scale:not(.maturity-scale--percentage) .maturity-scale__label--center {
+  text-align: center;
+}
+
+.maturity-scale:not(.maturity-scale--percentage) .maturity-scale__label--start {
+  text-align: left;
+}
+
+.maturity-scale:not(.maturity-scale--percentage) .maturity-scale__label--end {
+  text-align: right;
+}
+
+.maturity-scale:not(.maturity-scale--percentage) .maturity-scale__label strong {
+  font-size: 0.76rem;
+}
+
+.maturity-scale:not(.maturity-scale--percentage) .maturity-scale__label span {
+  font-size: 0.67rem;
 }
 
 .support-panel {
@@ -1614,11 +1647,11 @@
   }
 
   .maturity-scale__labels {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 3rem;
   }
 
   .maturity-scale__labels--percentage {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-height: 1.6rem;
   }
 
   .platform-topbar {

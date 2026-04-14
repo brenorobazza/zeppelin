@@ -11,6 +11,18 @@ function formatDimensionValue(value) {
 
 const PERCENTAGE_SCALE = [0, 20, 40, 60, 80, 100];
 
+function getScaleLabelStyle(value) {
+  if (value === 0) {
+    return { left: "0%", transform: "translateX(0)" };
+  }
+
+  if (value === 100) {
+    return { left: "100%", transform: "translateX(-100%)" };
+  }
+
+  return { left: `${value}%`, transform: "translateX(-50%)" };
+}
+
 function PercentageScale({
   score = null,
   title = "Percentage scale",
@@ -50,7 +62,11 @@ function PercentageScale({
 
       <div className="maturity-scale__labels maturity-scale__labels--percentage">
         {PERCENTAGE_SCALE.map((tick) => (
-          <div key={tick} className="maturity-scale__label is-reached">
+          <div
+            key={tick}
+            className="maturity-scale__label is-reached"
+            style={getScaleLabelStyle(tick)}
+          >
             <strong>{tick}%</strong>
           </div>
         ))}

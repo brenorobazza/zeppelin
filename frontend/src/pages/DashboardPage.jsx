@@ -37,6 +37,35 @@ function renderScaleLabel(label) {
   return label.replace("/", "/\u2009");
 }
 
+function getScaleLabelStyle(value) {
+  if (value === 0) {
+    return { left: "0%", transform: "translateX(0)" };
+  }
+
+  if (value === 100) {
+    return { left: "100%", transform: "translateX(-100%)" };
+  }
+
+  return { left: `${value}%`, transform: "translateX(-50%)" };
+}
+
+function getScaleLabelClass(value, safeScore) {
+  const edgeClass =
+    value === 0
+      ? "maturity-scale__label--start"
+      : value === 100
+        ? "maturity-scale__label--end"
+        : "maturity-scale__label--center";
+
+  return [
+    "maturity-scale__label",
+    edgeClass,
+    safeScore >= value ? "is-reached" : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 function MaturityScale({ score, currentLevel, available }) {
   if (!available) {
     return (
@@ -75,7 +104,8 @@ function MaturityScale({ score, currentLevel, available }) {
         {MATURITY_SCALE.map((item) => (
           <div
             key={item.value}
-            className={`maturity-scale__label ${safeScore >= item.value ? "is-reached" : ""}`.trim()}
+            className={getScaleLabelClass(item.value, safeScore)}
+            style={getScaleLabelStyle(item.value)}
           >
             <strong>{item.value}</strong>
             <span>{renderScaleLabel(item.label)}</span>
