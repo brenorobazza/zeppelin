@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { registerAccount } from "../services/auth";
 import "./organization-registration-page.css";
 
 const YEARS_OPTIONS = [
@@ -55,7 +54,13 @@ const INITIAL_FORM = {
   audience: ""
 };
 
-export function OrganizationRegistrationPage({ accountData, onBack, onSubmitSuccess }) {
+export function OrganizationRegistrationPage({
+  mode = "signup",
+  accountData,
+  onBack,
+  onSubmit,
+  onSubmitSuccess,
+}) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -87,26 +92,24 @@ export function OrganizationRegistrationPage({ accountData, onBack, onSubmitSucc
     setIsSubmitting(true);
 
     try {
-      if (!accountData?.username || !accountData?.email || !accountData?.password) {
+      if (mode === "signup" && (!accountData?.username || !accountData?.email || !accountData?.password)) {
         setError("Create your account first to continue organization registration.");
         return;
       }
 
-      await registerAccount({
-        username: accountData.username,
-        email: accountData.email,
-        password: accountData.password,
-        role: accountData.role || "",
-        organization_name: form.name,
-        years: form.years,
-        state: form.state,
-        organization_type: form.organizationType,
-        organization_sector: form.sector,
-        organization_size: form.size,
-        target_audience: form.audience
-      });
+      if (typeof onSubmit !== "function") {
+        setError("Organization registration flow is not configured.");
+        return;
+      }
 
-      setSuccess("Registration completed successfully. Your account is now linked to an organization.");
+      const result = await onSubmit({ form, mode, accountData });
+
+      setSuccess(
+        result?.message ||
+          (mode === "signup"
+            ? "Registration completed successfully. Your account is now linked to an organization."
+            : "Organization added to your profile.")
+      );
     } catch (err) {
       setError(err.message || "Could not complete registration.");
     } finally {
@@ -121,7 +124,6 @@ export function OrganizationRegistrationPage({ accountData, onBack, onSubmitSucc
           <div className="org-registration-brand-mark" aria-hidden="true">[]</div>
           <div className="org-registration-brand-copy">
             <h1>Organization Registration</h1>
-            <p>Software Development Assessment</p>
           </div>
           <p className="org-registration-time">~5 minutes</p>
         </div>
@@ -185,7 +187,6 @@ export function OrganizationRegistrationPage({ accountData, onBack, onSubmitSucc
 
             <label>
               <span>Organization Type *</span>
-              <small className="org-registration-important">This question is very important</small>
               <select name="organizationType" value={form.organizationType} onChange={handleChange} required>
                 <option value="">Select type</option>
                 {TYPE_OPTIONS.map((option) => (
@@ -198,7 +199,6 @@ export function OrganizationRegistrationPage({ accountData, onBack, onSubmitSucc
 
             <label>
               <span>Organization Sector *</span>
-              <small className="org-registration-important">This question is very important</small>
               <select name="sector" value={form.sector} onChange={handleChange} required>
                 <option value="">Select sector</option>
                 {SECTOR_OPTIONS.map((option) => (
@@ -251,7 +251,11 @@ export function OrganizationRegistrationPage({ accountData, onBack, onSubmitSucc
                 Back
               </button>
               <button type="submit" className="org-registration-submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit Registration"}
+                {isSubmitting
+                  ? "Submitting..."
+                  : mode === "signup"
+                    ? "Submit Registration"
+                    : "Create Organization"}
               </button>
             </footer>
 
@@ -261,7 +265,7 @@ export function OrganizationRegistrationPage({ accountData, onBack, onSubmitSucc
                 className="org-registration-submit"
                 onClick={() => onSubmitSuccess(form)}
               >
-                Continue to sign in
+                {mode === "signup" ? "Continue to sign in" : "Back to settings"}
               </button>
             ) : null}
           </form>

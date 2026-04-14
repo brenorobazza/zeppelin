@@ -11,6 +11,12 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { JoinOrganizationPage } from "./pages/JoinOrganizationPage";
 import { OrganizationRegistrationPage } from "./pages/OrganizationRegistrationPage";
 import {
+  addOrganization,
+  joinOrganization,
+  registerAccount,
+  submitOrganizationRegistration,
+} from "./services/auth";
+import {
   getAnalyticsFiltersFromUrl,
   getFallbackAnalyticsBundle,
   loadAnalyticsBundle,
@@ -61,6 +67,11 @@ export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [disableGlobalSelectors, setDisableGlobalSelectors] = useState(false);
   const [registrationUserData, setRegistrationUserData] = useState(null);
+  const [organizationRegistrationContext, setOrganizationRegistrationContext] = useState({
+    mode: "signup",
+    source: "join-organization",
+    employeeId: null,
+  });
   const lastScreenRef = useRef(screen);
 
   function triggerRefresh() {
@@ -170,9 +181,95 @@ export default function App() {
     setScreen("join-organization");
   }
 
-  function goToOrganizationRegistration() {
+  function goToOrganizationRegistration(context = {}) {
+    setOrganizationRegistrationContext((current) => ({
+      ...current,
+      ...context,
+    }));
     window.location.hash = "organization-registration";
     setScreen("organization-registration");
+  }
+
+  function mapOrganizationFormPayload(form) {
+    return {
+      organization_name: form.name,
+      years: form.years,
+      state: form.state,
+      organization_type: form.organizationType,
+      organization_sector: form.sector,
+      organization_size: form.size,
+      target_audience: form.audience,
+    };
+  }
+
+  async function handleFinalizeJoin({ accountData, organizationId }) {
+    const registerPayload = await registerAccount({
+      username: accountData.username,
+      email: accountData.email,
+      password: accountData.password,
+      role: accountData.role || "",
+    });
+
+    await joinOrganization({
+      employee_id: registerPayload.employee_id,
+      organization_id: organizationId,
+    });
+  }
+
+  async function handleOrganizationRegistrationSubmit({ form, mode, accountData }) {
+    const organizationPayload = mapOrganizationFormPayload(form);
+
+    if (mode === "signup") {
+      const registerPayload = await registerAccount({
+        username: accountData.username,
+        email: accountData.email,
+        password: accountData.password,
+        role: accountData.role || "",
+      });
+
+      await submitOrganizationRegistration({
+        employee_id: registerPayload.employee_id,
+        ...organizationPayload,
+      });
+
+      return {
+        message: "Registration completed successfully. Your account is now linked to an organization.",
+      };
+    }
+
+    const payload = await addOrganization(organizationPayload);
+
+    setUser((current) => {
+      if (!current) return current;
+
+      const alreadyExists = (current.organizations || []).some(
+        (item) => String(item.id) === String(payload.organization_id)
+      );
+
+      const nextOrganizations = alreadyExists
+        ? current.organizations || []
+        : [
+            ...(current.organizations || []),
+            {
+              id: payload.organization_id,
+              name: payload.organization_name || form.name || "New Organization",
+              organization_sector:
+                payload.organization_sector || form.sector || "",
+            },
+          ];
+
+      const nextUser = {
+        ...current,
+        organizations: nextOrganizations,
+      };
+
+      localStorage.setItem("zeppelin_user", JSON.stringify(nextUser));
+      return nextUser;
+    });
+
+    return {
+      message: payload.message || "Organization created and linked to your profile.",
+    };
   }
 
   function goToScreen(nextScreen) {
@@ -199,6 +296,7 @@ export default function App() {
         username: nextProfile.username || current.username,
         fullName: nextProfile.fullName || current.fullName,
         email: nextProfile.email || current.email,
+        employeeId: current.employeeId,
         accessToken: current.accessToken,
       };
       localStorage.setItem("zeppelin_user", JSON.stringify(nextUser));
@@ -212,6 +310,113 @@ export default function App() {
       // Mantém organização e ciclo no URL para suportar histórico por empresa/ciclo.
       updateAnalyticsFiltersInUrl(next);
       return next;
+    });
+  }
+
+  function handleOrganizationQuit(payload) {
+    const removedId = String(payload?.organization_id || "");
+    if (!removedId) {
+      return;
+    }
+
+    let shouldLogout = false;
+    let nextOrganizationId = "";
+
+    setUser((current) => {
+      if (!current) return current;
+
+      const nextOrganizations = (current.organizations || []).filter(
+        (organization) => String(organization.id) !== removedId
+      );
+      const nextCurrentOrganizationId =
+        String(current.currentOrganizationId || "") === removedId
+          ? (nextOrganizations[0] ? String(nextOrganizations[0].id) : "")
+          : String(current.currentOrganizationId || "");
+
+      const nextUser = {
+        ...current,
+        organizations: nextOrganizations,
+        currentOrganizationId: nextCurrentOrganizationId || null,
+      };
+      localStorage.setItem("zeppelin_user", JSON.stringify(nextUser));
+
+      if (nextOrganizations.length === 0) {
+        shouldLogout = true;
+      } else if (analyticsFilters.organizationId === removedId) {
+        nextOrganizationId = String(nextOrganizations[0].id);
+      }
+
+      return nextUser;
+    });
+
+    if (shouldLogout) {
+      logout();
+      return;
+    }
+
+    if (nextOrganizationId) {
+      updateAnalyticsFilters({
+        organizationId: nextOrganizationId,
+        questionnaireId: "",
+      });
+    }
+  }
+
+  function handleOrganizationJoined(payload) {
+    const joinedId = String(payload?.organization_id || "");
+    if (!joinedId) {
+      return;
+    }
+
+    setUser((current) => {
+      if (!current) return current;
+
+      const alreadyLinked = (current.organizations || []).some(
+        (organization) => String(organization.id) === joinedId
+      );
+      if (alreadyLinked) {
+        return current;
+      }
+
+      const nextUser = {
+        ...current,
+        organizations: [
+          ...(current.organizations || []),
+          {
+            id: payload.organization_id,
+            name: payload.organization_name || `Organization ${payload.organization_id}`,
+            organization_sector: payload.organization_sector || "",
+          },
+        ],
+        currentOrganizationId:
+          current.currentOrganizationId || String(payload.organization_id),
+      };
+
+      localStorage.setItem("zeppelin_user", JSON.stringify(nextUser));
+      return nextUser;
+    });
+  }
+
+  function handleCurrentOrganizationChanged(payload) {
+    const currentOrganizationId = String(payload?.organization_id || "");
+    if (!currentOrganizationId) {
+      return;
+    }
+
+    setUser((current) => {
+      if (!current) return current;
+
+      const nextUser = {
+        ...current,
+        currentOrganizationId,
+      };
+      localStorage.setItem("zeppelin_user", JSON.stringify(nextUser));
+      return nextUser;
+    });
+
+    updateAnalyticsFilters({
+      organizationId: currentOrganizationId,
+      questionnaireId: "",
     });
   }
 
@@ -232,7 +437,10 @@ export default function App() {
     return (
       <JoinOrganizationPage
         accountData={registrationUserData}
-        onCreateOrganization={goToOrganizationRegistration}
+        onCreateOrganization={() =>
+          goToOrganizationRegistration({ mode: "signup", source: "join-organization" })
+        }
+        onFinalizeJoin={handleFinalizeJoin}
         onBackToLogin={goToLogin}
       />
     );
@@ -241,9 +449,22 @@ export default function App() {
   if (screen === "organization-registration") {
     return (
       <OrganizationRegistrationPage
+        mode={organizationRegistrationContext.mode}
         accountData={registrationUserData}
-        onBack={goToJoinOrganization}
-        onSubmitSuccess={goToLogin}
+        onSubmit={handleOrganizationRegistrationSubmit}
+        onBack={
+          organizationRegistrationContext.source === "settings"
+            ? () => goToScreen("settings")
+            : goToJoinOrganization
+        }
+        onSubmitSuccess={
+          organizationRegistrationContext.mode === "signup"
+            ? goToLogin
+            : () => {
+                triggerRefresh();
+                goToScreen("settings");
+              }
+        }
       />
     );
   }
@@ -325,8 +546,20 @@ export default function App() {
       component: (
         <SettingsPage
           organizationId={analyticsFilters.organizationId}
+          organizationOptions={user?.organizations || []}
+          currentOrganizationId={user?.currentOrganizationId || analyticsFilters.organizationId}
           onProfileUpdated={updateUserProfile}
           onSelfRemoved={logout}
+          onOrganizationQuit={handleOrganizationQuit}
+          onOrganizationJoined={handleOrganizationJoined}
+          onCurrentOrganizationChanged={handleCurrentOrganizationChanged}
+          onCreateOrganization={() =>
+            goToOrganizationRegistration({
+              mode: "add-organization",
+              source: "settings",
+              employeeId: user?.employeeId || null,
+            })
+          }
         />
       )
     }
@@ -370,6 +603,10 @@ export default function App() {
           username: loggedUser?.username || "Alex Silva",
           fullName: loggedUser?.full_name || loggedUser?.username || "Alex Silva",
           email: loggedUser?.email || "",
+          employeeId: loggedUser?.employee_id || null,
+          currentOrganizationId: loggedUser?.current_organization_id
+            ? String(loggedUser.current_organization_id)
+            : null,
           isAdmin: Boolean(loggedUser?.is_admin),
           organizations: loggedUser?.organizations || []
         };
@@ -378,8 +615,11 @@ export default function App() {
 
         // Se o usuário possuir empresas, define a primeira como o contexto inicial.
         if (loggedUser?.organizations && loggedUser.organizations.length > 0) {
+          const initialOrganizationId = loggedUser?.current_organization_id
+            ? String(loggedUser.current_organization_id)
+            : String(loggedUser.organizations[0].id);
           updateAnalyticsFilters({ 
-            organizationId: String(loggedUser.organizations[0].id),
+            organizationId: initialOrganizationId,
             questionnaireId: "" // Reseta o ciclo para garantir que não use lixo de sessões anteriores.
           });
         }

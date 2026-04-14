@@ -68,3 +68,39 @@ export async function updateCurrentUserProfile(payload) {
 
   return parseResponse(response, "Failed to update profile.");
 }
+
+export async function quitOrganizationMembership(organizationId) {
+  if (!organizationId) {
+    throw new Error("organizationId is required");
+  }
+
+  const response = await fetch(`${API_BASE}/auth/organization-settings/quit/`, {
+    method: "POST",
+    credentials: "include",
+    headers: getAuthHeaders({
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCookie("csrftoken"),
+    }),
+    body: JSON.stringify({ organization_id: organizationId }),
+  });
+
+  return parseResponse(response, "Failed to quit organization.");
+}
+
+export async function setCurrentOrganization(organizationId) {
+  if (!organizationId) {
+    throw new Error("organizationId is required");
+  }
+
+  const response = await fetch(`${API_BASE}/auth/current-organization/`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: getAuthHeaders({
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCookie("csrftoken"),
+    }),
+    body: JSON.stringify({ organization_id: organizationId }),
+  });
+
+  return parseResponse(response, "Failed to set current organization.");
+}

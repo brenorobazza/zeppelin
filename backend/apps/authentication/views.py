@@ -22,6 +22,16 @@ from oauthlib.common import generate_token
 from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
+from apps.authentication.models import UserOrganizationPreference
+
+
+YEARS_TO_AGE = {
+    "Less than 1 year": 1,
+    "1-3 years": 2,
+    "4-7 years": 5,
+    "8-12 years": 10,
+    "More than 12 years": 13,
+}
 
 
 class LoginPageView(View):
@@ -58,14 +68,6 @@ class LoginPageView(View):
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
-    YEARS_TO_AGE = {
-        "Less than 1 year": 1,
-        "1-3 years": 2,
-        "4-7 years": 5,
-        "8-12 years": 10,
-        "More than 12 years": 13,
-    }
-
     @transaction.atomic
     def post(self, request):
         username = _collapse_whitespace(request.data.get("username"))
@@ -93,87 +95,27 @@ class RegisterView(APIView):
         if not username or not password:
             return Response({"error": "username and password are required"}, status=400)
 
-        if not organization_id and not org_name:
-            return Response(
-                {"error": "Please inform organization_id or organization_name"},
-                status=400,
-            )
-
         if User.objects.filter(username=username).exists():
             return Response({"error": "User already exists"}, status=400)
 
-        if organization_id:
+        organization = None
+        if organization_id or org_name:
             try:
-                organization = Organization.objects.get(id=organization_id)
+                organization = _resolve_or_create_organization(
+                    organization_id=organization_id,
+                    org_name=org_name,
+                    org_description=org_description,
+                    years=years,
+                    state_name=state_name,
+                    organization_type_name=organization_type_name,
+                    organization_sector=organization_sector,
+                    organization_size_name=organization_size_name,
+                    target_audience=target_audience,
+                )
+            except ValueError as exc:
+                return Response({"error": str(exc)}, status=400)
             except Organization.DoesNotExist:
                 return Response({"error": "Organization not found"}, status=404)
-        else:
-            organization = _find_organization_by_normalized_name(org_name)
-            if organization and org_description and not organization.description:
-                organization.description = org_description
-                organization.save(update_fields=["description"])
-
-            if not organization:
-                organization = Organization.objects.create(
-                    name=org_name, description=org_description
-                )
-
-                fields_to_update = []
-
-                if years:
-                    organization.years_experience_range = years
-                    organization.age = self.YEARS_TO_AGE.get(years)
-                    fields_to_update.extend(["years_experience_range", "age"])
-
-                if state_name:
-                    state, _ = State.objects.get_or_create(name=state_name)
-                    organization.location = state
-                    fields_to_update.append("location")
-
-                if organization_size_name:
-                    size, _ = Size.objects.get_or_create(name=organization_size_name)
-                    organization.organization_size = size
-                    fields_to_update.append("organization_size")
-
-                if organization_type_name:
-                    category = None
-                    if organization_sector:
-                        category, _ = OrganizationCategory.objects.get_or_create(
-                            name=organization_sector
-                        )
-
-                    defaults = {
-                        "description": organization_type_name,
-                        "category_organization_type": category,
-                    }
-                    organization_type, _ = OrganizationType.objects.get_or_create(
-                        name=organization_type_name,
-                        defaults=defaults,
-                    )
-
-                    if (
-                        category
-                        and organization_type.category_organization_type_id
-                        != category.id
-                    ):
-                        organization_type.category_organization_type = category
-                        organization_type.save(
-                            update_fields=["category_organization_type"]
-                        )
-
-                    organization.organization_type = organization_type
-                    fields_to_update.append("organization_type")
-
-                if organization_sector:
-                    organization.organization_sector = organization_sector
-                    fields_to_update.append("organization_sector")
-
-                if target_audience:
-                    organization.target_audience = target_audience
-                    fields_to_update.append("target_audience")
-
-                if fields_to_update:
-                    organization.save(update_fields=fields_to_update)
 
         user = User.objects.create_user(
             username=username, email=email, password=password
@@ -187,7 +129,179 @@ class RegisterView(APIView):
             {
                 "user_id": user.id,
                 "employee_id": employee.id,
+                "organization_id": organization.id if organization else None,
+            },
+            status=201,
+        )
+
+
+class JoinOrganizationApiView(APIView):
+    permission_classes = [AllowAny]
+
+    @transaction.atomic
+    def post(self, request):
+        employee_id = request.data.get("employee_id")
+        organization_id = request.data.get("organization_id")
+
+        if not employee_id or not organization_id:
+            return Response(
+                {"error": "employee_id and organization_id are required"},
+                status=400,
+            )
+
+        try:
+            employee = Employee.objects.get(id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
+            return Response({"error": "Organization not found"}, status=404)
+
+        employee.employee_organization = organization
+        employee.save(update_fields=["employee_organization"])
+
+        return Response(
+            {
+                "employee_id": employee.id,
                 "organization_id": organization.id,
+                "message": "Registration completed successfully",
+            },
+            status=200,
+        )
+
+
+class OrganizationRegistrationApiView(APIView):
+    permission_classes = [AllowAny]
+
+    @transaction.atomic
+    def post(self, request):
+        employee_id = request.data.get("employee_id")
+        if not employee_id:
+            return Response({"error": "employee_id is required"}, status=400)
+
+        try:
+            employee = Employee.objects.get(id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found"}, status=404)
+
+        try:
+            organization = _resolve_or_create_organization(
+                organization_id=request.data.get("organization_id"),
+                org_name=_collapse_whitespace(request.data.get("organization_name")),
+                org_description=_collapse_whitespace(
+                    request.data.get("organization_description", "")
+                ),
+                years=_collapse_whitespace(request.data.get("years", "")),
+                state_name=_collapse_whitespace(request.data.get("state", "")),
+                organization_type_name=_collapse_whitespace(
+                    request.data.get("organization_type", "")
+                ),
+                organization_sector=_collapse_whitespace(
+                    request.data.get("organization_sector", "")
+                ),
+                organization_size_name=_collapse_whitespace(
+                    request.data.get("organization_size", "")
+                ),
+                target_audience=_collapse_whitespace(
+                    request.data.get("target_audience", "")
+                ),
+            )
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=400)
+        except Organization.DoesNotExist:
+            return Response({"error": "Organization not found"}, status=404)
+
+        employee.employee_organization = organization
+        employee.save(update_fields=["employee_organization"])
+
+        return Response(
+            {
+                "employee_id": employee.id,
+                "organization_id": organization.id,
+                "organization_name": organization.name,
+                "message": "Registration completed successfully",
+            },
+            status=200,
+        )
+
+
+class AddOrganizationApiView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request):
+        if not request.user.email:
+            return Response(
+                {"error": "Authenticated user must have an email."},
+                status=400,
+            )
+
+        try:
+            organization = _resolve_or_create_organization(
+                organization_id=request.data.get("organization_id"),
+                org_name=_collapse_whitespace(request.data.get("organization_name")),
+                org_description=_collapse_whitespace(
+                    request.data.get("organization_description", "")
+                ),
+                years=_collapse_whitespace(request.data.get("years", "")),
+                state_name=_collapse_whitespace(request.data.get("state", "")),
+                organization_type_name=_collapse_whitespace(
+                    request.data.get("organization_type", "")
+                ),
+                organization_sector=_collapse_whitespace(
+                    request.data.get("organization_sector", "")
+                ),
+                organization_size_name=_collapse_whitespace(
+                    request.data.get("organization_size", "")
+                ),
+                target_audience=_collapse_whitespace(
+                    request.data.get("target_audience", "")
+                ),
+            )
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=400)
+        except Organization.DoesNotExist:
+            return Response({"error": "Organization not found"}, status=404)
+
+        existing = Employee.objects.filter(
+            e_mail__iexact=request.user.email,
+            employee_organization=organization,
+        ).first()
+
+        if existing:
+            return Response(
+                {
+                    "employee_id": existing.id,
+                    "organization_id": organization.id,
+                    "organization_name": organization.name,
+                    "organization_sector": organization.organization_sector,
+                    "already_linked": True,
+                    "message": "Organization already linked to current user.",
+                },
+                status=200,
+            )
+
+        employee = Employee.objects.create(
+            name=request.user.get_full_name().strip() or request.user.username,
+            e_mail=request.user.email,
+            role=_collapse_whitespace(request.data.get("role", "")),
+            employee_organization=organization,
+        )
+
+        if not _get_current_organization_id(request.user):
+            _set_current_organization(request.user, organization.id)
+
+        return Response(
+            {
+                "employee_id": employee.id,
+                "organization_id": organization.id,
+                "organization_name": organization.name,
+                "organization_sector": organization.organization_sector,
+                "already_linked": False,
+                "message": "Organization linked to current user.",
             },
             status=201,
         )
@@ -252,10 +366,21 @@ class LoginApiView(APIView):
             "employee_organization"
         )
         organizations = [
-            {"id": e.employee_organization.id, "name": e.employee_organization.name}
+            {
+                "id": e.employee_organization.id,
+                "name": e.employee_organization.name,
+                "organization_sector": e.employee_organization.organization_sector,
+            }
             for e in employees
             if e.employee_organization
         ]
+
+        current_organization_id = _resolve_current_organization_id(
+            user,
+            [org["id"] for org in organizations],
+        )
+
+        employee_id = employees.first().id if employees.exists() else None
 
         response_data = {
             "id": user.id,
@@ -263,7 +388,9 @@ class LoginApiView(APIView):
             "full_name": user.get_full_name().strip() or user.username,
             "email": user.email,
             "is_admin": bool(user.is_staff or user.is_superuser),
+            "employee_id": employee_id,
             "organizations": organizations,
+            "current_organization_id": current_organization_id,
         }
 
         if access_token_str:
@@ -314,6 +441,92 @@ def _find_organization_by_normalized_name(name):
     return None
 
 
+def _resolve_or_create_organization(
+    *,
+    organization_id,
+    org_name,
+    org_description,
+    years,
+    state_name,
+    organization_type_name,
+    organization_sector,
+    organization_size_name,
+    target_audience,
+):
+    if organization_id:
+        return Organization.objects.get(id=organization_id)
+
+    if not org_name:
+        raise ValueError(
+            "organization_name is required when organization_id is not provided"
+        )
+
+    organization = _find_organization_by_normalized_name(org_name)
+    if organization and org_description and not organization.description:
+        organization.description = org_description
+        organization.save(update_fields=["description"])
+        return organization
+
+    if organization:
+        return organization
+
+    organization = Organization.objects.create(
+        name=org_name, description=org_description
+    )
+    fields_to_update = []
+
+    if years:
+        organization.years_experience_range = years
+        organization.age = YEARS_TO_AGE.get(years)
+        fields_to_update.extend(["years_experience_range", "age"])
+
+    if state_name:
+        state, _ = State.objects.get_or_create(name=state_name)
+        organization.location = state
+        fields_to_update.append("location")
+
+    if organization_size_name:
+        size, _ = Size.objects.get_or_create(name=organization_size_name)
+        organization.organization_size = size
+        fields_to_update.append("organization_size")
+
+    if organization_type_name:
+        category = None
+        if organization_sector:
+            category, _ = OrganizationCategory.objects.get_or_create(
+                name=organization_sector
+            )
+
+        defaults = {
+            "description": organization_type_name,
+            "category_organization_type": category,
+        }
+        organization_type, _ = OrganizationType.objects.get_or_create(
+            name=organization_type_name,
+            defaults=defaults,
+        )
+
+        if category and organization_type.category_organization_type_id != category.id:
+            organization_type.category_organization_type = category
+            organization_type.save(update_fields=["category_organization_type"])
+
+        organization.organization_type = organization_type
+        fields_to_update.append("organization_type")
+
+    if organization_sector:
+        organization.organization_sector = organization_sector
+        fields_to_update.append("organization_sector")
+
+    if target_audience:
+        organization.target_audience = target_audience
+        fields_to_update.append("target_audience")
+
+    if fields_to_update:
+        organization.save(update_fields=fields_to_update)
+
+    return organization
+
+
 def _has_membership(user, organization_id):
     if not user or not user.is_authenticated or not user.email or not organization_id:
         return False
@@ -322,6 +535,77 @@ def _has_membership(user, organization_id):
         e_mail__iexact=user.email,
         employee_organization_id=organization_id,
     ).exists()
+
+
+def _get_linked_organization_count(user):
+    if not user or not user.is_authenticated or not user.email:
+        return 0
+
+    return (
+        Employee.objects.filter(
+            e_mail__iexact=user.email, employee_organization__isnull=False
+        )
+        .values_list("employee_organization_id", flat=True)
+        .distinct()
+        .count()
+    )
+
+
+def _get_linked_organization_ids(user):
+    if not user or not user.is_authenticated or not user.email:
+        return []
+
+    return list(
+        Employee.objects.filter(
+            e_mail__iexact=user.email,
+            employee_organization__isnull=False,
+        )
+        .values_list("employee_organization_id", flat=True)
+        .distinct()
+    )
+
+
+def _get_current_organization_id(user):
+    if not user or not user.is_authenticated:
+        return None
+
+    preference = UserOrganizationPreference.objects.filter(user=user).first()
+    if not preference or not preference.current_organization_id:
+        return None
+
+    return preference.current_organization_id
+
+
+def _set_current_organization(user, organization_id):
+    preference, _ = UserOrganizationPreference.objects.get_or_create(user=user)
+    preference.current_organization_id = organization_id
+    preference.save(update_fields=["current_organization"])
+
+
+def _resolve_current_organization_id(user, linked_organization_ids=None):
+    linked_ids = linked_organization_ids or _get_linked_organization_ids(user)
+    if not linked_ids:
+        preference = UserOrganizationPreference.objects.filter(user=user).first()
+        if preference and preference.current_organization_id is not None:
+            preference.current_organization = None
+            preference.save(update_fields=["current_organization"])
+        return None
+
+    current_id = _get_current_organization_id(user)
+    if current_id in linked_ids:
+        return current_id
+
+    fallback_id = linked_ids[0]
+    _set_current_organization(user, fallback_id)
+    return fallback_id
+
+
+def _switch_current_organization(user, organization_id):
+    if not _has_membership(user, organization_id):
+        return False
+
+    _set_current_organization(user, organization_id)
+    return True
 
 
 class OrganizationSettingsApiView(APIView):
@@ -437,13 +721,119 @@ class OrganizationSettingsMemberApiView(APIView):
                     status=403,
                 )
 
+            if _get_linked_organization_count(request.user) <= 1:
+                return Response(
+                    {
+                        "error": "You must stay linked to at least one organization before quitting this one."
+                    },
+                    status=400,
+                )
+
         deleted_payload = {
             "id": member.id,
             "organization_id": member.employee_organization_id,
             "deleted_self": same_user,
         }
-        member.delete()
+        removed_organization_id = member.employee_organization_id
+        member.employee_organization = None
+        member.save(update_fields=["employee_organization"])
+
+        if (
+            same_user
+            and removed_organization_id
+            and _get_current_organization_id(request.user) == removed_organization_id
+        ):
+            _resolve_current_organization_id(request.user)
+
         return Response(deleted_payload, status=200)
+
+
+class QuitOrganizationApiView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request):
+        organization_id = request.data.get("organization_id")
+        if not organization_id:
+            return Response({"error": "organization_id is required"}, status=400)
+
+        try:
+            organization_id_int = int(organization_id)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "organization_id must be a valid integer"}, status=400
+            )
+
+        if not _has_membership(request.user, organization_id_int):
+            return Response(
+                {"error": "You do not have access to this organization."},
+                status=403,
+            )
+
+        if _get_linked_organization_count(request.user) <= 1:
+            return Response(
+                {
+                    "error": "You must stay linked to at least one organization before quitting this one."
+                },
+                status=400,
+            )
+
+        updated = Employee.objects.filter(
+            e_mail__iexact=request.user.email,
+            employee_organization_id=organization_id_int,
+        ).update(employee_organization=None)
+
+        if updated == 0:
+            return Response({"error": "Active membership not found."}, status=404)
+
+        if _get_current_organization_id(request.user) == organization_id_int:
+            _resolve_current_organization_id(request.user)
+
+        return Response(
+            {
+                "organization_id": int(organization_id),
+                "membership_id": None,
+                "ended_at": timezone.now(),
+            },
+            status=200,
+        )
+
+
+class CurrentOrganizationApiView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        organization_id = request.data.get("organization_id")
+        if not organization_id:
+            return Response({"error": "organization_id is required"}, status=400)
+
+        try:
+            organization_id_int = int(organization_id)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "organization_id must be a valid integer"},
+                status=400,
+            )
+
+        if not _switch_current_organization(request.user, organization_id_int):
+            return Response(
+                {"error": "You do not have access to this organization."},
+                status=403,
+            )
+
+        organization = (
+            Organization.objects.filter(id=organization_id_int).only("name").first()
+        )
+
+        return Response(
+            {
+                "current_organization_id": organization_id_int,
+                "current_organization_name": organization.name if organization else "",
+            },
+            status=200,
+        )
 
 
 class CurrentUserProfileApiView(APIView):
