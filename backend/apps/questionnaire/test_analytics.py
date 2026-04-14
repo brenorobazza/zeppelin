@@ -163,6 +163,66 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
             "Questionnaire recommendations catalog",
         )
 
+    def test_build_recommendations_ignores_ao_and_is_answers(self):
+        ao_answer = make_answer(
+            5,
+            "AO.01",
+            "Agile roles are defined in the organization.",
+            "Agile R&D Organization",
+            "Agile practices",
+            self.service.adopted_levels[0],
+            self.current_cycle,
+        )
+        is_answer = make_answer(
+            6,
+            "IS.01",
+            "Customer feedback is captured for experimentation.",
+            "R&D as an Experiment System",
+            "Experimentation practices",
+            self.service.adopted_levels[1],
+            self.current_cycle,
+        )
+
+        recommendations = self.service._build_recommendations(
+            self.all_answers + [ao_answer, is_answer]
+        )
+
+        self.assertEqual(len(recommendations), 3)
+        self.assertTrue(
+            all(
+                item["question_id"].startswith(("CI.", "CD."))
+                for item in recommendations
+            )
+        )
+
+    def test_history_cycles_ignore_ao_and_is_answers_in_recommendation_counts(self):
+        ao_answer = make_answer(
+            5,
+            "AO.01",
+            "Agile roles are defined in the organization.",
+            "Agile R&D Organization",
+            "Agile practices",
+            self.service.adopted_levels[0],
+            self.old_cycle,
+        )
+        is_answer = make_answer(
+            6,
+            "IS.01",
+            "Customer feedback is captured for experimentation.",
+            "R&D as an Experiment System",
+            "Experimentation practices",
+            self.service.adopted_levels[1],
+            self.current_cycle,
+        )
+
+        cycles = self.service._build_history_cycles(
+            self.all_answers + [ao_answer, is_answer]
+        )
+
+        self.assertEqual(len(cycles), 2)
+        self.assertEqual(cycles[0]["recommendation_count"], 2)
+        self.assertEqual(cycles[1]["recommendation_count"], 1)
+
     def test_build_history_cycles_summarizes_two_cycles(self):
         cycles = self.service._build_history_cycles(self.all_answers)
 

@@ -1,12 +1,6 @@
 import { useMemo, useState } from "react";
 import { fallbackRecommendationsData } from "../mock/analyticsFallback";
 
-function getPriorityClass(priority) {
-  if (priority === "High") return "high";
-  if (priority === "Medium") return "medium";
-  return "low";
-}
-
 function getRoadmapLaneCopy(lane) {
   if (lane.key === "Adopt now") {
     return {
@@ -29,29 +23,13 @@ function getRoadmapLaneCopy(lane) {
   };
 }
 
-function buildRoadmapSummary(total, stage, practiceGroup) {
+function buildRoadmapSummary(total, stage) {
   const stageLabel = stage === "All" ? "all stages" : `stage ${stage}`;
-  const groupLabel =
-    practiceGroup === "All" ? "all practice groups" : `practice group ${practiceGroup}`;
-  return `Showing ${total} recommendations for ${stageLabel} and ${groupLabel}.`;
+  return `Showing ${total} recommendations for ${stageLabel}.`;
 }
 
 function buildRecommendationTitle(item) {
-  if (item.track === "Adopt now") return `${item.questionId} - establish this practice`;
-  if (item.track === "Consolidate") return `${item.questionId} - consolidate this practice`;
-  return item.title;
-}
-
-function buildRecommendationSummary(item) {
-  if (item.track === "Adopt now") {
-    return "Establish this practice as a repeatable routine with clear ownership, execution criteria, and evidence of adoption.";
-  }
-
-  if (item.track === "Consolidate") {
-    return "Expand this practice from local use to a shared process with documented expectations and broader team adoption.";
-  }
-
-  return item.recommendation;
+  return item.questionId || item.title || "Recommendation";
 }
 
 function normalizeCurrentLevel(level) {
@@ -98,59 +76,19 @@ function normalizeCurrentLevel(level) {
   return level || "Not informed";
 }
 
-function buildExpectedOutcome(item) {
-  if (item.track === "Adopt now") {
-    return `Establish a stable adoption baseline for ${item.stage} in the next assessment cycle.`;
-  }
-
-  if (item.track === "Consolidate") {
-    return `Move this ${item.stage} practice from local use to a consistent process-level capability.`;
-  }
-
-  return item.expectedImpact || "Clarify the expected outcome for this recommendation.";
-}
-
-function buildSuggestedNextStep(item) {
-  if (item.track === "Adopt now") {
-    return `Assign an owner for ${item.questionId}, identify the main blockers, and define a short pilot for adoption.`;
-  }
-
-  if (item.track === "Consolidate") {
-    return `Review how ${item.questionId} is currently performed and define the changes required to standardize it across teams.`;
-  }
-
-  return item.nextStep || "Define the next implementation step for this recommendation.";
-}
-
-function normalizeStatus(status) {
-  const value = (status || "").trim().toLowerCase();
-
-  if (value === "suggested" || value === "sugerido") return "Suggested";
-  if (value === "planned" || value === "planejado") return "Planned";
-  if (value === "in progress" || value === "em andamento") return "In progress";
-  if (value === "completed" || value === "concluido" || value === "concluído") {
-    return "Completed";
-  }
-
-  return status || "Suggested";
-}
-
 export function RecommendationsPage({ data, loading }) {
   // Esta e a tela que transforma o diagnostico em um roadmap acionavel.
   const view = data || fallbackRecommendationsData;
   const [stage, setStage] = useState("All");
-  const [practiceGroup, setPracticeGroup] = useState("All");
 
   // Os filtros apenas mudam a leitura visual; os dados originais continuam intactos.
   const filtered = useMemo(
     () =>
       view.recommendations.filter((item) => {
         const matchesStage = stage === "All" || item.stage === stage;
-        const matchesPracticeGroup =
-          practiceGroup === "All" || item.dimensionName === practiceGroup;
-        return matchesStage && matchesPracticeGroup;
+        return matchesStage;
       }),
-    [view.recommendations, stage, practiceGroup]
+    [view.recommendations, stage]
   );
 
   // Depois do filtro, reorganizamos os itens dentro das trilhas do roadmap.
@@ -159,7 +97,7 @@ export function RecommendationsPage({ data, loading }) {
     ...getRoadmapLaneCopy(lane),
     items: filtered.filter((item) => item.track === lane.key)
   }));
-  const roadmapSummary = buildRoadmapSummary(filtered.length, stage, practiceGroup);
+  const roadmapSummary = buildRoadmapSummary(filtered.length, stage);
 
   if (loading && !data) {
     return <section className="panel">Loading the improvement roadmap...</section>;
@@ -205,30 +143,18 @@ export function RecommendationsPage({ data, loading }) {
         <div className="section-head">
           <div>
             <h3>Recommended actions for the current cycle</h3>
-            <p>Review the suggested actions by stage and practice group.</p>
+            <p>Review the recommended actions by stage.</p>
           </div>
         </div>
 
         <div className="roadmap-toolbar">
-          <div className="roadmap-filters roadmap-filters--two">
+          <div className="roadmap-filters roadmap-filters--one">
             <label className="roadmap-filter-field">
               <span>Filter by stage</span>
               <select value={stage} onChange={(event) => setStage(event.target.value)}>
                 <option value="All">All stages</option>
                 {view.availableStages.map((item) => (
                   <option key={item}>{item}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="roadmap-filter-field">
-              <span>Filter by practice group</span>
-              <select value={practiceGroup} onChange={(event) => setPracticeGroup(event.target.value)}>
-                <option value="All">All practice groups</option>
-                {view.availablePracticeGroups?.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
                 ))}
               </select>
             </label>
@@ -281,57 +207,33 @@ export function RecommendationsPage({ data, loading }) {
               lane.items.map((item) => (
                 <div key={item.id} className="roadmap-card">
                   <div className="roadmap-card__meta">
-                    <span className="tag">
-                      {item.stage} / {item.questionId}
-                    </span>
-                    <span className={`pill ${getPriorityClass(item.priority)}`}>{item.priority}</span>
+                    <span className="tag">{item.questionId}</span>
                   </div>
 
-                  <h4>{buildRecommendationTitle(item)}</h4>
-                  <p>{buildRecommendationSummary(item)}</p>
-
                   <dl className="roadmap-card__details">
-                    <div>
-                      <dt>Original practice statement</dt>
-                      <dd>{item.questionDescription || "Not available"}</dd>
-                    </div>
-                    <div>
-                      <dt>Practice group</dt>
-                      <dd>{item.dimensionName || "Not available"}</dd>
-                    </div>
-                    <div>
-                      <dt>Element</dt>
-                      <dd>{item.elementName || "Not available"}</dd>
-                    </div>
                     <div>
                       <dt>Current adoption level</dt>
                       <dd>{normalizeCurrentLevel(item.currentLevel)}</dd>
                     </div>
                     <div>
-                      <dt>Rule that triggered this recommendation</dt>
-                      <dd>{item.triggerRule || "Derived from the current maturity level."}</dd>
-                    </div>
-                    <div>
-                      <dt>Expected outcome</dt>
-                      <dd>{buildExpectedOutcome(item)}</dd>
-                    </div>
-                    <div>
-                      <dt>Suggested next step</dt>
-                      <dd>{buildSuggestedNextStep(item)}</dd>
-                    </div>
-                    <div>
-                      <dt>Status</dt>
-                      <dd>{normalizeStatus(item.status)}</dd>
-                    </div>
-                    <div>
-                      <dt>Source</dt>
-                      <dd>{item.referenceSource || "Analytics engine"}</dd>
+                      <dt>Original practice statement</dt>
+                      <dd>{item.questionDescription || "Not available"}</dd>
                     </div>
                   </dl>
 
                   {item.catalogRecommendation ? (
                     <details className="roadmap-reference">
-                      <summary>Detailed recommendation from the instrument</summary>
+                      <summary>More context and source</summary>
+                      <div className="roadmap-card__details roadmap-card__details--compact">
+                        <div>
+                          <dt>Practice group</dt>
+                          <dd>{item.dimensionName || "Not available"}</dd>
+                        </div>
+                        <div>
+                          <dt>Element</dt>
+                          <dd>{item.elementName || "Not available"}</dd>
+                        </div>
+                      </div>
                       <p>{item.catalogRecommendation}</p>
                     </details>
                   ) : null}
@@ -344,3 +246,4 @@ export function RecommendationsPage({ data, loading }) {
     </>
   );
 }
+

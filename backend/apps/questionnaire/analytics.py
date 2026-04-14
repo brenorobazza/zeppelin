@@ -967,7 +967,7 @@ class QuestionnaireAnalyticsService:
         items = []
         recommendations_catalog = self._get_recommendations_catalog()
         candidates = [
-            answer for answer in answers if answer.adopted_level_answer.percentage < 60
+            answer for answer in answers if self._is_recommendation_candidate(answer)
         ]
         candidates.sort(
             key=lambda answer: (
@@ -1113,7 +1113,7 @@ class QuestionnaireAnalyticsService:
                         [
                             answer
                             for answer in cycle_answers
-                            if answer.adopted_level_answer.percentage < 60
+                            if self._is_recommendation_candidate(answer)
                         ]
                     ),
                     "stage_scores": stage_scores,
@@ -1128,6 +1128,14 @@ class QuestionnaireAnalyticsService:
         if len(cycles) < 2:
             return 0
         return cycles[-1][field_name] - cycles[-2][field_name]
+
+    def _is_recommendation_candidate(self, answer):
+        percentage = getattr(answer.adopted_level_answer, "percentage", 0)
+        if percentage >= 60:
+            return False
+
+        statement_code = getattr(answer.statement_answer, "code", "") or ""
+        return statement_code.startswith(("CI.", "CD."))
 
     # Padroniza o formato de forças e gargalos para o frontend.
     def _serialize_insight(self, answer):
