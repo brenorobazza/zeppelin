@@ -1,12 +1,31 @@
 import { useState } from "react";
 import "./organization-registration-page.css";
 
-const YEARS_OPTIONS = [
-  "Less than 1 year",
-  "1-3 years",
-  "4-7 years",
-  "8-12 years",
-  "More than 12 years"
+const COUNTRY_OPTIONS = [
+  "Brazil",
+  "United States",
+  "Canada",
+  "Mexico",
+  "Argentina",
+  "Chile",
+  "Colombia",
+  "United Kingdom",
+  "Germany",
+  "France",
+  "Spain",
+  "Italy",
+  "Netherlands",
+  "Poland",
+  "Russia",
+  "India",
+  "China",
+  "Japan",
+  "South Korea",
+  "Singapore",
+  "Australia",
+  "South Africa",
+  "Nigeria",
+  "Kenya",
 ];
 
 const BRAZIL_STATES = [
@@ -41,11 +60,11 @@ const BRAZIL_STATES = [
 
 const TYPE_OPTIONS = ["Private", "Public", "Startup", "Scale-up", "Hybrid"];
 const SECTOR_OPTIONS = ["Finance", "Healthcare", "Retail", "Industry", "Education", "Technology"];
-const SIZE_OPTIONS = ["1-10", "11-50", "51-200", "201-500", "500+"];
 const AUDIENCE_OPTIONS = ["B2B", "B2C", "B2G", "Internal", "Mixed"];
 
 const INITIAL_FORM = {
   name: "",
+  country: "Brazil",
   years: "",
   state: "",
   organizationType: "",
@@ -72,9 +91,30 @@ export function OrganizationRegistrationPage({
   }
 
   function validateForm() {
-    if (!form.years || !form.state || !form.organizationType || !form.sector || !form.size || !form.audience) {
+    const isBrazil = (form.country || "").trim().toLowerCase() === "brazil";
+    const sizeValue = Number(form.size);
+    const yearsValue = form.years === "" ? null : Number(form.years);
+
+    if (!form.name || !form.country || !form.organizationType || !form.sector || !form.size) {
       return "Please fill in all required fields.";
     }
+
+    if (!form.name.trim()) {
+      return "Organization name is required.";
+    }
+
+    if (!Number.isFinite(sizeValue) || sizeValue <= 0) {
+      return "Organization size must be a number greater than zero.";
+    }
+
+    if (yearsValue !== null && (!Number.isFinite(yearsValue) || yearsValue < 0)) {
+      return "Years of experience must be a non-negative number.";
+    }
+
+    if (isBrazil && !form.state) {
+      return "Please fill in the Brazilian state when the country is Brazil.";
+    }
+
     return "";
   }
 
@@ -149,7 +189,7 @@ export function OrganizationRegistrationPage({
           <form className="org-registration-form" onSubmit={handleSubmit}>
             <label>
               <span>
-                Organization Name <em>(Optional - helps us identify duplicate submissions)</em>
+                Organization Name *
               </span>
               <input
                 type="text"
@@ -157,14 +197,21 @@ export function OrganizationRegistrationPage({
                 value={form.name}
                 onChange={handleChange}
                 placeholder="Enter your organization name"
+                required
               />
             </label>
 
             <label>
-              <span>How many years has your organization been developing software? *</span>
-              <select name="years" value={form.years} onChange={handleChange} required>
-                <option value="">Select years of experience</option>
-                {YEARS_OPTIONS.map((option) => (
+              <span>In which country is your organization located? *</span>
+              <small>If multiple countries, indicate your work unit's country</small>
+              <select
+                name="country"
+                value={form.country}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select country</option>
+                {COUNTRY_OPTIONS.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
@@ -173,9 +220,14 @@ export function OrganizationRegistrationPage({
             </label>
 
             <label>
-              <span>In which Brazilian state is your organization located? *</span>
+              <span>In which Brazilian state is your organization located? (required only if country is Brazil)</span>
               <small>If multiple locations, indicate your work unit's state</small>
-              <select name="state" value={form.state} onChange={handleChange} required>
+              <select
+                name="state"
+                value={form.state}
+                onChange={handleChange}
+                required={(form.country || "").trim().toLowerCase() === "brazil"}
+              >
                 <option value="">Select state</option>
                 {BRAZIL_STATES.map((option) => (
                   <option key={option} value={option}>
@@ -211,19 +263,21 @@ export function OrganizationRegistrationPage({
 
             <label>
               <span>Organization Size (number of employees) *</span>
-              <select name="size" value={form.size} onChange={handleChange} required>
-                <option value="">Select size</option>
-                {SIZE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <input
+                type="number"
+                name="size"
+                value={form.size}
+                onChange={handleChange}
+                min="1"
+                step="1"
+                required
+                placeholder="e.g. 120"
+              />
             </label>
 
             <label>
-              <span>What is the main target audience of the software developed? *</span>
-              <select name="audience" value={form.audience} onChange={handleChange} required>
+              <span>What is the main target audience of the software developed?</span>
+              <select name="audience" value={form.audience} onChange={handleChange}>
                 <option value="">Select target audience</option>
                 {AUDIENCE_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -233,6 +287,18 @@ export function OrganizationRegistrationPage({
               </select>
             </label>
 
+            <label>
+              <span>How many years has your organization been developing software?</span>
+              <input
+                type="number"
+                name="years"
+                value={form.years}
+                onChange={handleChange}
+                min="0"
+                step="1"
+                placeholder="e.g. 5"
+              />
+            </label>
             {error ? <p className="org-registration-error">{error}</p> : null}
             {success ? <p className="org-registration-success">{success}</p> : null}
 
