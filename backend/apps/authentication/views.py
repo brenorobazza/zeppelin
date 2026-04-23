@@ -34,6 +34,22 @@ YEARS_TO_AGE = {
 }
 
 
+def _resolve_age_from_years(years):
+    if not years:
+        return None
+
+    mapped_age = YEARS_TO_AGE.get(years)
+    if mapped_age is not None:
+        return mapped_age
+
+    try:
+        parsed_years = int(years)
+    except (TypeError, ValueError):
+        return None
+
+    return parsed_years if parsed_years >= 0 else None
+
+
 class LoginPageView(View):
     template_name = "authentication/login.html"
 
@@ -79,6 +95,9 @@ class RegisterView(APIView):
         org_description = _collapse_whitespace(
             request.data.get("organization_description", "")
         )
+        organization_country = _collapse_whitespace(
+            request.data.get("organization_country", "")
+        )
         years = _collapse_whitespace(request.data.get("years", ""))
         state_name = _collapse_whitespace(request.data.get("state", ""))
         organization_type_name = _collapse_whitespace(
@@ -105,6 +124,7 @@ class RegisterView(APIView):
                     organization_id=organization_id,
                     org_name=org_name,
                     org_description=org_description,
+                    organization_country=organization_country,
                     years=years,
                     state_name=state_name,
                     organization_type_name=organization_type_name,
@@ -130,6 +150,9 @@ class RegisterView(APIView):
                 "user_id": user.id,
                 "employee_id": employee.id,
                 "organization_id": organization.id if organization else None,
+                "organization_country": organization.organization_country
+                if organization
+                else None,
             },
             status=201,
         )
@@ -193,6 +216,9 @@ class OrganizationRegistrationApiView(APIView):
                 org_description=_collapse_whitespace(
                     request.data.get("organization_description", "")
                 ),
+                organization_country=_collapse_whitespace(
+                    request.data.get("organization_country", "")
+                ),
                 years=_collapse_whitespace(request.data.get("years", "")),
                 state_name=_collapse_whitespace(request.data.get("state", "")),
                 organization_type_name=_collapse_whitespace(
@@ -221,6 +247,7 @@ class OrganizationRegistrationApiView(APIView):
                 "employee_id": employee.id,
                 "organization_id": organization.id,
                 "organization_name": organization.name,
+                "organization_country": organization.organization_country,
                 "message": "Registration completed successfully",
             },
             status=200,
@@ -245,6 +272,9 @@ class AddOrganizationApiView(APIView):
                 org_name=_collapse_whitespace(request.data.get("organization_name")),
                 org_description=_collapse_whitespace(
                     request.data.get("organization_description", "")
+                ),
+                organization_country=_collapse_whitespace(
+                    request.data.get("organization_country", "")
                 ),
                 years=_collapse_whitespace(request.data.get("years", "")),
                 state_name=_collapse_whitespace(request.data.get("state", "")),
@@ -277,6 +307,7 @@ class AddOrganizationApiView(APIView):
                     "employee_id": existing.id,
                     "organization_id": organization.id,
                     "organization_name": organization.name,
+                    "organization_country": organization.organization_country,
                     "organization_sector": organization.organization_sector,
                     "already_linked": True,
                     "message": "Organization already linked to current user.",
@@ -299,6 +330,7 @@ class AddOrganizationApiView(APIView):
                 "employee_id": employee.id,
                 "organization_id": organization.id,
                 "organization_name": organization.name,
+                "organization_country": organization.organization_country,
                 "organization_sector": organization.organization_sector,
                 "already_linked": False,
                 "message": "Organization linked to current user.",
@@ -369,6 +401,7 @@ class LoginApiView(APIView):
             {
                 "id": e.employee_organization.id,
                 "name": e.employee_organization.name,
+                "organization_country": e.employee_organization.organization_country,
                 "organization_sector": e.employee_organization.organization_sector,
             }
             for e in employees
@@ -430,14 +463,31 @@ def _normalize_organization_name(value):
     return _collapse_whitespace(value).casefold()
 
 
-def _find_organization_by_normalized_name(name):
+def _normalize_country_name(value):
+    return _collapse_whitespace(value or "Brazil")
+
+
+def _find_organization_by_normalized_name(name, country=None):
     normalized_name = _normalize_organization_name(name)
     if not normalized_name:
         return None
 
-    for organization in Organization.objects.only("id", "name", "description"):
-        if _normalize_organization_name(organization.name) == normalized_name:
-            return organization
+    normalized_country = _normalize_country_name(country) if country else None
+
+    for organization in Organization.objects.only(
+        "id", "name", "description", "organization_country"
+    ):
+        if _normalize_organization_name(organization.name) != normalized_name:
+            continue
+
+        if normalized_country:
+            organization_country = _normalize_country_name(
+                getattr(organization, "organization_country", "")
+            )
+            if organization_country and organization_country != normalized_country:
+                continue
+
+        return organization
     return None
 
 
@@ -446,6 +496,7 @@ def _resolve_or_create_organization(
     organization_id,
     org_name,
     org_description,
+    organization_country,
     years,
     state_name,
     organization_type_name,
@@ -461,26 +512,37 @@ def _resolve_or_create_organization(
             "organization_name is required when organization_id is not provided"
         )
 
-    organization = _find_organization_by_normalized_name(org_name)
+    organization_country = _normalize_country_name(organization_country)
+
+    if organization_country.lower() == "brazil" and not state_name:
+        raise ValueError("state is required when organization_country is Brazil")
+
+    organization = _find_organization_by_normalized_name(org_name, organization_country)
     if organization and org_description and not organization.description:
         organization.description = org_description
         organization.save(update_fields=["description"])
         return organization
 
+    if organization and organization_country and not organization.organization_country:
+        organization.organization_country = organization_country
+        organization.save(update_fields=["organization_country"])
+
     if organization:
         return organization
 
     organization = Organization.objects.create(
-        name=org_name, description=org_description
+        name=org_name,
+        description=org_description,
+        organization_country=organization_country,
     )
     fields_to_update = []
 
     if years:
         organization.years_experience_range = years
-        organization.age = YEARS_TO_AGE.get(years)
+        organization.age = _resolve_age_from_years(years)
         fields_to_update.extend(["years_experience_range", "age"])
 
-    if state_name:
+    if organization_country.lower() == "brazil" and state_name:
         state, _ = State.objects.get_or_create(name=state_name)
         organization.location = state
         fields_to_update.append("location")
@@ -520,6 +582,13 @@ def _resolve_or_create_organization(
     if target_audience:
         organization.target_audience = target_audience
         fields_to_update.append("target_audience")
+
+    if (
+        organization_country
+        and organization.organization_country != organization_country
+    ):
+        organization.organization_country = organization_country
+        fields_to_update.append("organization_country")
 
     if fields_to_update:
         organization.save(update_fields=fields_to_update)
