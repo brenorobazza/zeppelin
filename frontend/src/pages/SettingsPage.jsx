@@ -235,6 +235,11 @@ export function SettingsPage({
         onOrganizationJoined({
           organization_id: payload.organization_id || organizationToJoin.id,
           organization_name: payload.organization_name || organizationToJoin.name,
+          organization_country:
+            payload.organization_country ||
+            organizationToJoin.organization_country ||
+            organizationToJoin.country ||
+            "Brazil",
           organization_sector:
             payload.organization_sector ||
             organizationToJoin.organization_sector ||

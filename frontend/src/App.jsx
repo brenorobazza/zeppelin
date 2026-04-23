@@ -193,6 +193,7 @@ export default function App() {
   function mapOrganizationFormPayload(form) {
     return {
       organization_name: form.name,
+      organization_country: form.country,
       years: form.years,
       state: form.state,
       organization_type: form.organizationType,
@@ -253,6 +254,8 @@ export default function App() {
             {
               id: payload.organization_id,
               name: payload.organization_name || form.name || "New Organization",
+              organization_country:
+                payload.organization_country || form.country || "Brazil",
               organization_sector:
                 payload.organization_sector || form.sector || "",
             },
@@ -385,6 +388,7 @@ export default function App() {
           {
             id: payload.organization_id,
             name: payload.organization_name || `Organization ${payload.organization_id}`,
+            organization_country: payload.organization_country || "Brazil",
             organization_sector: payload.organization_sector || "",
           },
         ],

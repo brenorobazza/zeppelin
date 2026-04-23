@@ -91,6 +91,12 @@ class Organization(Base):
     description = models.TextField(
         help_text="organization's description", blank=True, null=True
     )
+    organization_country = models.CharField(
+        max_length=100,
+        help_text="organization country",
+        blank=True,
+        null=True,
+    )
     years_experience_range = models.CharField(
         max_length=50,
         help_text="organization years of software development experience",
