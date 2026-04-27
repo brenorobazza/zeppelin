@@ -1,3 +1,4 @@
+import { BenchmarkComparisonCard } from "../components/BenchmarkComparisonCard";
 import { fallbackHistoryData } from "../mock/analyticsFallback";
 
 export function HistoryPage({ data, loading }) {
@@ -51,6 +52,8 @@ export function HistoryPage({ data, loading }) {
           <small>Fewer low-maturity practices needing intervention</small>
         </article>
       </section>
+
+      <BenchmarkComparisonCard />
 
       {/* Cards comparativos por ciclo. */}
       <section className="panel">
