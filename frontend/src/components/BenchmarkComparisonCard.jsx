@@ -29,19 +29,15 @@ const LENS_OPTIONS = [
 
 const REFERENCE_OPTIONS = [
   {
-    key: "previous",
-    label: "Compare with previous",
-    referenceLabel: "Q2 2023"
+    key: "first-submission",
+    label: "Compare with first submission",
+    referenceLabel: "First submission"
   },
   {
-    key: "base",
-    label: "Compare with base",
-    referenceLabel: "Q1 2023"
-  },
-  {
-    key: "average",
-    label: "Compare with organization average",
-    referenceLabel: "Org. average"
+    key: "specific-cycles",
+    label: "Compare specific cycles",
+    referenceLabel: "Specific cycles",
+    isSpecialMode: true
   }
 ];
 
@@ -60,19 +56,9 @@ const MOCK_BENCHMARK_DATA = {
       "User/Customer"
     ],
     series: {
-      previous: {
-        label: "Q2 2023",
-        values: [66, 62, 56, 64, 52, 43, 49],
-        cohortSize: 12
-      },
-      base: {
-        label: "Q1 2023",
+      "first-submission": {
+        label: "First submission",
         values: [61, 56, 51, 58, 45, 40, 44],
-        cohortSize: 12
-      },
-      average: {
-        label: "Org. average",
-        values: [64, 60, 55, 61, 48, 42, 46],
         cohortSize: 12
       },
       current: {
@@ -80,7 +66,12 @@ const MOCK_BENCHMARK_DATA = {
         values: [72, 68, 64, 71, 59, 47, 56],
         cohortSize: 12
       }
-    }
+    },
+    cycles: [
+      { key: "q1-2023", label: "Q1 2023" },
+      { key: "q2-2023", label: "Q2 2023" },
+      { key: "q3-2023", label: "Q3 2023" }
+    ]
   },
   sth: {
     title: "StH benchmark",
@@ -88,19 +79,9 @@ const MOCK_BENCHMARK_DATA = {
     currentLabel: "Q3 2023",
     axes: ["ARO", "CI", "CD", "EXP"],
     series: {
-      previous: {
-        label: "Q2 2023",
-        values: [47, 73, 60, 38],
-        cohortSize: 12
-      },
-      base: {
-        label: "Q1 2023",
+      "first-submission": {
+        label: "First submission",
         values: [43, 68, 55, 33],
-        cohortSize: 12
-      },
-      average: {
-        label: "Org. average",
-        values: [45, 70, 58, 35],
         cohortSize: 12
       },
       current: {
@@ -108,7 +89,12 @@ const MOCK_BENCHMARK_DATA = {
         values: [53, 79, 68, 44],
         cohortSize: 12
       }
-    }
+    },
+    cycles: [
+      { key: "q1-2023", label: "Q1 2023" },
+      { key: "q2-2023", label: "Q2 2023" },
+      { key: "q3-2023", label: "Q3 2023" }
+    ]
   },
   adoption: {
     title: "Adoption level mix",
@@ -122,19 +108,9 @@ const MOCK_BENCHMARK_DATA = {
       "Institutionalized"
     ],
     series: {
-      previous: {
-        label: "Q2 2023",
-        values: [15, 16, 24, 28, 17],
-        cohortSize: 12
-      },
-      base: {
-        label: "Q1 2023",
+      "first-submission": {
+        label: "First submission",
         values: [18, 19, 25, 24, 14],
-        cohortSize: 12
-      },
-      average: {
-        label: "Org. average",
-        values: [16, 17, 23, 27, 17],
         cohortSize: 12
       },
       current: {
@@ -142,7 +118,12 @@ const MOCK_BENCHMARK_DATA = {
         values: [12, 14, 21, 31, 22],
         cohortSize: 12
       }
-    }
+    },
+    cycles: [
+      { key: "q1-2023", label: "Q1 2023" },
+      { key: "q2-2023", label: "Q2 2023" },
+      { key: "q3-2023", label: "Q3 2023" }
+    ]
   }
 };
 
@@ -193,9 +174,20 @@ function renderRadarAxisTick({ x, y, payload, textAnchor }) {
   const lines = splitLabel(payload.value);
 
   return (
-    <text x={x} y={y} textAnchor={textAnchor} className="benchmark-comparison-card__label">
+    <text
+      x={x}
+      y={y}
+      textAnchor={textAnchor}
+      className="benchmark-comparison-card__label"
+      style={{ fill: "#0f172a" }}
+    >
       {lines.map((line, index) => (
-        <tspan key={`${payload.value}-line-${index}`} x={x} dy={index === 0 ? 0 : 13}>
+        <tspan
+          key={`${payload.value}-line-${index}`}
+          x={x}
+          dy={index === 0 ? 0 : 13}
+          style={{ fill: "#0f172a" }}
+        >
           {line}
         </tspan>
       ))}
@@ -221,13 +213,13 @@ function RadarPlot({ title, axes, currentValues, referenceValues, currentLabel, 
           <span>Comparison radar</span>
           <h4>{title}</h4>
         </div>
-        <small>{axes.length} points</small>
+        <small>{axes.length} dimensions</small>
       </div>
 
       <div className="benchmark-comparison-card__svg-wrap">
         <ResponsiveContainer width="100%" height={380}>
           <RadarChart data={chartData} aria-label={`${title} comparison radar`} margin={{ top: 20, right: 28, bottom: 20, left: 28 }}>
-            <PolarGrid stroke="rgba(148, 163, 184, 0.18)" />
+            <PolarGrid stroke="rgba(0, 0, 0, 0.2)" />
             <PolarAngleAxis dataKey="axis" tick={renderRadarAxisTick} />
             <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} tickLine={false} />
 
@@ -313,17 +305,37 @@ function LevelBars({ axes, currentValues, referenceValues, lensKey }) {
 
 export function BenchmarkComparisonCard({ className = "" }) {
   const [lensKey, setLensKey] = useState("eye");
-  const [referenceKey, setReferenceKey] = useState("previous");
+  const [referenceKey, setReferenceKey] = useState("first-submission");
+  const [selectedCycles, setSelectedCycles] = useState({
+    cycle1: "q1-2023",
+    cycle2: "q2-2023"
+  });
 
   const handleReferenceChange = (nextReferenceKey) => {
-    setReferenceKey((currentReferenceKey) =>
-      currentReferenceKey === nextReferenceKey ? currentReferenceKey : nextReferenceKey
-    );
+    setReferenceKey(nextReferenceKey);
   };
 
   const lensData = MOCK_BENCHMARK_DATA[lensKey];
-  const referenceData = lensData.series[referenceKey] || lensData.series.previous;
+  let referenceData;
+
+  if (referenceKey === "specific-cycles") {
+    // For specific cycles comparison, create a synthetic reference from the first selected cycle
+    const cycle1Data = lensData.series.current; // Placeholder - in real app, fetch actual cycle data
+    referenceData = {
+      label: `${selectedCycles.cycle1} vs ${selectedCycles.cycle2}`,
+      values: cycle1Data.values,
+      cohortSize: cycle1Data.cohortSize
+    };
+  } else {
+    referenceData = lensData.series[referenceKey] || lensData.series["first-submission"];
+  }
+
   const currentData = lensData.series.current;
+
+  // Determine radar title based on comparison mode
+  const radarTitle = referenceKey === "specific-cycles"
+    ? `${selectedCycles.cycle1} vs ${selectedCycles.cycle2}`
+    : `${currentData.label} vs ${referenceData.label}`;
 
   const summary = useMemo(() => {
     const currentScore =
@@ -345,13 +357,6 @@ export function BenchmarkComparisonCard({ className = "" }) {
 
   return (
     <section className={["benchmark-comparison-card", className].filter(Boolean).join(" ")}>
-      <header className="benchmark-comparison-card__header">
-
-        <div className="benchmark-comparison-card__header-meta">
-          <span className="benchmark-comparison-card__badge">Mock data</span>
-        </div>
-      </header>
-
       <div className="benchmark-comparison-card__toolbar">
         <div className="benchmark-comparison-card__toolbar-center">
           <h3>{lensData.title}</h3>
@@ -400,6 +405,52 @@ export function BenchmarkComparisonCard({ className = "" }) {
               </button>
             ))}
           </div>
+
+          {referenceKey === "specific-cycles" && (
+            <div className="benchmark-comparison-card__cycles-picker">
+              <div className="benchmark-comparison-card__cycle-group">
+                <label htmlFor={`cycle1-${lensKey}`}>First cycle</label>
+                <select
+                  id={`cycle1-${lensKey}`}
+                  value={selectedCycles.cycle1}
+                  onChange={(e) =>
+                    setSelectedCycles((prev) => ({
+                      ...prev,
+                      cycle1: e.target.value
+                    }))
+                  }
+                  className="benchmark-comparison-card__cycle-select"
+                >
+                  {lensData.cycles.map((cycle) => (
+                    <option key={cycle.key} value={cycle.key}>
+                      {cycle.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="benchmark-comparison-card__cycle-group">
+                <label htmlFor={`cycle2-${lensKey}`}>Second cycle</label>
+                <select
+                  id={`cycle2-${lensKey}`}
+                  value={selectedCycles.cycle2}
+                  onChange={(e) =>
+                    setSelectedCycles((prev) => ({
+                      ...prev,
+                      cycle2: e.target.value
+                    }))
+                  }
+                  className="benchmark-comparison-card__cycle-select"
+                >
+                  {lensData.cycles.map((cycle) => (
+                    <option key={cycle.key} value={cycle.key}>
+                      {cycle.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
       </div>
@@ -407,8 +458,12 @@ export function BenchmarkComparisonCard({ className = "" }) {
       <div className="benchmark-comparison-card__body">
         <div className="benchmark-comparison-card__canvas">
           <RadarPlot
-            key={`${lensKey}-${referenceKey}`}
-            title={`${currentData.label} vs ${referenceData.label}`}
+            key={
+              referenceKey === "specific-cycles"
+                ? `${lensKey}-${referenceKey}-${selectedCycles.cycle1}-${selectedCycles.cycle2}`
+                : `${lensKey}-${referenceKey}`
+            }
+            title={radarTitle}
             axes={lensData.axes}
             currentValues={currentData.values}
             referenceValues={referenceData.values}
@@ -419,14 +474,14 @@ export function BenchmarkComparisonCard({ className = "" }) {
 
         <aside className="benchmark-comparison-card__summary">
           <article className="benchmark-comparison-card__score-card">
-            <span>Score general</span>
+            <span >Score general</span>
             <strong>{summary.currentScore}/100</strong>
             <small>
               {summary.delta >= 0 ? `+${summary.delta}` : summary.delta} vs {referenceData.label}
             </small>
           </article>
 
-          <article className="benchmark-comparison-card__score-card benchmark-comparison-card__score-card--soft">
+          <article className="benchmark-comparison-card__reference-score-card benchmark-comparison-card__score-card--soft">
             <span>Reference score</span>
             <strong>{summary.referenceScore}/100</strong>
             <small>{referenceData.label}</small>
