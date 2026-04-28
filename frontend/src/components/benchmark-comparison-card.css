@@ -104,6 +104,28 @@
   margin-bottom: 18px;
 }
 
+.benchmark-comparison-card__toolbar-center {
+  flex: 1 1 0;
+  align-self: flex-start;
+  padding-top: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.benchmark-comparison-card__toolbar-center h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.benchmark-comparison-card__toolbar-center p:last-child {
+  margin: 8px 0 0;
+}
+
 .benchmark-comparison-card__group {
   display: flex;
   flex-direction: column;
@@ -395,7 +417,13 @@
   }
 
   .benchmark-comparison-card__toolbar {
-    flex-direction: column;
+    flex-direction: column;;
+    padding-bottom: 10px;
+  }
+
+  .benchmark-comparison-card__toolbar-center {
+    padding-top: 0;
+    width: 100%;
   }
 }
 
@@ -429,9 +457,8 @@
 
   .benchmark-comparison-card__svg-wrap {
     min-height: 320px;
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.12) inset;
   }
-}
-  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.12) inset;
 }
 
 .benchmark-comparison-card__body {
