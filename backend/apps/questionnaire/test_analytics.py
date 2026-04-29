@@ -9,6 +9,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from apps.questionnaire.analytics import QuestionnaireAnalyticsService
 from apps.questionnaire.api_views import (
+    QuestionnaireComparisonAnalyticsView,
     QuestionnaireDashboardAnalyticsView,
     QuestionnaireHistoryAnalyticsView,
     QuestionnaireRecommendationsAnalyticsView,
@@ -765,6 +766,17 @@ class QuestionnaireAnalyticsApiTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["summary"]["cycle_count"], 2)
+
+    def test_comparison_endpoint_returns_payload(self):
+        response = self._dispatch(
+            QuestionnaireComparisonAnalyticsView,
+            "/questionnaire/analytics/comparison/",
+            "get_comparison_payload",
+            {"summary": {"delta": 10}, "lenses": {}},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["summary"]["delta"], 10)
 
     def test_dashboard_endpoint_returns_400_for_validation_error(self):
         request = self.factory.get("/questionnaire/analytics/dashboard/")
