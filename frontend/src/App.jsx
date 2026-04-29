@@ -541,6 +541,7 @@ export default function App() {
         <HistoryPage
           data={analytics.history}
           loading={analytics.loading}
+          filters={analyticsFilters}
         />
       )
     },

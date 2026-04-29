@@ -11,6 +11,7 @@ from .api_views import (
     QuestionnaireResultsAnalyticsView,
     QuestionnaireRecommendationsAnalyticsView,
     QuestionnaireHistoryAnalyticsView,
+    QuestionnaireComparisonAnalyticsView,
 )
 
 router = routers.DefaultRouter()
@@ -52,5 +53,10 @@ urlpatterns = [
         "questionnaire/analytics/history/",
         QuestionnaireHistoryAnalyticsView.as_view(),
         name="questionnaire-analytics-history",
+    ),
+    path(
+        "questionnaire/analytics/comparison/",
+        QuestionnaireComparisonAnalyticsView.as_view(),
+        name="questionnaire-analytics-comparison",
     ),
 ]

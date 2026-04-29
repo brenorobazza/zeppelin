@@ -1,7 +1,7 @@
 import { BenchmarkComparisonCard } from "../components/BenchmarkComparisonCard";
 import { fallbackHistoryData } from "../mock/analyticsFallback";
 
-export function HistoryPage({ data, loading }) {
+export function HistoryPage({ data, loading, filters }) {
   // O historico compara ciclos para mostrar progressao real de maturidade ao longo do tempo.
   const view = data || fallbackHistoryData;
   const baselineCycle = view.historySeries[0];
@@ -53,7 +53,7 @@ export function HistoryPage({ data, loading }) {
         </article>
       </section>
 
-      <BenchmarkComparisonCard />
+      <BenchmarkComparisonCard filters={filters} />
 
       {/* Cards comparativos por ciclo. */}
       <section className="panel">

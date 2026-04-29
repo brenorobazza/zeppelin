@@ -9,6 +9,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from apps.questionnaire.analytics import QuestionnaireAnalyticsService
 from apps.questionnaire.api_views import (
+    QuestionnaireComparisonAnalyticsView,
     QuestionnaireDashboardAnalyticsView,
     QuestionnaireHistoryAnalyticsView,
     QuestionnaireRecommendationsAnalyticsView,
@@ -312,6 +313,101 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
 
         self.assertEqual(payload["summary"]["questionnaire_status"], "Incomplete")
 
+    def test_comparison_payload_supports_first_submission_and_specific_cycles(self):
+        organization = SimpleNamespace(
+            id=1,
+            name="Zeppelin Labs",
+            organization_type=SimpleNamespace(name="Software"),
+            organization_size=None,
+            age=48,
+        )
+
+        request = SimpleNamespace(
+            query_params={"reference_mode": "first-submission"},
+            user=None,
+        )
+
+        with patch.object(
+            self.service,
+            "_resolve_context",
+            return_value={
+                "organization": organization,
+                "questionnaire": self.current_cycle,
+                "stage_scope": "all",
+                "all_answers": self.all_answers,
+                "current_answers": self.current_answers,
+                "expected_statement_count": 4,
+                "expected_stage_counts": {
+                    "Continuous Integration": 2,
+                    "Continuous Deployment": 2,
+                },
+            },
+        ):
+            payload = self.service.get_comparison_payload(request)
+
+        self.assertEqual(payload["selection"]["reference_mode"], "first-submission")
+        self.assertEqual(
+            payload["selection"]["current_cycle"]["id"], self.current_cycle.id
+        )
+        self.assertEqual(
+            payload["selection"]["reference_cycle"]["id"], self.old_cycle.id
+        )
+        self.assertEqual(payload["summary"]["current_score"], 55)
+        self.assertEqual(payload["summary"]["reference_score"], 15)
+        self.assertEqual(payload["summary"]["delta"], 40)
+
+        eye_axes = {item["key"]: item for item in payload["lenses"]["eye"]["axes"]}
+        sth_axes = {item["key"]: item for item in payload["lenses"]["sth"]["axes"]}
+
+        self.assertEqual(eye_axes["Development"]["current"], 100)
+        self.assertEqual(eye_axes["Development"]["reference"], 0)
+        self.assertEqual(eye_axes["User/Customer"]["reference"], 30)
+        self.assertEqual(sth_axes["CI"]["current"], 100)
+        self.assertEqual(sth_axes["CD"]["reference"], 30)
+
+    def test_comparison_payload_supports_specific_cycle_reference(self):
+        organization = SimpleNamespace(
+            id=1,
+            name="Zeppelin Labs",
+            organization_type=SimpleNamespace(name="Software"),
+            organization_size=None,
+            age=48,
+        )
+
+        request = SimpleNamespace(
+            query_params={
+                "reference_mode": "specific-cycles",
+                "reference_questionnaire_id": str(self.old_cycle.id),
+            },
+            user=None,
+        )
+
+        with patch.object(
+            self.service,
+            "_resolve_context",
+            return_value={
+                "organization": organization,
+                "questionnaire": self.current_cycle,
+                "stage_scope": "all",
+                "all_answers": self.all_answers,
+                "current_answers": self.current_answers,
+                "expected_statement_count": 4,
+                "expected_stage_counts": {
+                    "Continuous Integration": 2,
+                    "Continuous Deployment": 2,
+                },
+            },
+        ):
+            payload = self.service.get_comparison_payload(request)
+
+        self.assertEqual(payload["selection"]["reference_mode"], "specific-cycles")
+        self.assertEqual(
+            payload["selection"]["reference_cycle"]["id"], self.old_cycle.id
+        )
+        self.assertEqual(
+            payload["selection"]["current_cycle"]["id"], self.current_cycle.id
+        )
+
     def test_adoption_level_stage_overview_reproduces_ci_cd_counts(self):
         overview = self.service._build_adoption_level_stage_overview(self.all_answers)
 
@@ -426,6 +522,17 @@ class QuestionnaireAnalyticsApiTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["summary"]["cycle_count"], 2)
+
+    def test_comparison_endpoint_returns_payload(self):
+        response = self._dispatch(
+            QuestionnaireComparisonAnalyticsView,
+            "/questionnaire/analytics/comparison/",
+            "get_comparison_payload",
+            {"summary": {"delta": 10}, "lenses": {}},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["summary"]["delta"], 10)
 
     def test_dashboard_endpoint_returns_400_for_validation_error(self):
         request = self.factory.get("/questionnaire/analytics/dashboard/")
