@@ -37,6 +37,21 @@ function buildQuery(filters = {}) {
   return query ? `?${query}` : "";
 }
 
+function buildComparisonQuery(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.organizationId) params.set("organization_id", filters.organizationId);
+  if (filters.questionnaireId) params.set("questionnaire_id", filters.questionnaireId);
+  if (filters.stageScope) params.set("stage_scope", filters.stageScope);
+  if (filters.referenceMode) params.set("reference_mode", filters.referenceMode);
+  if (filters.referenceQuestionnaireId) {
+    params.set("reference_questionnaire_id", filters.referenceQuestionnaireId);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
 // Busca uma seção específica da camada analítica.
 async function fetchAnalyticsSection(section, filters) {
   const query = buildQuery(filters);
@@ -45,6 +60,15 @@ async function fetchAnalyticsSection(section, filters) {
   });
 
   return parseResponse(response, `Failed to load ${section} analytics.`);
+}
+
+async function fetchComparisonAnalytics(filters) {
+  const query = buildComparisonQuery(filters);
+  const response = await fetch(`${API_BASE}/api/questionnaire/analytics/comparison/${query}`, {
+    credentials: "include"
+  });
+
+  return parseResponse(response, "Failed to load comparison analytics.");
 }
 
 // Busca o score de um estágio específico pelo nome curto.
@@ -326,6 +350,62 @@ function normalizeHistory(payload) {
   };
 }
 
+function normalizeComparison(payload) {
+  const lensEntries = Object.entries(payload.lenses || {}).map(([key, lens]) => ({
+    key,
+    title: lens.title,
+    subtitle: lens.subtitle,
+    currentScore: lens.current_score,
+    referenceScore: lens.reference_score,
+    delta: lens.delta,
+    axes: (lens.axes || []).map((axis) => ({
+      key: axis.key,
+      label: axis.label,
+      current: axis.current,
+      reference: axis.reference,
+      delta: axis.delta
+    }))
+  }));
+
+  return {
+    organization: payload.organization,
+    scope: payload.scope,
+    selection: {
+      referenceMode: payload.selection?.reference_mode || "first-submission",
+      currentCycle: {
+        id: payload.selection?.current_cycle?.id ? String(payload.selection.current_cycle.id) : "",
+        label: payload.selection?.current_cycle?.label || "",
+        appliedDate: payload.selection?.current_cycle?.applied_date || null,
+        answeredPractices: payload.selection?.current_cycle?.answered_practices || 0
+      },
+      referenceCycle: {
+        id: payload.selection?.reference_cycle?.id ? String(payload.selection.reference_cycle.id) : "",
+        label: payload.selection?.reference_cycle?.label || "",
+        appliedDate: payload.selection?.reference_cycle?.applied_date || null,
+        answeredPractices: payload.selection?.reference_cycle?.answered_practices || 0
+      },
+      availableCycles: (payload.selection?.available_cycles || []).map((cycle) => ({
+        id: cycle.id != null ? String(cycle.id) : "",
+        label: cycle.label,
+        appliedDate: cycle.applied_date || null,
+        answeredPractices: cycle.answered_practices || 0
+      }))
+    },
+    summary: {
+      currentScore: payload.summary?.current_score ?? 0,
+      referenceScore: payload.summary?.reference_score ?? 0,
+      delta: payload.summary?.delta ?? 0,
+      currentAnsweredPractices: payload.summary?.current_answered_practices ?? 0,
+      referenceAnsweredPractices: payload.summary?.reference_answered_practices ?? 0
+    },
+    lenses: lensEntries.reduce((accumulator, item) => {
+      accumulator[item.key] = item;
+      return accumulator;
+    }, {}),
+    lensOptions: lensEntries
+  };
+}
+
 // O layout principal precisa de metadados globais, como nome da empresa e lista de ciclos.
 function normalizeMeta(dashboardPayload, historyPayload) {
   return {
@@ -360,6 +440,12 @@ export async function loadAnalyticsBundle(filters = {}) {
     recommendations: normalizeRecommendations(recommendationsPayload),
     history: normalizeHistory(historyPayload)
   };
+}
+
+// Carrega a comparação agregada usada pelo card de benchmark.
+export async function loadComparisonAnalytics(filters = {}) {
+  const payload = await fetchComparisonAnalytics(filters);
+  return normalizeComparison(payload);
 }
 
 // Entrega um conjunto de dados de demonstração quando o backend não estiver disponível.

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -7,6 +7,7 @@ import {
   RadarChart,
   ResponsiveContainer
 } from "recharts";
+import { loadComparisonAnalytics } from "../services/analytics";
 import "./benchmark-comparison-card.css";
 
 const LENS_OPTIONS = [
@@ -26,108 +27,6 @@ const LENS_OPTIONS = [
     description: "5 maturity levels"
   }
 ];
-
-const REFERENCE_OPTIONS = [
-  {
-    key: "first-submission",
-    label: "Compare with first submission",
-    referenceLabel: "First submission"
-  },
-  {
-    key: "specific-cycles",
-    label: "Compare specific cycles",
-    referenceLabel: "Specific cycles",
-    isSpecialMode: true
-  }
-];
-
-const MOCK_BENCHMARK_DATA = {
-  eye: {
-    title: "Eye of CSE benchmark",
-    subtitle: "Seven-dimensional view of maturity balance across the organization.",
-    currentLabel: "Q3 2023",
-    axes: [
-      "Development",
-      "Quality",
-      "Software Mgt",
-      "Technical Solution",
-      "Knowledge",
-      "Business",
-      "User/Customer"
-    ],
-    series: {
-      "first-submission": {
-        label: "First submission",
-        values: [61, 56, 51, 58, 45, 40, 44],
-        cohortSize: 12
-      },
-      current: {
-        label: "Q3 2023",
-        values: [72, 68, 64, 71, 59, 47, 56],
-        cohortSize: 12
-      }
-    },
-    cycles: [
-      { key: "q1-2023", label: "Q1 2023" },
-      { key: "q2-2023", label: "Q2 2023" },
-      { key: "q3-2023", label: "Q3 2023" }
-    ]
-  },
-  sth: {
-    title: "StH benchmark",
-    subtitle: "Stairway to Heaven stages compared against the selected cohort reference.",
-    currentLabel: "Q3 2023",
-    axes: ["ARO", "CI", "CD", "EXP"],
-    series: {
-      "first-submission": {
-        label: "First submission",
-        values: [43, 68, 55, 33],
-        cohortSize: 12
-      },
-      current: {
-        label: "Q3 2023",
-        values: [53, 79, 68, 44],
-        cohortSize: 12
-      }
-    },
-    cycles: [
-      { key: "q1-2023", label: "Q1 2023" },
-      { key: "q2-2023", label: "Q2 2023" },
-      { key: "q3-2023", label: "Q3 2023" }
-    ]
-  },
-  adoption: {
-    title: "Adoption level mix",
-    subtitle: "Distribution across the maturity levels used in the questionnaire.",
-    currentLabel: "Q3 2023",
-    axes: [
-      "Not adopted",
-      "Abandoned",
-      "Project/Product",
-      "Process",
-      "Institutionalized"
-    ],
-    series: {
-      "first-submission": {
-        label: "First submission",
-        values: [18, 19, 25, 24, 14],
-        cohortSize: 12
-      },
-      current: {
-        label: "Q3 2023",
-        values: [12, 14, 21, 31, 22],
-        cohortSize: 12
-      }
-    },
-    cycles: [
-      { key: "q1-2023", label: "Q1 2023" },
-      { key: "q2-2023", label: "Q2 2023" },
-      { key: "q3-2023", label: "Q3 2023" }
-    ]
-  }
-};
-
-const ADOPTION_WEIGHTS = [0, 10, 30, 60, 100];
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -158,16 +57,6 @@ function splitLabel(label, maxChars = 16) {
   }
 
   return lines;
-}
-
-function getWeightedAdoptionScore(values) {
-  const total = values.reduce((accumulator, value, index) => accumulator + value * ADOPTION_WEIGHTS[index], 0);
-  return Math.round(total / 100);
-}
-
-function getAverageScore(values) {
-  if (!values.length) return 0;
-  return Math.round(values.reduce((accumulator, value) => accumulator + value, 0) / values.length);
 }
 
 function renderRadarAxisTick({ x, y, payload, textAnchor }) {
@@ -218,7 +107,11 @@ function RadarPlot({ title, axes, currentValues, referenceValues, currentLabel, 
 
       <div className="benchmark-comparison-card__svg-wrap">
         <ResponsiveContainer width="100%" height={380}>
-          <RadarChart data={chartData} aria-label={`${title} comparison radar`} margin={{ top: 20, right: 28, bottom: 20, left: 28 }}>
+          <RadarChart
+            data={chartData}
+            aria-label={`${title} comparison radar`}
+            margin={{ top: 20, right: 28, bottom: 20, left: 28 }}
+          >
             <PolarGrid stroke="rgba(0, 0, 0, 0.2)" />
             <PolarAngleAxis dataKey="axis" tick={renderRadarAxisTick} />
             <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} tickLine={false} />
@@ -270,16 +163,16 @@ function LevelBars({ axes, currentValues, referenceValues, lensKey }) {
 
       <div className="benchmark-comparison-card__levels-list">
         {axes.map((axis, index) => {
-          const current = currentValues[index] ?? 0;
-          const reference = referenceValues[index] ?? 0;
+          const current = axis.current ?? currentValues[index] ?? 0;
+          const reference = axis.reference ?? referenceValues[index] ?? 0;
           const currentWidth = `${clamp((current / maxScore) * 100, 0, 100)}%`;
           const referenceWidth = `${clamp((reference / maxScore) * 100, 0, 100)}%`;
           const gap = current - reference;
 
           return (
-            <article key={axis} className="benchmark-comparison-card__level-row">
+            <article key={axis.key} className="benchmark-comparison-card__level-row">
               <div className="benchmark-comparison-card__level-copy">
-                <strong>{axis}</strong>
+                <strong>{axis.label}</strong>
                 <span className={gap < 0 ? "is-negative" : "is-positive"}>
                   {gap >= 0 ? `+${gap}` : gap}% vs ref
                 </span>
@@ -303,65 +196,195 @@ function LevelBars({ axes, currentValues, referenceValues, lensKey }) {
   );
 }
 
-export function BenchmarkComparisonCard({ className = "" }) {
-  const [lensKey, setLensKey] = useState("eye");
-  const [referenceKey, setReferenceKey] = useState("first-submission");
-  const [selectedCycles, setSelectedCycles] = useState({
-    cycle1: "q1-2023",
-    cycle2: "q2-2023"
-  });
-
-  const handleReferenceChange = (nextReferenceKey) => {
-    setReferenceKey(nextReferenceKey);
+function createEmptyComparisonData() {
+  return {
+    selection: {
+      currentCycle: { id: "", label: "", answeredPractices: 0 },
+      referenceCycle: { id: "", label: "", answeredPractices: 0 },
+      availableCycles: []
+    },
+    summary: {
+      currentScore: 0,
+      referenceScore: 0,
+      delta: 0,
+      currentAnsweredPractices: 0,
+      referenceAnsweredPractices: 0
+    },
+    lenses: {
+      eye: {
+        key: "eye",
+        title: "Benchmark comparison",
+        subtitle: "Select two cycles to compare them.",
+        currentScore: 0,
+        referenceScore: 0,
+        delta: 0,
+        axes: []
+      },
+      sth: {
+        key: "sth",
+        title: "Benchmark comparison",
+        subtitle: "Select two cycles to compare them.",
+        currentScore: 0,
+        referenceScore: 0,
+        delta: 0,
+        axes: []
+      },
+      adoption: {
+        key: "adoption",
+        title: "Benchmark comparison",
+        subtitle: "Select two cycles to compare them.",
+        currentScore: 0,
+        referenceScore: 0,
+        delta: 0,
+        axes: []
+      }
+    }
   };
+}
 
-  const lensData = MOCK_BENCHMARK_DATA[lensKey];
-  let referenceData;
+function normalizeAxisValues(axes = []) {
+  return axes.map((axis, index) => ({
+    ...axis,
+    index
+  }));
+}
 
-  if (referenceKey === "specific-cycles") {
-    // For specific cycles comparison, create a synthetic reference from the first selected cycle
-    const cycle1Data = lensData.series.current; // Placeholder - in real app, fetch actual cycle data
-    referenceData = {
-      label: `${selectedCycles.cycle1} vs ${selectedCycles.cycle2}`,
-      values: cycle1Data.values,
-      cohortSize: cycle1Data.cohortSize
+function getCycleLabel(comparisonData, cycleId) {
+  return (
+    comparisonData?.selection?.availableCycles?.find((cycle) => String(cycle.id) === String(cycleId))
+      ?.label || ""
+  );
+}
+
+function getDifferentCycleId(cycles = [], excludedId = "") {
+  const candidate = cycles.find((cycle) => String(cycle.id) !== String(excludedId));
+  return candidate ? String(candidate.id) : "";
+}
+
+export function BenchmarkComparisonCard({ className = "", filters = {} }) {
+  const [lensKey, setLensKey] = useState("eye");
+  const [currentQuestionnaireId, setCurrentQuestionnaireId] = useState(filters.questionnaireId || "");
+  const [referenceQuestionnaireId, setReferenceQuestionnaireId] = useState("");
+  const [comparisonData, setComparisonData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setCurrentQuestionnaireId(filters.questionnaireId || "");
+    setReferenceQuestionnaireId("");
+  }, [filters.organizationId, filters.questionnaireId, filters.stageScope]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function syncComparison() {
+      if (!filters.organizationId) {
+        setComparisonData(createEmptyComparisonData());
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const useSpecificCycles = Boolean(currentQuestionnaireId && referenceQuestionnaireId);
+        const requestFilters = {
+          organizationId: filters.organizationId,
+          questionnaireId: currentQuestionnaireId || filters.questionnaireId || "",
+          stageScope: filters.stageScope,
+          referenceMode: useSpecificCycles ? "specific-cycles" : "first-submission",
+          referenceQuestionnaireId: useSpecificCycles ? referenceQuestionnaireId : ""
+        };
+
+        const bundle = await loadComparisonAnalytics(requestFilters);
+        if (ignore) return;
+
+        setComparisonData(bundle);
+
+        const availableCycles = bundle.selection?.availableCycles || [];
+        const resolvedCurrentId = currentQuestionnaireId || String(bundle.selection?.currentCycle?.id || "");
+        const resolvedReferenceId = referenceQuestionnaireId || String(bundle.selection?.referenceCycle?.id || "");
+
+        if (!currentQuestionnaireId && resolvedCurrentId) {
+          setCurrentQuestionnaireId(resolvedCurrentId);
+        }
+
+        if (!resolvedReferenceId || resolvedReferenceId === resolvedCurrentId) {
+          const nextReferenceId = getDifferentCycleId(availableCycles, resolvedCurrentId);
+          if (nextReferenceId) {
+            setReferenceQuestionnaireId(nextReferenceId);
+          }
+        } else if (!referenceQuestionnaireId) {
+          setReferenceQuestionnaireId(resolvedReferenceId);
+        }
+      } catch (fetchError) {
+        if (ignore) return;
+        setComparisonData(createEmptyComparisonData());
+        setError(fetchError.message || "Failed to load comparison analytics.");
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    syncComparison();
+
+    return () => {
+      ignore = true;
     };
-  } else {
-    referenceData = lensData.series[referenceKey] || lensData.series["first-submission"];
+  }, [
+    filters.organizationId,
+    filters.questionnaireId,
+    filters.stageScope,
+    currentQuestionnaireId,
+    referenceQuestionnaireId
+  ]);
+
+  const selectedCurrentCycleId = currentQuestionnaireId || String(comparisonData?.selection?.currentCycle?.id || "");
+  const selectedReferenceCycleId = referenceQuestionnaireId || String(comparisonData?.selection?.referenceCycle?.id || "");
+  const availableCycles = comparisonData?.selection?.availableCycles || [];
+  const currentCycleLabel = getCycleLabel(comparisonData, selectedCurrentCycleId) || comparisonData?.selection?.currentCycle?.label || "Current cycle";
+  const referenceCycleLabel = getCycleLabel(comparisonData, selectedReferenceCycleId) || comparisonData?.selection?.referenceCycle?.label || "Reference cycle";
+  const referenceCycleOptions = availableCycles.filter(
+    (cycle) => String(cycle.id) !== String(selectedCurrentCycleId)
+  );
+
+  const activeLens = comparisonData?.lenses?.[lensKey] || comparisonData?.lenses?.eye;
+  const selectedAxes = normalizeAxisValues(activeLens?.axes || []);
+  const radarTitle = `${currentCycleLabel} vs ${referenceCycleLabel}`;
+
+  function handleCurrentCycleChange(nextCurrentQuestionnaireId) {
+    setCurrentQuestionnaireId(nextCurrentQuestionnaireId);
+
+    if (String(nextCurrentQuestionnaireId) === String(referenceQuestionnaireId)) {
+      const nextReferenceId = getDifferentCycleId(availableCycles, nextCurrentQuestionnaireId);
+      setReferenceQuestionnaireId(nextReferenceId);
+    }
   }
 
-  const currentData = lensData.series.current;
+  function handleReferenceCycleChange(nextReferenceQuestionnaireId) {
+    setReferenceQuestionnaireId(nextReferenceQuestionnaireId);
+  }
 
-  // Determine radar title based on comparison mode
-  const radarTitle = referenceKey === "specific-cycles"
-    ? `${selectedCycles.cycle1} vs ${selectedCycles.cycle2}`
-    : `${currentData.label} vs ${referenceData.label}`;
+  if (loading && !comparisonData) {
+    return <section className="panel">Loading comparison analytics from backend...</section>;
+  }
 
-  const summary = useMemo(() => {
-    const currentScore =
-      lensKey === "adoption"
-        ? getWeightedAdoptionScore(currentData.values)
-        : getAverageScore(currentData.values);
-    const referenceScore =
-      lensKey === "adoption"
-        ? getWeightedAdoptionScore(referenceData.values)
-        : getAverageScore(referenceData.values);
-
-    return {
-      currentScore,
-      referenceScore,
-      delta: currentScore - referenceScore,
-      cohortSize: referenceData.cohortSize || 12
-    };
-  }, [currentData.values, lensKey, referenceData.cohortSize, referenceData.values]);
+  if (!comparisonData) {
+    return <section className="panel">Loading comparison analytics from backend...</section>;
+  }
 
   return (
     <section className={["benchmark-comparison-card", className].filter(Boolean).join(" ")}>
       <div className="benchmark-comparison-card__toolbar">
         <div className="benchmark-comparison-card__toolbar-center">
-          <h3>{lensData.title}</h3>
-          <p>{lensData.subtitle}</p>
+          <h3>{activeLens?.title || "Benchmark comparison"}</h3>
+          <p>{activeLens?.subtitle || "Comparison data loaded from backend analytics."}</p>
+          {error ? <small className="benchmark-comparison-card__error">{error}</small> : null}
         </div>
+
         <div className="benchmark-comparison-card__group">
           <span>Lens</span>
           <div className="benchmark-comparison-card__segmented">
@@ -385,120 +408,85 @@ export function BenchmarkComparisonCard({ className = "" }) {
             ))}
           </div>
         </div>
+
         <div className="benchmark-comparison-card__group">
-          <span>Compare with</span>
-          <div className="benchmark-comparison-card__chips">
-            {REFERENCE_OPTIONS.map((option) => (
-              <button
-                key={option.key}
-                type="button"
-                className={[
-                  "benchmark-comparison-card__chip",
-                  referenceKey === option.key && "is-active"
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => handleReferenceChange(option.key)}
-                aria-pressed={referenceKey === option.key}
+          <span>Cycles</span>
+          <div className="benchmark-comparison-card__cycles-picker">
+            <div className="benchmark-comparison-card__cycle-group">
+              <label htmlFor={`current-cycle-${lensKey}`}>Current cycle</label>
+              <select
+                id={`current-cycle-${lensKey}`}
+                value={selectedCurrentCycleId}
+                onChange={(event) => handleCurrentCycleChange(event.target.value)}
+                className="benchmark-comparison-card__cycle-select"
               >
-                {option.label}
-              </button>
-            ))}
-          </div>
-
-          {referenceKey === "specific-cycles" && (
-            <div className="benchmark-comparison-card__cycles-picker">
-              <div className="benchmark-comparison-card__cycle-group">
-                <label htmlFor={`cycle1-${lensKey}`}>First cycle</label>
-                <select
-                  id={`cycle1-${lensKey}`}
-                  value={selectedCycles.cycle1}
-                  onChange={(e) =>
-                    setSelectedCycles((prev) => ({
-                      ...prev,
-                      cycle1: e.target.value
-                    }))
-                  }
-                  className="benchmark-comparison-card__cycle-select"
-                >
-                  {lensData.cycles.map((cycle) => (
-                    <option key={cycle.key} value={cycle.key}>
-                      {cycle.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="benchmark-comparison-card__cycle-group">
-                <label htmlFor={`cycle2-${lensKey}`}>Second cycle</label>
-                <select
-                  id={`cycle2-${lensKey}`}
-                  value={selectedCycles.cycle2}
-                  onChange={(e) =>
-                    setSelectedCycles((prev) => ({
-                      ...prev,
-                      cycle2: e.target.value
-                    }))
-                  }
-                  className="benchmark-comparison-card__cycle-select"
-                >
-                  {lensData.cycles.map((cycle) => (
-                    <option key={cycle.key} value={cycle.key}>
-                      {cycle.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                {availableCycles.map((cycle) => (
+                  <option key={cycle.id} value={cycle.id}>
+                    {cycle.label}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
-        </div>
 
+            <div className="benchmark-comparison-card__cycle-group">
+              <label htmlFor={`reference-cycle-${lensKey}`}>Reference cycle</label>
+              <select
+                id={`reference-cycle-${lensKey}`}
+                value={selectedReferenceCycleId}
+                onChange={(event) => handleReferenceCycleChange(event.target.value)}
+                className="benchmark-comparison-card__cycle-select"
+              >
+                {referenceCycleOptions.map((cycle) => (
+                  <option key={cycle.id} value={cycle.id}>
+                    {cycle.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="benchmark-comparison-card__body">
         <div className="benchmark-comparison-card__canvas">
           <RadarPlot
-            key={
-              referenceKey === "specific-cycles"
-                ? `${lensKey}-${referenceKey}-${selectedCycles.cycle1}-${selectedCycles.cycle2}`
-                : `${lensKey}-${referenceKey}`
-            }
+            key={`${lensKey}-${selectedCurrentCycleId}-${selectedReferenceCycleId}`}
             title={radarTitle}
-            axes={lensData.axes}
-            currentValues={currentData.values}
-            referenceValues={referenceData.values}
-            currentLabel={currentData.label}
-            referenceLabel={referenceData.label}
+            axes={selectedAxes.map((axis) => axis.label)}
+            currentValues={selectedAxes.map((axis) => axis.current ?? 0)}
+            referenceValues={selectedAxes.map((axis) => axis.reference ?? 0)}
+            currentLabel={currentCycleLabel}
+            referenceLabel={referenceCycleLabel}
           />
         </div>
 
         <aside className="benchmark-comparison-card__summary">
           <article className="benchmark-comparison-card__score-card">
-            <span >Score general</span>
-            <strong>{summary.currentScore}/100</strong>
+            <span>Score general</span>
+            <strong>{comparisonData.summary.currentScore}/100</strong>
             <small>
-              {summary.delta >= 0 ? `+${summary.delta}` : summary.delta} vs {referenceData.label}
+              {comparisonData.summary.delta >= 0 ? `+${comparisonData.summary.delta}` : comparisonData.summary.delta} vs {referenceCycleLabel}
             </small>
           </article>
 
           <article className="benchmark-comparison-card__reference-score-card benchmark-comparison-card__score-card--soft">
             <span>Reference score</span>
-            <strong>{summary.referenceScore}/100</strong>
-            <small>{referenceData.label}</small>
+            <strong>{comparisonData.summary.referenceScore}/100</strong>
+            <small>{referenceCycleLabel}</small>
           </article>
 
           <LevelBars
-            axes={lensData.axes}
-            currentValues={currentData.values}
-            referenceValues={referenceData.values}
+            axes={selectedAxes}
+            currentValues={selectedAxes.map((axis) => axis.current ?? 0)}
+            referenceValues={selectedAxes.map((axis) => axis.reference ?? 0)}
             lensKey={lensKey}
           />
         </aside>
       </div>
 
       <footer className="benchmark-comparison-card__footer">
-        <span>{lensData.currentLabel} selected as current snapshot</span>
-        <span>{referenceData.label} used as benchmark reference</span>
+        <span>{currentCycleLabel} selected as current snapshot</span>
+        <span>{referenceCycleLabel} used as benchmark reference</span>
       </footer>
     </section>
   );

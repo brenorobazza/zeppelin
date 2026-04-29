@@ -250,3 +250,17 @@ class QuestionnaireHistoryAnalyticsView(APIView):
         except ValidationError as exc:
             return Response({"error": exc.message}, status=400)
         return Response(payload)
+
+
+# Endpoint agregado para comparacao de ciclos e benchmarks.
+class QuestionnaireComparisonAnalyticsView(APIView):
+    authentication_classes = [OAuth2Authentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        service = QuestionnaireAnalyticsService()
+        try:
+            payload = service.get_comparison_payload(request)
+        except ValidationError as exc:
+            return Response({"error": exc.message}, status=400)
+        return Response(payload)

@@ -184,6 +184,35 @@ class QuestionnaireAnalyticsService:
             ),
         },
     )
+    COMPARISON_LENS_CONFIG = {
+        "eye": {
+            "title": "Eye of CSE benchmark",
+            "subtitle": "Seven-dimensional view of maturity balance across the organization.",
+            "axes": [
+                {"key": "Development", "label": "Development"},
+                {"key": "Quality", "label": "Quality"},
+                {"key": "Software Management", "label": "Software Mgt"},
+                {"key": "Technical Solution", "label": "Technical Solution"},
+                {"key": "Knowledge", "label": "Knowledge"},
+                {"key": "Business", "label": "Business"},
+                {"key": "User/Customer", "label": "User/Customer"},
+            ],
+            "item_key": "name",
+            "item_value": "score",
+        },
+        "sth": {
+            "title": "StH benchmark",
+            "subtitle": "Stairway to Heaven stages compared against the selected cohort reference.",
+            "axes": [
+                {"key": "Agile", "label": "ARO"},
+                {"key": "CI", "label": "CI"},
+                {"key": "CD", "label": "CD"},
+                {"key": "Experimentation", "label": "EXP"},
+            ],
+            "item_key": "short_name",
+            "item_value": "score",
+        },
+    }
 
     # Carrega os níveis de adoção uma única vez para reutilização ao longo dos cálculos.
     def __init__(self):
@@ -384,6 +413,82 @@ class QuestionnaireAnalyticsService:
             "cycles": cycles,
         }
 
+    # Monta a resposta agregada de comparacao para o card de benchmark.
+    def get_comparison_payload(self, request):
+        context = self._resolve_context(request)
+        organization = context["organization"]
+        current_answers = context["current_answers"]
+        all_answers = context["all_answers"]
+
+        reference_mode = request.query_params.get("reference_mode", "first-submission")
+        reference_questionnaire_id = request.query_params.get(
+            "reference_questionnaire_id"
+        )
+
+        reference_answers, reference_questionnaire = self._resolve_reference_answers(
+            all_answers,
+            reference_mode,
+            reference_questionnaire_id,
+        )
+
+        current_questionnaire = context["questionnaire"]
+        current_cycle = self._serialize_cycle(current_questionnaire, current_answers)
+        reference_cycle = self._serialize_cycle(
+            reference_questionnaire,
+            reference_answers,
+        )
+
+        current_overall_score = self._score_for_answers(current_answers)
+        reference_overall_score = self._score_for_answers(reference_answers)
+
+        return {
+            "organization": self._serialize_organization(organization),
+            "scope": context["stage_scope"],
+            "selection": {
+                "reference_mode": reference_mode,
+                "current_cycle": current_cycle,
+                "reference_cycle": reference_cycle,
+                "available_cycles": self._build_history_cycles(all_answers),
+            },
+            "summary": {
+                "current_score": current_overall_score,
+                "reference_score": reference_overall_score,
+                "delta": current_overall_score - reference_overall_score,
+                "current_answered_practices": len(current_answers),
+                "reference_answered_practices": len(reference_answers),
+            },
+            "lenses": {
+                "eye": self._build_comparison_lens_payload(
+                    lens_key="eye",
+                    current_items=self._build_dimension_results(current_answers),
+                    reference_items=self._build_dimension_results(reference_answers),
+                    current_overall_score=current_overall_score,
+                    reference_overall_score=reference_overall_score,
+                ),
+                "sth": self._build_comparison_lens_payload(
+                    lens_key="sth",
+                    current_items=[
+                        item
+                        for item in self._build_stage_scores(current_answers)
+                        if item["short_name"] != "Traditional"
+                    ],
+                    reference_items=[
+                        item
+                        for item in self._build_stage_scores(reference_answers)
+                        if item["short_name"] != "Traditional"
+                    ],
+                    current_overall_score=current_overall_score,
+                    reference_overall_score=reference_overall_score,
+                ),
+                "adoption": self._build_adoption_comparison_lens_payload(
+                    current_answers,
+                    reference_answers,
+                    current_overall_score=current_overall_score,
+                    reference_overall_score=reference_overall_score,
+                ),
+            },
+        }
+
     # Resolve todo o contexto necessário: organização, escopo, ciclo escolhido e respostas filtradas.
     def _resolve_context(self, request):
         organization = self._resolve_organization(request)
@@ -418,6 +523,158 @@ class QuestionnaireAnalyticsService:
             "current_answers": current_answers,
             "expected_statement_count": expected_statement_count,
             "expected_stage_counts": expected_stage_counts,
+        }
+
+    def _resolve_reference_answers(
+        self,
+        answers,
+        reference_mode,
+        reference_questionnaire_id,
+    ):
+        grouped = self._group_answers_by_questionnaire(answers)
+
+        if reference_mode == "first-submission":
+            ordered_groups = sorted(
+                grouped.items(),
+                key=lambda item: self._questionnaire_sort_key(
+                    item[1][0].questionnaire_answer if item[1] else None
+                ),
+            )
+            if not ordered_groups:
+                return list(answers), None
+
+            for questionnaire_id, cycle_answers in ordered_groups:
+                if questionnaire_id is not None:
+                    return cycle_answers, cycle_answers[0].questionnaire_answer
+
+            fallback_answers = ordered_groups[0][1]
+            return (
+                fallback_answers,
+                fallback_answers[0].questionnaire_answer if fallback_answers else None,
+            )
+
+        if reference_mode == "specific-cycles":
+            if reference_questionnaire_id in (None, ""):
+                raise ValidationError(
+                    "reference_questionnaire_id is required for specific-cycles comparison"
+                )
+
+            try:
+                questionnaire_id = int(reference_questionnaire_id)
+            except (TypeError, ValueError) as exc:
+                raise ValidationError(
+                    "reference_questionnaire_id must be an integer"
+                ) from exc
+
+            cycle_answers = grouped.get(questionnaire_id)
+            if cycle_answers is None:
+                raise ValidationError("reference_questionnaire_id not found")
+            if not cycle_answers:
+                raise ValidationError(
+                    "reference_questionnaire_id has no answers in the selected scope"
+                )
+
+            return cycle_answers, cycle_answers[0].questionnaire_answer
+
+        raise ValidationError(
+            "reference_mode must be first-submission or specific-cycles"
+        )
+
+    def _group_answers_by_questionnaire(self, answers):
+        grouped = defaultdict(list)
+        for answer in answers:
+            grouped[answer.questionnaire_answer_id].append(answer)
+        return grouped
+
+    def _questionnaire_sort_key(self, questionnaire):
+        if questionnaire is None:
+            return ("9999-12-31", 999999)
+
+        applied_date = questionnaire.applied_date or questionnaire.uploaded_at
+        return (
+            applied_date.isoformat() if applied_date is not None else "9999-12-30",
+            questionnaire.id,
+        )
+
+    def _build_comparison_lens_payload(
+        self,
+        lens_key,
+        current_items,
+        reference_items,
+        current_overall_score,
+        reference_overall_score,
+    ):
+        config = self.COMPARISON_LENS_CONFIG[lens_key]
+        current_lookup = {
+            item[config["item_key"]]: item[config["item_value"]]
+            for item in current_items
+        }
+        reference_lookup = {
+            item[config["item_key"]]: item[config["item_value"]]
+            for item in reference_items
+        }
+
+        axes = []
+        for axis in config["axes"]:
+            current_value = current_lookup.get(axis["key"], 0)
+            reference_value = reference_lookup.get(axis["key"], 0)
+            axes.append(
+                {
+                    "key": axis["key"],
+                    "label": axis["label"],
+                    "current": current_value,
+                    "reference": reference_value,
+                    "delta": current_value - reference_value,
+                }
+            )
+
+        return {
+            "title": config["title"],
+            "subtitle": config["subtitle"],
+            "current_score": current_overall_score,
+            "reference_score": reference_overall_score,
+            "delta": current_overall_score - reference_overall_score,
+            "axes": axes,
+        }
+
+    def _build_adoption_comparison_lens_payload(
+        self,
+        current_answers,
+        reference_answers,
+        current_overall_score,
+        reference_overall_score,
+    ):
+        axes = []
+        current_lookup = {
+            item["key"]: item["percentage"]
+            for item in self._build_adoption_distribution(current_answers)
+        }
+        reference_lookup = {
+            item["key"]: item["percentage"]
+            for item in self._build_adoption_distribution(reference_answers)
+        }
+
+        for level in self.adopted_levels:
+            key = slugify(level.name)
+            current_value = current_lookup.get(key, 0)
+            reference_value = reference_lookup.get(key, 0)
+            axes.append(
+                {
+                    "key": key,
+                    "label": level.name,
+                    "current": current_value,
+                    "reference": reference_value,
+                    "delta": current_value - reference_value,
+                }
+            )
+
+        return {
+            "title": "Adoption level mix",
+            "subtitle": "Distribution across the maturity levels used in the questionnaire.",
+            "current_score": current_overall_score,
+            "reference_score": reference_overall_score,
+            "delta": current_overall_score - reference_overall_score,
+            "axes": axes,
         }
 
     # Descobre a organização a partir da URL ou do usuário autenticado.
