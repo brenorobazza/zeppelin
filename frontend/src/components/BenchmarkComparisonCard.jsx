@@ -7,6 +7,7 @@ import {
   RadarChart,
   ResponsiveContainer
 } from "recharts";
+import { AlertTriangle, Lock, SearchX, SlidersHorizontal } from "lucide-react";
 import { loadComparisonAnalytics } from "../services/analytics";
 import "./benchmark-comparison-card.css";
 
@@ -22,6 +23,8 @@ const LENS_OPTIONS = [
     description: "4 stages"
   }
 ];
+
+const MIN_LOADING_MS = 400;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -193,6 +196,15 @@ function LevelBars({ axes, currentValues, referenceValues, lensKey }) {
 
 function createEmptyComparisonData() {
   return {
+    benchmarkState: {
+      code: "ready",
+      title: "",
+      message: "",
+      errorCode: "",
+      minCompanyThreshold: 5,
+      companyCount: 0,
+      snapshotCount: 0
+    },
     selection: {
       currentCycle: { id: "", label: "", answeredPractices: 0 },
       referenceCycle: { id: "", label: "", answeredPractices: 0 },
@@ -250,7 +262,61 @@ function getDifferentCycleId(cycles = [], excludedId = "") {
   return candidate ? String(candidate.id) : "";
 }
 
-export function BenchmarkComparisonCard({ className = "", filters = {} }) {
+function BenchmarkStatePanel({
+  tone = "neutral",
+  title,
+  message,
+  badge,
+  details,
+  actionLabel,
+  onAction,
+  icon = null
+}) {
+  return (
+    <section className={["benchmark-state", `benchmark-state--${tone}`].join(" ")}>
+      <header className="benchmark-state__head">
+        {badge ? <span className="benchmark-state__badge">{badge}</span> : null}
+      </header>
+
+      <div className="benchmark-state__icon" aria-hidden="true">
+        {icon}
+      </div>
+
+      <h3>{title}</h3>
+      <p>{message}</p>
+
+      {details ? <small className="benchmark-state__details">{details}</small> : null}
+
+      {actionLabel && typeof onAction === "function" ? (
+        <button type="button" className="benchmark-state__action" onClick={onAction}>
+          <SlidersHorizontal size={14} strokeWidth={2.2} />
+          {actionLabel}
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
+/**
+ * BenchmarkComparisonCard
+ * 
+ * Wrapper that adds mock data support on top of TimeEvolutionCard logic.
+ * Used by BenchmarkPage to support both backend and mock analytics.
+ * 
+ * Props:
+ * - filters: Object with organizationId, questionnaireId, stageScope
+ * - mockLoader: Optional function(filters) that returns mock comparison data
+ * - className: CSS class names to apply
+ */
+export function BenchmarkComparisonCard({
+  className = "",
+  filters = {},
+  mockLoader = null,
+  comparisonVariant = "history",
+  onClearFilters,
+  onAdjustFilters
+}) {
+  const isBenchmarkComparison = comparisonVariant === "benchmark";
   const [lensKey, setLensKey] = useState("eye");
   const [currentQuestionnaireId, setCurrentQuestionnaireId] = useState(filters.questionnaireId || "");
   const [referenceQuestionnaireId, setReferenceQuestionnaireId] = useState("");
@@ -261,12 +327,21 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
   useEffect(() => {
     setCurrentQuestionnaireId(filters.questionnaireId || "");
     setReferenceQuestionnaireId("");
-  }, [filters.organizationId, filters.questionnaireId, filters.stageScope]);
+  }, [
+    filters.organizationId,
+    filters.questionnaireId,
+    filters.category,
+    filters.size,
+    filters.type,
+    filters.targetAudience
+  ]);
 
   useEffect(() => {
     let ignore = false;
 
     async function syncComparison() {
+      const startedAt = Date.now();
+
       if (!filters.organizationId) {
         setComparisonData(createEmptyComparisonData());
         setLoading(false);
@@ -281,12 +356,22 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
         const requestFilters = {
           organizationId: filters.organizationId,
           questionnaireId: currentQuestionnaireId || filters.questionnaireId || "",
-          stageScope: filters.stageScope,
-          referenceMode: useSpecificCycles ? "specific-cycles" : "first-submission",
+          category: filters.category,
+          size: filters.size,
+          type: filters.type,
+          targetAudience: filters.targetAudience,
+          referenceMode: isBenchmarkComparison
+            ? "cohort-aggregate"
+            : useSpecificCycles
+              ? "specific-cycles"
+              : "first-submission",
           referenceQuestionnaireId: useSpecificCycles ? referenceQuestionnaireId : ""
         };
 
-        const bundle = await loadComparisonAnalytics(requestFilters);
+        // Use mockLoader if provided; otherwise fetch from backend
+        const bundle = mockLoader
+          ? mockLoader(requestFilters)
+          : await loadComparisonAnalytics(requestFilters);
         if (ignore) return;
 
         setComparisonData(bundle);
@@ -299,19 +384,36 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
           setCurrentQuestionnaireId(resolvedCurrentId);
         }
 
-        if (!resolvedReferenceId || resolvedReferenceId === resolvedCurrentId) {
+        if (!isBenchmarkComparison && (!resolvedReferenceId || resolvedReferenceId === resolvedCurrentId)) {
           const nextReferenceId = getDifferentCycleId(availableCycles, resolvedCurrentId);
           if (nextReferenceId) {
             setReferenceQuestionnaireId(nextReferenceId);
           }
-        } else if (!referenceQuestionnaireId) {
+        } else if (!isBenchmarkComparison && !referenceQuestionnaireId) {
           setReferenceQuestionnaireId(resolvedReferenceId);
         }
       } catch (fetchError) {
         if (ignore) return;
-        setComparisonData(createEmptyComparisonData());
+        setComparisonData({
+          ...createEmptyComparisonData(),
+          benchmarkState: {
+            code: "error",
+            title: "Unable to load benchmark data",
+            message: fetchError.message || "Failed to load comparison analytics.",
+            errorCode: "ERR_DATA_FETCH_FAILED_500",
+            minCompanyThreshold: 5,
+            companyCount: 0,
+            snapshotCount: 0
+          }
+        });
         setError(fetchError.message || "Failed to load comparison analytics.");
       } finally {
+        const elapsed = Date.now() - startedAt;
+        const remaining = Math.max(0, MIN_LOADING_MS - elapsed);
+        if (remaining > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remaining));
+        }
+
         if (!ignore) {
           setLoading(false);
         }
@@ -326,9 +428,14 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
   }, [
     filters.organizationId,
     filters.questionnaireId,
-    filters.stageScope,
+    filters.category,
+    filters.size,
+    filters.type,
+    filters.targetAudience,
     currentQuestionnaireId,
-    referenceQuestionnaireId
+    referenceQuestionnaireId,
+    isBenchmarkComparison,
+    mockLoader
   ]);
 
   const selectedCurrentCycleId = currentQuestionnaireId || String(comparisonData?.selection?.currentCycle?.id || "");
@@ -336,37 +443,118 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
   const availableCycles = comparisonData?.selection?.availableCycles || [];
   const currentCycleLabel = getCycleLabel(comparisonData, selectedCurrentCycleId) || comparisonData?.selection?.currentCycle?.label || "Current cycle";
   const referenceCycleLabel = getCycleLabel(comparisonData, selectedReferenceCycleId) || comparisonData?.selection?.referenceCycle?.label || "Reference cycle";
+  const referenceContext = comparisonData?.selection?.referenceContext || null;
+  const benchmarkReferenceLabel = referenceContext?.label || referenceCycleLabel || "Cohort average";
+  const benchmarkState = comparisonData?.benchmarkState || { code: "ready" };
+  const benchmarkStateCode = String(benchmarkState.code || "ready").toLowerCase();
+  const isInsufficientState = isBenchmarkComparison && benchmarkStateCode === "insufficient_data";
+  const isEmptyState = isBenchmarkComparison && benchmarkStateCode === "empty_results";
+  const isErrorState = isBenchmarkComparison && benchmarkStateCode === "error";
+  const isRefreshing = loading && Boolean(comparisonData);
   const referenceCycleOptions = availableCycles.filter(
     (cycle) => String(cycle.id) !== String(selectedCurrentCycleId)
   );
 
   const activeLens = comparisonData?.lenses?.[lensKey] || comparisonData?.lenses?.eye;
   const selectedAxes = normalizeAxisValues(activeLens?.axes || []);
-  const radarTitle = `${currentCycleLabel} vs ${referenceCycleLabel}`;
+  const radarTitle = isBenchmarkComparison
+    ? activeLens?.title || "Benchmark comparison"
+    : `${currentCycleLabel} vs ${referenceCycleLabel}`;
 
   function handleCurrentCycleChange(nextCurrentQuestionnaireId) {
     setCurrentQuestionnaireId(nextCurrentQuestionnaireId);
 
-    if (String(nextCurrentQuestionnaireId) === String(referenceQuestionnaireId)) {
+    if (!isBenchmarkComparison && String(nextCurrentQuestionnaireId) === String(referenceQuestionnaireId)) {
       const nextReferenceId = getDifferentCycleId(availableCycles, nextCurrentQuestionnaireId);
       setReferenceQuestionnaireId(nextReferenceId);
     }
   }
 
   function handleReferenceCycleChange(nextReferenceQuestionnaireId) {
-    setReferenceQuestionnaireId(nextReferenceQuestionnaireId);
+    if (!isBenchmarkComparison) {
+      setReferenceQuestionnaireId(nextReferenceQuestionnaireId);
+    }
   }
 
   if (loading && !comparisonData) {
-    return <section className="panel">Loading comparison analytics from backend...</section>;
+    return (
+      <section className={["benchmark-comparison-card", "benchmark-comparison-card--loading", className].filter(Boolean).join(" ")}>
+        <div className="benchmark-comparison-card__skeleton-header" />
+        <div className="benchmark-comparison-card__skeleton-body" />
+        <div className="benchmark-comparison-card__skeleton-body benchmark-comparison-card__skeleton-body--short" />
+      </section>
+    );
   }
 
   if (!comparisonData) {
-    return <section className="panel">Loading comparison analytics from backend...</section>;
+    return (
+      <section className={["benchmark-comparison-card", "benchmark-comparison-card--loading", className].filter(Boolean).join(" ")}>
+        <div className="benchmark-comparison-card__skeleton-header" />
+        <div className="benchmark-comparison-card__skeleton-body" />
+        <div className="benchmark-comparison-card__skeleton-body benchmark-comparison-card__skeleton-body--short" />
+      </section>
+    );
+  }
+
+  if (isInsufficientState) {
+    return (
+      <BenchmarkStatePanel
+        tone="warning"
+        badge="Insufficient Data"
+        icon={<Lock size={24} strokeWidth={2.2} />}
+        title={benchmarkState.title || "Insufficient data for comparison"}
+        message={benchmarkState.message || "The selected cohort does not meet the minimum company threshold."}
+        details={`Minimum cohort size: ${benchmarkState.minCompanyThreshold || 5} companies · Current: ${benchmarkState.companyCount || 0} companies`}
+        actionLabel="Clear filters"
+        onAction={onClearFilters}
+      />
+    );
+  }
+
+  if (isEmptyState) {
+    return (
+      <BenchmarkStatePanel
+        tone="neutral"
+        badge="Empty State"
+        icon={<SearchX size={24} strokeWidth={2.2} />}
+        title={benchmarkState.title || "No data found"}
+        message={benchmarkState.message || "No benchmark snapshots match the selected filters."}
+        details="Try broadening one or more filters to rebuild the cohort."
+        actionLabel="Adjust filters"
+        onAction={onAdjustFilters || onClearFilters}
+      />
+    );
+  }
+
+  if (isErrorState) {
+    return (
+      <BenchmarkStatePanel
+        tone="error"
+        badge="Error"
+        icon={<AlertTriangle size={24} strokeWidth={2.2} />}
+        title={benchmarkState.title || "Unable to load benchmark data"}
+        message={benchmarkState.message || "A server-side error occurred while computing benchmark data."}
+        details={benchmarkState.errorCode ? `Error code: ${benchmarkState.errorCode}` : "Please adjust filters or try again later."}
+      />
+    );
   }
 
   return (
-    <section className={["benchmark-comparison-card", className].filter(Boolean).join(" ")}>
+    <section
+      className={[
+        "benchmark-comparison-card",
+        isRefreshing && "benchmark-comparison-card--refreshing",
+        className
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {isRefreshing ? (
+        <div className="benchmark-comparison-card__refresh-overlay" role="status" aria-live="polite">
+          <div className="benchmark-comparison-card__refresh-badge">Loading benchmark data...</div>
+        </div>
+      ) : null}
+
       <div className="benchmark-comparison-card__toolbar">
         <div className="benchmark-comparison-card__toolbar-center">
           <h3>{activeLens?.title || "Benchmark comparison"}</h3>
@@ -399,39 +587,53 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
         </div>
 
         <div className="benchmark-comparison-card__group">
-          <span>Cycles</span>
+          <span>{isBenchmarkComparison ? "Reference cohort" : "Cycles"}</span>
           <div className="benchmark-comparison-card__cycles-picker">
-            <div className="benchmark-comparison-card__cycle-group">
-              <label htmlFor={`current-cycle-${lensKey}`}>Current cycle</label>
-              <select
-                id={`current-cycle-${lensKey}`}
-                value={selectedCurrentCycleId}
-                onChange={(event) => handleCurrentCycleChange(event.target.value)}
-                className="benchmark-comparison-card__cycle-select"
-              >
-                {availableCycles.map((cycle) => (
-                  <option key={cycle.id} value={cycle.id}>
-                    {cycle.displayLabel || cycle.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {!isBenchmarkComparison ? (
+              <div className="benchmark-comparison-card__cycle-group">
+                <label htmlFor={`current-cycle-${lensKey}`}>Current cycle</label>
+                <select
+                  id={`current-cycle-${lensKey}`}
+                  value={selectedCurrentCycleId}
+                  onChange={(event) => handleCurrentCycleChange(event.target.value)}
+                  className="benchmark-comparison-card__cycle-select"
+                >
+                  {availableCycles.map((cycle) => (
+                    <option key={cycle.id} value={cycle.id}>
+                      {cycle.displayLabel || cycle.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
 
-            <div className="benchmark-comparison-card__cycle-group">
-              <label htmlFor={`reference-cycle-${lensKey}`}>Reference cycle</label>
-              <select
-                id={`reference-cycle-${lensKey}`}
-                value={selectedReferenceCycleId}
-                onChange={(event) => handleReferenceCycleChange(event.target.value)}
-                className="benchmark-comparison-card__cycle-select"
-              >
-                {referenceCycleOptions.map((cycle) => (
-                  <option key={cycle.id} value={cycle.id}>
-                    {cycle.displayLabel || cycle.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {isBenchmarkComparison ? (
+              <div className="benchmark-comparison-card__reference-summary">
+                <span>Reference cohort</span>
+                <strong>{benchmarkReferenceLabel}</strong>
+                <small>
+                  {referenceContext
+                    ? `${referenceContext.company_count} companies · ${referenceContext.snapshot_count} snapshots`
+                    : "Aggregated peer snapshots matched by the active filters"}
+                </small>
+              </div>
+            ) : (
+              <div className="benchmark-comparison-card__cycle-group">
+                <label htmlFor={`reference-cycle-${lensKey}`}>Reference cycle</label>
+                <select
+                  id={`reference-cycle-${lensKey}`}
+                  value={selectedReferenceCycleId}
+                  onChange={(event) => handleReferenceCycleChange(event.target.value)}
+                  className="benchmark-comparison-card__cycle-select"
+                >
+                  {referenceCycleOptions.map((cycle) => (
+                    <option key={cycle.id} value={cycle.id}>
+                      {cycle.displayLabel || cycle.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -445,7 +647,7 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
             currentValues={selectedAxes.map((axis) => axis.current ?? 0)}
             referenceValues={selectedAxes.map((axis) => axis.reference ?? 0)}
             currentLabel={currentCycleLabel}
-            referenceLabel={referenceCycleLabel}
+            referenceLabel={isBenchmarkComparison ? benchmarkReferenceLabel : referenceCycleLabel}
           />
         </div>
 
@@ -454,14 +656,14 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
             <span>Score general</span>
             <strong>{comparisonData.summary.currentScore}/100</strong>
             <small>
-              {comparisonData.summary.delta >= 0 ? `+${comparisonData.summary.delta}` : comparisonData.summary.delta} vs {referenceCycleLabel}
+              {comparisonData.summary.delta >= 0 ? `+${comparisonData.summary.delta}` : comparisonData.summary.delta} vs {isBenchmarkComparison ? benchmarkReferenceLabel : referenceCycleLabel}
             </small>
           </article>
 
           <article className="benchmark-comparison-card__reference-score-card benchmark-comparison-card__score-card--soft">
-            <span>Reference score</span>
+            <span>{isBenchmarkComparison ? "Cohort score" : "Reference score"}</span>
             <strong>{comparisonData.summary.referenceScore}/100</strong>
-            <small>{referenceCycleLabel}</small>
+            <small>{isBenchmarkComparison ? benchmarkReferenceLabel : referenceCycleLabel}</small>
           </article>
 
           <LevelBars
@@ -475,8 +677,9 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
 
       <footer className="benchmark-comparison-card__footer">
         <span>{currentCycleLabel} selected as current snapshot</span>
-        <span>{referenceCycleLabel} used as benchmark reference</span>
+        <span>{isBenchmarkComparison ? `${benchmarkReferenceLabel} aggregated from peer snapshots` : `${referenceCycleLabel} used as benchmark reference`}</span>
       </footer>
     </section>
   );
 }
+

@@ -1,0 +1,24 @@
+.benchmark-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+.benchmark-page__content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.benchmark-page__card {
+  max-width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .benchmark-page__content {
+    padding: 16px;
+  }
+}

@@ -6,6 +6,7 @@ import {
   fallbackRecommendationsData,
   fallbackResultsData
 } from "../mock/analyticsFallback";
+import { loadComparisonMock } from "../mock/benchmarkComparisonMock";
 
 // A base da API vem do ambiente para permitir troca de servidor sem editar o código.
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
@@ -60,7 +61,10 @@ function buildComparisonQuery(filters = {}) {
 
   if (filters.organizationId) params.set("organization_id", filters.organizationId);
   if (filters.questionnaireId) params.set("questionnaire_id", filters.questionnaireId);
-  if (filters.stageScope) params.set("stage_scope", filters.stageScope);
+  if (filters.category) params.set("organization_category", filters.category);
+  if (filters.size) params.set("organization_size", filters.size);
+  if (filters.type) params.set("organization_type", filters.type);
+  if (filters.targetAudience) params.set("target_audience", filters.targetAudience);
   if (filters.referenceMode) params.set("reference_mode", filters.referenceMode);
   if (filters.referenceQuestionnaireId) {
     params.set("reference_questionnaire_id", filters.referenceQuestionnaireId);
@@ -559,11 +563,35 @@ function normalizeComparison(payload) {
     }))
   }));
 
+  const normalizedBenchmarkState = {
+    code: payload.benchmark_state?.code || payload.selection?.benchmark_state?.code || "ready",
+    title: payload.benchmark_state?.title || payload.selection?.benchmark_state?.title || "",
+    message: payload.benchmark_state?.message || payload.selection?.benchmark_state?.message || "",
+    errorCode:
+      payload.benchmark_state?.error_code || payload.selection?.benchmark_state?.error_code || "",
+    minCompanyThreshold:
+      payload.benchmark_state?.min_company_threshold ||
+      payload.selection?.benchmark_state?.min_company_threshold ||
+      5,
+    companyCount:
+      payload.benchmark_state?.company_count ||
+      payload.selection?.benchmark_state?.company_count ||
+      payload.selection?.reference_context?.company_count ||
+      0,
+    snapshotCount:
+      payload.benchmark_state?.snapshot_count ||
+      payload.selection?.benchmark_state?.snapshot_count ||
+      payload.selection?.reference_context?.snapshot_count ||
+      0
+  };
+
   return {
     organization: payload.organization,
     scope: payload.scope,
+    benchmarkState: normalizedBenchmarkState,
     selection: {
       referenceMode: payload.selection?.reference_mode || "first-submission",
+      referenceContext: payload.selection?.reference_context || null,
       currentCycle: {
         id: currentCycleId,
         label:
@@ -639,6 +667,11 @@ export async function loadAnalyticsBundle(filters = {}) {
 export async function loadComparisonAnalytics(filters = {}) {
   const payload = await fetchComparisonAnalytics(filters);
   return normalizeComparison(payload);
+}
+
+// Carrega um payload mock para comparação (uso temporário, sem dependência de backend).
+export function loadComparisonMockAnalytics(filters = {}) {
+  return normalizeComparison(loadComparisonMock(filters));
 }
 
 // Entrega um conjunto de dados de demonstração quando o backend não estiver disponível.
