@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { PlatformLayout } from "./components/PlatformLayout";
 import { CreateAccountPage } from "./pages/CreateAccountPage";
 import { AssessmentPage } from "./pages/AssessmentPage";
+import { BenchmarkPage } from "./pages/BenchmarkPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -34,6 +35,7 @@ function getScreenFromHash() {
   if (hash === "results") return "results";
   if (hash === "recommendations") return "recommendations";
   if (hash === "history") return "history";
+  if (hash === "benchmark") return "benchmark";
   if (hash === "settings") return "settings";
   return "login";
 }
@@ -108,6 +110,7 @@ export default function App() {
     "results",
     "recommendations",
     "history",
+    "benchmark",
     "settings"
   ].includes(screen);
 
@@ -542,6 +545,16 @@ export default function App() {
           data={analytics.history}
           loading={analytics.loading}
           filters={analyticsFilters}
+        />
+      )
+    },
+    benchmark: {
+      title: "Benchmark Comparison",
+      subtitle: "Compare your organization's maturity against peer cohorts.",
+      component: (
+        <BenchmarkPage
+          filters={analyticsFilters}
+          organizationOptions={user?.organizations || []}
         />
       )
     },
