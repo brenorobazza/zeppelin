@@ -351,6 +351,22 @@ function normalizeHistory(payload) {
 }
 
 function normalizeComparison(payload) {
+  function formatCycleLabel(index, label) {
+    const baseLabel = label || "Cycle";
+    return `Cycle ${index + 1} - ${baseLabel}`;
+  }
+
+  const availableCycles = (payload.selection?.available_cycles || []).map((cycle, index) => ({
+    id: cycle.id != null ? String(cycle.id) : "",
+    label: cycle.label,
+    displayLabel: formatCycleLabel(index, cycle.label),
+    appliedDate: cycle.applied_date || null,
+    answeredPractices: cycle.answered_practices || 0
+  }));
+
+  const currentCycleId = payload.selection?.current_cycle?.id ? String(payload.selection.current_cycle.id) : "";
+  const referenceCycleId = payload.selection?.reference_cycle?.id ? String(payload.selection.reference_cycle.id) : "";
+
   const lensEntries = Object.entries(payload.lenses || {}).map(([key, lens]) => ({
     key,
     title: lens.title,
@@ -373,23 +389,24 @@ function normalizeComparison(payload) {
     selection: {
       referenceMode: payload.selection?.reference_mode || "first-submission",
       currentCycle: {
-        id: payload.selection?.current_cycle?.id ? String(payload.selection.current_cycle.id) : "",
-        label: payload.selection?.current_cycle?.label || "",
+        id: currentCycleId,
+        label:
+          availableCycles.find((cycle) => cycle.id === currentCycleId)?.displayLabel ||
+          payload.selection?.current_cycle?.label ||
+          "",
         appliedDate: payload.selection?.current_cycle?.applied_date || null,
         answeredPractices: payload.selection?.current_cycle?.answered_practices || 0
       },
       referenceCycle: {
-        id: payload.selection?.reference_cycle?.id ? String(payload.selection.reference_cycle.id) : "",
-        label: payload.selection?.reference_cycle?.label || "",
+        id: referenceCycleId,
+        label:
+          availableCycles.find((cycle) => cycle.id === referenceCycleId)?.displayLabel ||
+          payload.selection?.reference_cycle?.label ||
+          "",
         appliedDate: payload.selection?.reference_cycle?.applied_date || null,
         answeredPractices: payload.selection?.reference_cycle?.answered_practices || 0
       },
-      availableCycles: (payload.selection?.available_cycles || []).map((cycle) => ({
-        id: cycle.id != null ? String(cycle.id) : "",
-        label: cycle.label,
-        appliedDate: cycle.applied_date || null,
-        answeredPractices: cycle.answered_practices || 0
-      }))
+      availableCycles
     },
     summary: {
       currentScore: payload.summary?.current_score ?? 0,

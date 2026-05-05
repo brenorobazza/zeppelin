@@ -238,7 +238,10 @@ function normalizeAxisValues(axes = []) {
 function getCycleLabel(comparisonData, cycleId) {
   return (
     comparisonData?.selection?.availableCycles?.find((cycle) => String(cycle.id) === String(cycleId))
-      ?.label || ""
+      ?.displayLabel ||
+    comparisonData?.selection?.availableCycles?.find((cycle) => String(cycle.id) === String(cycleId))
+      ?.label ||
+    ""
   );
 }
 
@@ -408,7 +411,7 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
               >
                 {availableCycles.map((cycle) => (
                   <option key={cycle.id} value={cycle.id}>
-                    {cycle.label}
+                    {cycle.displayLabel || cycle.label}
                   </option>
                 ))}
               </select>
@@ -424,7 +427,7 @@ export function BenchmarkComparisonCard({ className = "", filters = {} }) {
               >
                 {referenceCycleOptions.map((cycle) => (
                   <option key={cycle.id} value={cycle.id}>
-                    {cycle.label}
+                    {cycle.displayLabel || cycle.label}
                   </option>
                 ))}
               </select>
