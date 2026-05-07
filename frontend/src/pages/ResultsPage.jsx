@@ -331,9 +331,6 @@ function renderInsightList(items, variant) {
     <ul className="insight-list">
       {items.map((item) => (
         <li key={item.id} className="insight-item">
-          <small>
-            {item.stage} / {item.questionId}
-          </small>
           <h4>{buildInsightTitle(item, variant)}</h4>
           <p>{buildInsightDescription(item, variant)}</p>
         </li>
@@ -373,18 +370,54 @@ const ADOPTION_LEVEL_COLORS = {
   "process-level": "#96c97e"
 };
 
+const ADOPTION_STAGE_LABELS = {
+  agile: {
+    chartLabel: "Agile R&D",
+    shortLabel: "Agile R&D",
+    longLabel: "Agile R&D Organization"
+  },
+  ci: {
+    chartLabel: "CI",
+    shortLabel: "CI",
+    longLabel: "Continuous Integration"
+  },
+  cd: {
+    chartLabel: "CD",
+    shortLabel: "CD",
+    longLabel: "Continuous Deployment"
+  },
+  experimentation: {
+    chartLabel: "Exp. system",
+    shortLabel: "Exp. system",
+    longLabel: "R&D as an Experiment System"
+  },
+  organization: {
+    chartLabel: "Organization",
+    shortLabel: "Organization",
+    longLabel: "Combined organizational reading"
+  }
+};
+
+function getAdoptionStagePresentation(stageKey, fallbackTitle) {
+  return (
+    ADOPTION_STAGE_LABELS[stageKey] || {
+      chartLabel: fallbackTitle,
+      shortLabel: fallbackTitle,
+      longLabel: fallbackTitle
+    }
+  );
+}
+
 function buildStageAdoptionColumns(overview) {
-  const stageDefinitions = [
-    { key: "ciCount", label: "Continuous Integration", shortLabel: "CI" },
-    { key: "cdCount", label: "Continuous Deployment", shortLabel: "CD" }
-  ];
+  const stageDefinitions = overview.stages || [];
 
   return stageDefinitions.map((stage) => {
-    const total = overview.totals?.[stage.key] || 0;
+    const countKey = `${stage.key}Count`;
+    const total = overview.totals?.[countKey] || 0;
     const segments = overview.levels.map((level) => {
-      const count = level[stage.key] || 0;
+      const count = level[countKey] || 0;
       return {
-        key: `${stage.key}-${level.key}`,
+        key: `${countKey}-${level.key}`,
         label: level.label,
         count,
         percentage: total ? (count / total) * 100 : 0,
@@ -393,7 +426,10 @@ function buildStageAdoptionColumns(overview) {
     });
 
     return {
-      ...stage,
+      key: countKey,
+      label: stage.title,
+      stageKey: stage.key,
+      ...getAdoptionStagePresentation(stage.key, stage.title),
       total,
       segments
     };
@@ -402,7 +438,7 @@ function buildStageAdoptionColumns(overview) {
 
 function AdoptionLevelStageChart({ overview }) {
   if (!overview.levels?.length) {
-    return <div className="empty-state">No CI/CD adoption breakdown is available for this cycle.</div>;
+    return <div className="empty-state">No stage adoption breakdown is available for this cycle.</div>;
   }
 
   const columns = buildStageAdoptionColumns(overview);
@@ -416,34 +452,49 @@ function AdoptionLevelStageChart({ overview }) {
           ))}
         </div>
 
-        <div className="adoption-stage-chart__bars">
-          {[100, 75, 50, 25].map((tick) => (
-            <div
-              key={tick}
-              className="adoption-stage-chart__gridline"
-              style={{ bottom: `${tick}%` }}
-            />
-          ))}
+        <div className="adoption-stage-chart__surface">
+          <div
+            className="adoption-stage-chart__bars"
+            style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}
+          >
+            {[100, 75, 50, 25].map((tick) => (
+              <div
+                key={tick}
+                className="adoption-stage-chart__gridline"
+                style={{ bottom: `${tick}%` }}
+              />
+            ))}
 
-          {columns.map((column) => (
-            <div key={column.key} className="adoption-stage-chart__bar-group">
-              <div className="adoption-stage-chart__bar">
-                {column.segments.map((segment) => (
-                  <div
-                    key={segment.key}
-                    className="adoption-stage-chart__segment"
-                    style={{
-                      height: `${segment.percentage}%`,
-                      background: segment.color
-                    }}
-                    title={`${column.label}: ${segment.label} (${segment.count} practices)`}
-                  />
-                ))}
+            {columns.map((column) => (
+              <div key={column.key} className="adoption-stage-chart__bar-group">
+                <div className="adoption-stage-chart__bar">
+                  {column.segments.map((segment) => (
+                    <div
+                      key={segment.key}
+                      className="adoption-stage-chart__segment"
+                      style={{
+                        height: `${segment.percentage}%`,
+                        background: segment.color
+                      }}
+                      title={`${column.label}: ${segment.label} (${segment.count} practices)`}
+                    />
+                  ))}
+                </div>
               </div>
-              <strong>{column.label}</strong>
-              <small>{column.total} practices</small>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          <div
+            className="adoption-stage-chart__captions"
+            style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}
+          >
+            {columns.map((column) => (
+              <div key={`${column.key}-caption`} className="adoption-stage-chart__caption">
+                <strong>{column.chartLabel}</strong>
+                <small>{column.total} practices</small>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -526,7 +577,6 @@ export function ResultsPage({ data, overview, loading }) {
         </div>
 
         <article className="insight-item">
-          <small>Interpretive summary</small>
           <h4>How to interpret the current diagnosis</h4>
           <p>{analyticalNarrative}</p>
         </article>
@@ -570,9 +620,8 @@ export function ResultsPage({ data, overview, loading }) {
           <div>
             <h3>Adoption by level and stage</h3>
             <p>
-              This view reproduces the CI/CD instrument reading by showing how submitted
-              practices are distributed across adoption levels in Continuous Integration,
-              Continuous Deployment and the combined organizational reading.
+              This view shows how submitted practices are distributed across adoption levels in
+              each assessed stage and in the combined organizational reading.
             </p>
           </div>
         </div>
@@ -587,12 +636,39 @@ export function ResultsPage({ data, overview, loading }) {
                     <thead>
                       <tr>
                         <th rowSpan="2">Adoption level</th>
-                        <th colSpan="3">Number of CSE practices</th>
+                        <th colSpan="5">Number of CSE practices</th>
                       </tr>
                       <tr>
-                        <th>Continuous Integration</th>
-                        <th>Continuous Deployment</th>
-                        <th>Organization</th>
+                        <th>
+                          <div className="table-stage-head">
+                            <strong>Agile R&amp;D</strong>
+                            <span>Agile R&amp;D Organization</span>
+                          </div>
+                        </th>
+                        <th>
+                          <div className="table-stage-head">
+                            <strong>CI</strong>
+                            <span>Continuous Integration</span>
+                          </div>
+                        </th>
+                        <th>
+                          <div className="table-stage-head">
+                            <strong>CD</strong>
+                            <span>Continuous Deployment</span>
+                          </div>
+                        </th>
+                        <th>
+                          <div className="table-stage-head">
+                            <strong>Experiment system</strong>
+                            <span>R&amp;D as an Experiment System</span>
+                          </div>
+                        </th>
+                        <th>
+                          <div className="table-stage-head">
+                            <strong>Organization</strong>
+                            <span>Combined reading</span>
+                          </div>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -601,8 +677,10 @@ export function ResultsPage({ data, overview, loading }) {
                           <td>
                             <strong>{level.label}</strong>
                           </td>
+                          <td>{level.agileCount}</td>
                           <td>{level.ciCount}</td>
                           <td>{level.cdCount}</td>
+                          <td>{level.experimentationCount}</td>
                           <td>{level.organizationCount}</td>
                         </tr>
                       ))}
@@ -615,45 +693,76 @@ export function ResultsPage({ data, overview, loading }) {
                   <div className="results-adoption-summary">
                     <article className="results-adoption-summary__card">
                       <span>Total CSE practices</span>
-                      <div className="results-adoption-summary__values">
-                        <strong>CI: {adoptionLevelStageOverview.totals.ciCount}</strong>
-                        <strong>CD: {adoptionLevelStageOverview.totals.cdCount}</strong>
-                        <strong>
-                          Organization: {adoptionLevelStageOverview.totals.organizationCount}
-                        </strong>
-                      </div>
+                      <dl className="results-adoption-summary__list">
+                        <div className="results-adoption-summary__row">
+                          <dt>Agile R&amp;D</dt>
+                          <dd>{adoptionLevelStageOverview.totals.agileCount}</dd>
+                        </div>
+                        <div className="results-adoption-summary__row">
+                          <dt>CI</dt>
+                          <dd>{adoptionLevelStageOverview.totals.ciCount}</dd>
+                        </div>
+                        <div className="results-adoption-summary__row">
+                          <dt>CD</dt>
+                          <dd>{adoptionLevelStageOverview.totals.cdCount}</dd>
+                        </div>
+                        <div className="results-adoption-summary__row">
+                          <dt>Experiment system</dt>
+                          <dd>{adoptionLevelStageOverview.totals.experimentationCount}</dd>
+                        </div>
+                        <div className="results-adoption-summary__row">
+                          <dt>Organization</dt>
+                          <dd>{adoptionLevelStageOverview.totals.organizationCount}</dd>
+                        </div>
+                      </dl>
                     </article>
 
                     <article className="results-adoption-summary__card results-adoption-summary__card--highlight">
                       <span>Degree of adoption</span>
-                      <div className="results-adoption-summary__values">
-                        <strong>
-                          CI: {formatDimensionValue(adoptionLevelStageOverview.degreeOfAdoption.ciScore)}
-                        </strong>
-                        <strong>
-                          CD: {formatDimensionValue(adoptionLevelStageOverview.degreeOfAdoption.cdScore)}
-                        </strong>
-                        <strong>
-                          Organization:{" "}
-                          {formatDimensionValue(
-                            adoptionLevelStageOverview.degreeOfAdoption.organizationScore
-                          )}
-                        </strong>
-                      </div>
+                      <dl className="results-adoption-summary__list">
+                        <div className="results-adoption-summary__row">
+                          <dt>Agile R&amp;D</dt>
+                          <dd>{formatDimensionValue(adoptionLevelStageOverview.degreeOfAdoption.agileScore)}</dd>
+                        </div>
+                        <div className="results-adoption-summary__row">
+                          <dt>CI</dt>
+                          <dd>{formatDimensionValue(adoptionLevelStageOverview.degreeOfAdoption.ciScore)}</dd>
+                        </div>
+                        <div className="results-adoption-summary__row">
+                          <dt>CD</dt>
+                          <dd>{formatDimensionValue(adoptionLevelStageOverview.degreeOfAdoption.cdScore)}</dd>
+                        </div>
+                        <div className="results-adoption-summary__row">
+                          <dt>Experiment system</dt>
+                          <dd>
+                            {formatDimensionValue(
+                              adoptionLevelStageOverview.degreeOfAdoption.experimentationScore
+                            )}
+                          </dd>
+                        </div>
+                        <div className="results-adoption-summary__row">
+                          <dt>Organization</dt>
+                          <dd>
+                            {formatDimensionValue(
+                              adoptionLevelStageOverview.degreeOfAdoption.organizationScore
+                            )}
+                          </dd>
+                        </div>
+                      </dl>
                     </article>
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="empty-state">No CI/CD adoption breakdown is available for this cycle.</p>
+              <p className="empty-state">No stage adoption breakdown is available for this cycle.</p>
             )}
           </article>
 
           <article className="panel support-panel">
-            <h3>Practices adopted by level and CI/CD stage</h3>
+            <h3>Practices adopted by level and stage</h3>
             <p>
               The chart highlights how the current answered practices are distributed across the
-              adoption levels in Continuous Integration and Continuous Deployment.
+              adoption levels in each assessed CSE stage.
             </p>
             <AdoptionLevelStageChart overview={adoptionLevelStageOverview} />
           </article>
@@ -784,7 +893,6 @@ export function ResultsPage({ data, overview, loading }) {
                 <div className="dimension-card__head">
                   <div>
                     <h4>{item.name}</h4>
-                    <span>{item.focus}</span>
                   </div>
                   <strong>{item.score}</strong>
                 </div>
@@ -811,23 +919,6 @@ export function ResultsPage({ data, overview, loading }) {
         ) : (
           <p className="empty-state">No practice-group evidence is available in the current payload.</p>
         )}
-      </section>
-
-      <section className="grid-3">
-        <article className="panel">
-          <h3>Practices supporting the current maturity position</h3>
-          {renderInsightList(view.strengths, "strengths")}
-        </article>
-
-        <article className="panel">
-          <h3>Practices constraining progression to the next CSE stage</h3>
-          {renderInsightList(view.bottlenecks, "bottlenecks")}
-        </article>
-
-        <article className="panel">
-          <h3>Analytical priorities derived from the current diagnosis</h3>
-          {renderInsightList(view.opportunities, "opportunities")}
-        </article>
       </section>
     </>
   );

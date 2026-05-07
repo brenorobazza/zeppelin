@@ -154,23 +154,37 @@ function normalizeResults(payload) {
       overallLevel: payload.summary.overall_level
     },
     adoptionLevelStageOverview: {
+      stages: (payload.adoption_level_stage_overview?.stages || []).map((item) => ({
+        key: item.key,
+        title: item.title
+      })),
       levels: (payload.adoption_level_stage_overview?.levels || []).map((item) => ({
         key: item.key,
         label: item.label,
         weight: item.weight,
+        agileCount: item.agile_count,
         ciCount: item.ci_count,
         cdCount: item.cd_count,
+        experimentationCount: item.experimentation_count,
         organizationCount: item.organization_count
       })),
       totals: {
+        agileCount: payload.adoption_level_stage_overview?.totals?.agile_count ?? 0,
         ciCount: payload.adoption_level_stage_overview?.totals?.ci_count ?? 0,
         cdCount: payload.adoption_level_stage_overview?.totals?.cd_count ?? 0,
+        experimentationCount:
+          payload.adoption_level_stage_overview?.totals?.experimentation_count ?? 0,
         organizationCount:
           payload.adoption_level_stage_overview?.totals?.organization_count ?? 0
       },
       degreeOfAdoption: {
+        agileScore:
+          payload.adoption_level_stage_overview?.degree_of_adoption?.agile_score ?? null,
         ciScore: payload.adoption_level_stage_overview?.degree_of_adoption?.ci_score ?? null,
         cdScore: payload.adoption_level_stage_overview?.degree_of_adoption?.cd_score ?? null,
+        experimentationScore:
+          payload.adoption_level_stage_overview?.degree_of_adoption?.experimentation_score ??
+          null,
         organizationScore:
           payload.adoption_level_stage_overview?.degree_of_adoption?.organization_score ?? null
       }

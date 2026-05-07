@@ -29,6 +29,16 @@ def make_questionnaire(questionnaire_id, days_ago):
     )
 
 
+def make_organization(type_name):
+    return SimpleNamespace(
+        id=1,
+        name="Zeppelin Labs",
+        organization_type=SimpleNamespace(name=type_name),
+        organization_size=None,
+        age=48,
+    )
+
+
 def make_answer(
     answer_id,
     code,
@@ -127,6 +137,58 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         score = self.service._score_for_answers(self.current_answers)
 
         self.assertEqual(score, 55)
+
+    def test_score_for_answers_uses_calibrated_weights_by_organization_type(self):
+        process_answer = [
+            make_answer(
+                99,
+                "CI.99",
+                "A process-level practice.",
+                "Continuous Integration",
+                "Integration practices",
+                self.service.adopted_levels[3],
+                self.current_cycle,
+            )
+        ]
+
+        startup_score = self.service._score_for_answers(
+            process_answer,
+            organization=make_organization("Startup"),
+        )
+        software_house_score = self.service._score_for_answers(
+            process_answer,
+            organization=make_organization("Software House"),
+        )
+        it_department_score = self.service._score_for_answers(
+            process_answer,
+            organization=make_organization("Organization with IT Department"),
+        )
+
+        self.assertEqual(startup_score, 61)
+        self.assertEqual(software_house_score, 60)
+        self.assertEqual(it_department_score, 68)
+
+    def test_score_for_answers_falls_back_to_software_house_scale_for_unknown_type(
+        self,
+    ):
+        process_answer = [
+            make_answer(
+                100,
+                "CI.100",
+                "A process-level practice.",
+                "Continuous Integration",
+                "Integration practices",
+                self.service.adopted_levels[3],
+                self.current_cycle,
+            )
+        ]
+
+        score = self.service._score_for_answers(
+            process_answer,
+            organization=make_organization("Unknown Organization Type"),
+        )
+
+        self.assertEqual(score, 60)
 
     def test_score_for_answers_treats_missing_responses_as_zero_when_total_is_provided(
         self,
@@ -238,13 +300,7 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         self.assertEqual(dimension_name, "Development")
 
     def test_dashboard_payload_uses_current_context_data(self):
-        organization = SimpleNamespace(
-            id=1,
-            name="Zeppelin Labs",
-            organization_type=SimpleNamespace(name="Software"),
-            organization_size=None,
-            age=48,
-        )
+        organization = make_organization("Startup")
         request = SimpleNamespace(query_params={}, user=None)
 
         with patch.object(
@@ -270,7 +326,7 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
 
         self.assertEqual(payload["organization"]["name"], "Zeppelin Labs")
         self.assertEqual(payload["cycle"]["id"], self.current_cycle.id)
-        self.assertEqual(payload["snapshot"]["overall_score"], 28)
+        self.assertEqual(payload["snapshot"]["overall_score"], 29)
         self.assertEqual(
             payload["snapshot"]["overall_level"],
             "Realized at project/product level",
@@ -280,16 +336,10 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         self.assertEqual(payload["snapshot"]["recommendation_count"], 1)
         self.assertEqual(len(payload["stage_scores"]), 2)
         self.assertEqual(payload["stage_scores"][0]["score"], 50)
-        self.assertEqual(payload["stage_scores"][1]["score"], 5)
+        self.assertEqual(payload["stage_scores"][1]["score"], 8)
 
     def test_results_payload_reports_questionnaire_status(self):
-        organization = SimpleNamespace(
-            id=1,
-            name="Zeppelin Labs",
-            organization_type=SimpleNamespace(name="Software"),
-            organization_size=None,
-            age=48,
-        )
+        organization = make_organization("Startup")
         request = SimpleNamespace(query_params={}, user=None)
 
         with patch.object(
@@ -311,16 +361,43 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
             payload = self.service.get_results_payload(request)
 
         self.assertEqual(payload["summary"]["questionnaire_status"], "Incomplete")
+        self.assertEqual(payload["summary"]["overall_score"], 58)
 
-    def test_adoption_level_stage_overview_reproduces_ci_cd_counts(self):
-        overview = self.service._build_adoption_level_stage_overview(self.all_answers)
+    def test_adoption_level_stage_overview_reproduces_all_stage_counts(self):
+        agile_answer = make_answer(
+            5,
+            "AO.01",
+            "Agile roles are defined in the organization.",
+            "Agile R&D Organization",
+            "Agile practices",
+            self.service.adopted_levels[2],
+            self.current_cycle,
+        )
+        experimentation_answer = make_answer(
+            6,
+            "IS.01",
+            "Customer feedback is captured for experimentation.",
+            "R&D as an Experiment System",
+            "Experimentation practices",
+            self.service.adopted_levels[4],
+            self.current_cycle,
+        )
+        overview = self.service._build_adoption_level_stage_overview(
+            self.all_answers + [agile_answer, experimentation_answer],
+            organization=make_organization("Organization with IT Department"),
+        )
 
+        self.assertEqual(len(overview["stages"]), 4)
+        self.assertEqual(overview["totals"]["agile_count"], 1)
         self.assertEqual(overview["totals"]["ci_count"], 2)
         self.assertEqual(overview["totals"]["cd_count"], 2)
-        self.assertEqual(overview["totals"]["organization_count"], 4)
+        self.assertEqual(overview["totals"]["experimentation_count"], 1)
+        self.assertEqual(overview["totals"]["organization_count"], 6)
+        self.assertEqual(overview["degree_of_adoption"]["agile_score"], 38)
         self.assertEqual(overview["degree_of_adoption"]["ci_score"], 50)
         self.assertEqual(overview["degree_of_adoption"]["cd_score"], 30)
-        self.assertEqual(overview["degree_of_adoption"]["organization_score"], 40)
+        self.assertEqual(overview["degree_of_adoption"]["experimentation_score"], 100)
+        self.assertEqual(overview["degree_of_adoption"]["organization_score"], 50)
 
         not_adopted_row = next(
             item for item in overview["levels"] if item["label"] == "Not adopted"
@@ -332,13 +409,24 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
             item for item in overview["levels"] if item["label"] == "Institutionalized"
         )
 
+        project_row = next(
+            item
+            for item in overview["levels"]
+            if item["label"] == "Realized at project/product level"
+        )
+
         self.assertEqual(not_adopted_row["ci_count"], 1)
         self.assertEqual(not_adopted_row["cd_count"], 0)
         self.assertEqual(abandoned_row["cd_count"], 1)
         self.assertEqual(institutionalized_row["ci_count"], 1)
+        self.assertEqual(project_row["agile_count"], 1)
+        self.assertEqual(institutionalized_row["experimentation_count"], 1)
 
     def test_dimension_element_overview_groups_rows_by_dimension_and_element(self):
-        overview = self.service._build_dimension_element_overview(self.current_answers)
+        overview = self.service._build_dimension_element_overview(
+            self.current_answers,
+            organization=make_organization("Organization with IT Department"),
+        )
 
         self.assertEqual(overview["summary"]["ci_score"], 100)
         self.assertEqual(overview["summary"]["cd_score"], 22)

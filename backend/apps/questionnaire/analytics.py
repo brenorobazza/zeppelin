@@ -32,6 +32,38 @@ def load_recommendations_catalog():
 
 
 class QuestionnaireAnalyticsService:
+    DEFAULT_ORGANIZATION_TYPE_KEY = "software-house"
+    ORGANIZATION_TYPE_WEIGHT_MAP = {
+        "startup": {
+            0: 0,
+            10: 17,
+            30: 33,
+            60: 61,
+            100: 100,
+        },
+        "software-house": {
+            0: 0,
+            10: 10,
+            30: 30,
+            60: 60,
+            100: 100,
+        },
+        "organization-with-it-department": {
+            0: 0,
+            10: 22,
+            30: 38,
+            60: 68,
+            100: 100,
+        },
+    }
+    ORGANIZATION_TYPE_ALIASES = {
+        "startup": "startup",
+        "software": "software-house",
+        "software-house": "software-house",
+        "organization-with-it-department": "organization-with-it-department",
+        "organization-with-ti-department": "organization-with-it-department",
+        "organizacao-com-departamento-de-ti": "organization-with-it-department",
+    }
     # Estágios usados como recorte principal da análise do frontend atual.
     CI_CD_STAGE_NAMES = (
         "Continuous Integration",
@@ -92,13 +124,40 @@ class QuestionnaireAnalyticsService:
         "Traditional Development": 11,
         "Unclassified": 999,
     }
-    INSTRUMENT_WEIGHT_BY_PERCENTAGE = {
-        0: 0,
-        10: 22,
-        30: 38,
-        60: 68,
-        100: 100,
-    }
+    ADOPTION_OVERVIEW_STAGES = (
+        {
+            "key": "agile",
+            "labels": (
+                "Agile R&D Organization",
+                "Desenvolvimento Agil",
+            ),
+            "title": "Agile R&D Organization",
+        },
+        {
+            "key": "ci",
+            "labels": (
+                "Continuous Integration",
+                "Integracao Continua",
+            ),
+            "title": "Continuous Integration",
+        },
+        {
+            "key": "cd",
+            "labels": (
+                "Continuous Deployment",
+                "Entrega Continua",
+            ),
+            "title": "Continuous Deployment",
+        },
+        {
+            "key": "experimentation",
+            "labels": (
+                "R&D as an Experiment System",
+                "Experimentacao Continua",
+            ),
+            "title": "R&D as an Experiment System",
+        },
+    )
     INSTRUMENT_PRACTICE_CATALOG = {
         "CI.01": {
             "dimension": "Development",
@@ -200,6 +259,7 @@ class QuestionnaireAnalyticsService:
     # Monta a resposta resumida do dashboard, focada em resultado geral do ciclo atual.
     def get_dashboard_payload(self, request):
         context = self._resolve_context(request)
+        organization = context["organization"]
         answers = context["current_answers"]
         selected_answers = context.get("selected_answers", answers)
         selected_cycle_empty = context.get("selected_cycle_empty", False)
@@ -208,21 +268,25 @@ class QuestionnaireAnalyticsService:
         stage_scores = self._build_stage_scores(
             answers,
             expected_stage_counts=expected_stage_counts,
+            organization=organization,
         )
-        recommendations = self._build_recommendations(answers)
+        recommendations = self._build_recommendations(
+            answers, organization=organization
+        )
         history_cycles = self._build_history_cycles(
-            context["all_answers"], context["organization"]
+            context["all_answers"], organization
         )
         overall_score = self._score_for_answers(
             answers,
             expected_total=expected_statement_count,
+            organization=organization,
         )
         questionnaire_status = self._questionnaire_status(
             len(answers), expected_statement_count
         )
 
         return {
-            "organization": self._serialize_organization(context["organization"]),
+            "organization": self._serialize_organization(organization),
             "cycle": self._serialize_cycle(
                 context["questionnaire"],
                 selected_answers if context["questionnaire"] is not None else answers,
@@ -231,7 +295,10 @@ class QuestionnaireAnalyticsService:
             "selected_cycle_empty": selected_cycle_empty,
             "snapshot": {
                 "overall_score": overall_score,
-                "overall_level": self._resolve_average_level(overall_score),
+                "overall_level": self._resolve_average_level(
+                    overall_score,
+                    organization=organization,
+                ),
                 "answered_practices": len(answers),
                 "questionnaire_status": questionnaire_status,
                 "recommendation_count": len(recommendations),
@@ -243,21 +310,24 @@ class QuestionnaireAnalyticsService:
             },
             "stage_scores": stage_scores,
             "adoption_levels": self._build_adoption_distribution(answers),
-            "strengths": self._build_strengths(answers),
-            "bottlenecks": self._build_bottlenecks(answers),
+            "strengths": self._build_strengths(answers, organization=organization),
+            "bottlenecks": self._build_bottlenecks(answers, organization=organization),
             "recommendations_preview": recommendations[:3],
         }
 
     # Monta a resposta detalhada da tela de resultados, com foco em forças e gargalos.
     def get_results_payload(self, request):
         context = self._resolve_context(request)
+        organization = context["organization"]
         answers = context["current_answers"]
         selected_answers = context.get("selected_answers", answers)
         selected_cycle_empty = context.get("selected_cycle_empty", False)
         expected_statement_count = context.get("expected_statement_count", len(answers))
-        stage_scores = self._build_stage_scores(answers)
-        recommendations = self._build_recommendations(answers)
-        overall_score = self._score_for_answers(answers)
+        stage_scores = self._build_stage_scores(answers, organization=organization)
+        recommendations = self._build_recommendations(
+            answers, organization=organization
+        )
+        overall_score = self._score_for_answers(answers, organization=organization)
         questionnaire_status = self._questionnaire_status(
             len(answers), expected_statement_count
         )
@@ -268,7 +338,7 @@ class QuestionnaireAnalyticsService:
         )
 
         return {
-            "organization": self._serialize_organization(context["organization"]),
+            "organization": self._serialize_organization(organization),
             "cycle": self._serialize_cycle(
                 context["questionnaire"],
                 selected_answers if context["questionnaire"] is not None else answers,
@@ -277,30 +347,45 @@ class QuestionnaireAnalyticsService:
             "selected_cycle_empty": selected_cycle_empty,
             "summary": {
                 "overall_score": overall_score,
-                "overall_level": self._resolve_average_level(overall_score),
+                "overall_level": self._resolve_average_level(
+                    overall_score,
+                    organization=organization,
+                ),
                 "answered_practices": len(answers),
                 "questionnaire_status": questionnaire_status,
                 "stage_gap": stage_gap,
             },
             "stage_scores": stage_scores,
             "adoption_level_stage_overview": self._build_adoption_level_stage_overview(
-                answers
+                answers,
+                organization=organization,
             ),
-            "dimensions": self._build_dimension_results(answers),
-            "dimension_overview": self._build_dimension_stage_overview(answers),
-            "element_overview": self._build_dimension_element_overview(answers),
-            "strengths": self._build_strengths(answers),
-            "bottlenecks": self._build_bottlenecks(answers),
+            "dimensions": self._build_dimension_results(
+                answers, organization=organization
+            ),
+            "dimension_overview": self._build_dimension_stage_overview(
+                answers,
+                organization=organization,
+            ),
+            "element_overview": self._build_dimension_element_overview(
+                answers,
+                organization=organization,
+            ),
+            "strengths": self._build_strengths(answers, organization=organization),
+            "bottlenecks": self._build_bottlenecks(answers, organization=organization),
             "opportunities": recommendations[:5],
         }
 
     # Gera o roadmap acionável a partir das práticas com menor maturidade.
     def get_recommendations_payload(self, request):
         context = self._resolve_context(request)
+        organization = context["organization"]
         answers = context["current_answers"]
         selected_answers = context.get("selected_answers", answers)
         selected_cycle_empty = context.get("selected_cycle_empty", False)
-        recommendations = self._build_recommendations(answers)
+        recommendations = self._build_recommendations(
+            answers, organization=organization
+        )
 
         grouped_tracks = []
         for lane in self.RECOMMENDATION_TRACKS:
@@ -308,7 +393,7 @@ class QuestionnaireAnalyticsService:
             grouped_tracks.append({**lane, "count": len(items), "items": items})
 
         return {
-            "organization": self._serialize_organization(context["organization"]),
+            "organization": self._serialize_organization(organization),
             "cycle": self._serialize_cycle(
                 context["questionnaire"],
                 selected_answers if context["questionnaire"] is not None else answers,
@@ -546,19 +631,19 @@ class QuestionnaireAnalyticsService:
         }
 
     # Calcula a pontuação média do conjunto de respostas.
-    def _score_for_answers(self, answers, expected_total=None):
-        percentages = [
-            answer.adopted_level_answer.percentage
+    def _score_for_answers(self, answers, expected_total=None, organization=None):
+        weights = [
+            self._instrument_weight(answer, organization=organization)
             for answer in answers
             if answer.adopted_level_answer is not None
         ]
-        total = len(percentages)
+        total = len(weights)
         if expected_total is not None:
             total = max(total, expected_total)
 
         if total == 0:
             return 0
-        return round(sum(percentages) / total)
+        return round(sum(weights) / total)
 
     def _questionnaire_status(self, answered_count, expected_total):
         if expected_total <= 0:
@@ -566,18 +651,26 @@ class QuestionnaireAnalyticsService:
         return "Complete" if answered_count >= expected_total else "Incomplete"
 
     # Traduz um score numérico para o nível de adoção mais próximo.
-    def _resolve_average_level(self, score):
+    def _resolve_average_level(self, score, organization=None):
         if not self.adopted_levels:
             return None
 
         closest = min(
             self.adopted_levels,
-            key=lambda level: abs(level.percentage - score),
+            key=lambda level: abs(
+                self._weight_for_percentage(
+                    level.percentage,
+                    organization=organization,
+                )
+                - score
+            ),
         )
         return closest.name
 
     # Agrupa as respostas por estágio e calcula os indicadores de cada grupo.
-    def _build_stage_scores(self, answers, expected_stage_counts=None):
+    def _build_stage_scores(
+        self, answers, expected_stage_counts=None, organization=None
+    ):
         grouped = defaultdict(list)
         for answer in answers:
             stage = getattr(answer.statement_answer, "sth_stage", None)
@@ -601,6 +694,7 @@ class QuestionnaireAnalyticsService:
             score = self._score_for_answers(
                 stage_answers,
                 expected_total=expected_total,
+                organization=organization,
             )
             items.append(
                 {
@@ -611,11 +705,16 @@ class QuestionnaireAnalyticsService:
                         stage_name,
                     ),
                     "score": score,
-                    "current_level": self._resolve_average_level(score),
+                    "current_level": self._resolve_average_level(
+                        score,
+                        organization=organization,
+                    ),
                     "answered_practices": len(stage_answers),
-                    "total_practices": expected_total
-                    if expected_total is not None
-                    else len(stage_answers),
+                    "total_practices": (
+                        expected_total
+                        if expected_total is not None
+                        else len(stage_answers)
+                    ),
                     "strength_count": len(
                         [
                             answer
@@ -679,7 +778,7 @@ class QuestionnaireAnalyticsService:
         return items
 
     # Seleciona as práticas mais maduras para a seção de pontos fortes.
-    def _build_strengths(self, answers, limit=3):
+    def _build_strengths(self, answers, limit=3, organization=None):
         candidates = [
             answer for answer in answers if answer.adopted_level_answer.percentage >= 60
         ]
@@ -689,10 +788,13 @@ class QuestionnaireAnalyticsService:
                 answer.statement_answer.code or "",
             )
         )
-        return [self._serialize_insight(answer) for answer in candidates[:limit]]
+        return [
+            self._serialize_insight(answer, organization=organization)
+            for answer in candidates[:limit]
+        ]
 
     # Seleciona as práticas mais críticas para a seção de gargalos.
-    def _build_bottlenecks(self, answers, limit=3):
+    def _build_bottlenecks(self, answers, limit=3, organization=None):
         candidates = [
             answer for answer in answers if answer.adopted_level_answer.percentage < 60
         ]
@@ -702,10 +804,13 @@ class QuestionnaireAnalyticsService:
                 answer.statement_answer.code or "",
             )
         )
-        return [self._serialize_insight(answer) for answer in candidates[:limit]]
+        return [
+            self._serialize_insight(answer, organization=organization)
+            for answer in candidates[:limit]
+        ]
 
     # Agrupa resultados por tema/dimensão para facilitar a leitura do diagnóstico.
-    def _build_dimension_results(self, answers):
+    def _build_dimension_results(self, answers, organization=None):
         grouped = defaultdict(list)
         for answer in answers:
             dimension_name = self._resolve_dimension_name(answer)
@@ -713,7 +818,10 @@ class QuestionnaireAnalyticsService:
 
         items = []
         for dimension_name, dimension_answers in grouped.items():
-            score = self._score_for_answers(dimension_answers)
+            score = self._score_for_answers(
+                dimension_answers,
+                organization=organization,
+            )
             strongest = max(
                 dimension_answers,
                 key=lambda answer: answer.adopted_level_answer.percentage,
@@ -732,11 +840,14 @@ class QuestionnaireAnalyticsService:
                 {
                     "key": slugify(dimension_name),
                     "name": dimension_name,
-                    "focus": ", ".join(focus_codes)
-                    if focus_codes
-                    else "Practice cluster",
+                    "focus": (
+                        ", ".join(focus_codes) if focus_codes else "Practice cluster"
+                    ),
                     "score": score,
-                    "current_level": self._resolve_average_level(score),
+                    "current_level": self._resolve_average_level(
+                        score,
+                        organization=organization,
+                    ),
                     "answered_practices": len(dimension_answers),
                     "strength": self._compact_statement(
                         strongest.statement_answer.text
@@ -744,8 +855,14 @@ class QuestionnaireAnalyticsService:
                     "bottleneck": self._compact_statement(
                         weakest.statement_answer.text
                     ),
-                    "strength_item": self._serialize_insight(strongest),
-                    "bottleneck_item": self._serialize_insight(weakest),
+                    "strength_item": self._serialize_insight(
+                        strongest,
+                        organization=organization,
+                    ),
+                    "bottleneck_item": self._serialize_insight(
+                        weakest,
+                        organization=organization,
+                    ),
                 }
             )
 
@@ -754,7 +871,7 @@ class QuestionnaireAnalyticsService:
             key=lambda item: (-item["score"], item["name"]),
         )
 
-    def _build_dimension_stage_overview(self, answers):
+    def _build_dimension_stage_overview(self, answers, organization=None):
         grouped = defaultdict(
             lambda: {
                 "organization": [],
@@ -771,7 +888,7 @@ class QuestionnaireAnalyticsService:
             dimension_name = self._resolve_dimension_name(answer)
             stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
             stage_short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
-            score = self._instrument_weight(answer)
+            score = self._instrument_weight(answer, organization=organization)
 
             grouped[dimension_name]["organization"].append(score)
             if stage_short_name in {"CI", "CD"}:
@@ -823,70 +940,82 @@ class QuestionnaireAnalyticsService:
             },
         }
 
-    def _build_adoption_level_stage_overview(self, answers):
+    def _build_adoption_level_stage_overview(self, answers, organization=None):
+        stage_name_to_key = {}
+        for stage in self.ADOPTION_OVERVIEW_STAGES:
+            for label in stage["labels"]:
+                stage_name_to_key[label] = stage["key"]
+
         stage_level_counts = {
-            "CI": defaultdict(int),
-            "CD": defaultdict(int),
+            stage["key"]: defaultdict(int) for stage in self.ADOPTION_OVERVIEW_STAGES
         }
 
         for answer in answers:
-            statement_code = getattr(answer.statement_answer, "code", "") or ""
-            if statement_code not in self.INSTRUMENT_PRACTICE_CATALOG:
-                continue
-
             stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
-            stage_short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
-            if stage_short_name not in {"CI", "CD"}:
+            stage_key = stage_name_to_key.get(stage_name)
+            if not stage_key:
                 continue
 
             level_name = getattr(answer.adopted_level_answer, "name", "") or ""
-            stage_level_counts[stage_short_name][level_name] += 1
+            stage_level_counts[stage_key][level_name] += 1
 
         rows = []
-        total_ci = 0
-        total_cd = 0
+        totals = {stage["key"]: 0 for stage in self.ADOPTION_OVERVIEW_STAGES}
         total_organization = 0
-        weighted_ci = 0
-        weighted_cd = 0
+        weighted_scores = {stage["key"]: 0 for stage in self.ADOPTION_OVERVIEW_STAGES}
         weighted_organization = 0
 
         for level in self.adopted_levels:
-            weight = self.INSTRUMENT_WEIGHT_BY_PERCENTAGE.get(
+            weight = self._weight_for_percentage(
                 level.percentage,
-                level.percentage,
+                organization=organization,
             )
-            ci_count = stage_level_counts["CI"].get(level.name, 0)
-            cd_count = stage_level_counts["CD"].get(level.name, 0)
-            organization_count = ci_count + cd_count
+            level_counts = {}
+            organization_count = 0
 
-            total_ci += ci_count
-            total_cd += cd_count
+            for stage in self.ADOPTION_OVERVIEW_STAGES:
+                count = stage_level_counts[stage["key"]].get(level.name, 0)
+                level_counts[stage["key"]] = count
+                totals[stage["key"]] += count
+                weighted_scores[stage["key"]] += count * weight
+                organization_count += count
+
             total_organization += organization_count
-            weighted_ci += ci_count * weight
-            weighted_cd += cd_count * weight
             weighted_organization += organization_count * weight
 
-            rows.append(
-                {
-                    "key": slugify(level.name),
-                    "label": level.name,
-                    "weight": weight,
-                    "ci_count": ci_count,
-                    "cd_count": cd_count,
-                    "organization_count": organization_count,
-                }
-            )
+            row = {
+                "key": slugify(level.name),
+                "label": level.name,
+                "weight": weight,
+                "organization_count": organization_count,
+            }
+            for stage in self.ADOPTION_OVERVIEW_STAGES:
+                row[f"{stage['key']}_count"] = level_counts[stage["key"]]
+
+            rows.append(row)
 
         return {
+            "stages": [
+                {"key": stage["key"], "title": stage["title"]}
+                for stage in self.ADOPTION_OVERVIEW_STAGES
+            ],
             "levels": rows,
             "totals": {
-                "ci_count": total_ci,
-                "cd_count": total_cd,
+                **{
+                    f"{stage['key']}_count": totals[stage["key"]]
+                    for stage in self.ADOPTION_OVERVIEW_STAGES
+                },
                 "organization_count": total_organization,
             },
             "degree_of_adoption": {
-                "ci_score": round(weighted_ci / total_ci) if total_ci else None,
-                "cd_score": round(weighted_cd / total_cd) if total_cd else None,
+                **{
+                    f"{stage['key']}_score": (
+                        round(weighted_scores[stage["key"]] / totals[stage["key"]])
+                        if totals[stage["key"]]
+                        else None
+                    )
+                    for stage in self.ADOPTION_OVERVIEW_STAGES
+                },
                 "organization_score": (
                     round(weighted_organization / total_organization)
                     if total_organization
@@ -895,7 +1024,7 @@ class QuestionnaireAnalyticsService:
             },
         }
 
-    def _build_dimension_element_overview(self, answers):
+    def _build_dimension_element_overview(self, answers, organization=None):
         grouped = defaultdict(
             lambda: {
                 "organization": [],
@@ -913,7 +1042,7 @@ class QuestionnaireAnalyticsService:
             element_name = self._resolve_element_name(answer) or "Unclassified element"
             stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
             stage_short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
-            score = self._instrument_weight(answer)
+            score = self._instrument_weight(answer, organization=organization)
 
             grouped[(dimension_name, element_name)]["organization"].append(score)
             if stage_short_name in {"CI", "CD"}:
@@ -959,11 +1088,14 @@ class QuestionnaireAnalyticsService:
 
         return {
             "rows": rows,
-            "summary": self._build_dimension_stage_overview(answers)["summary"],
+            "summary": self._build_dimension_stage_overview(
+                answers,
+                organization=organization,
+            )["summary"],
         }
 
     # Gera recomendações para práticas abaixo do limiar de 60 por cento.
-    def _build_recommendations(self, answers):
+    def _build_recommendations(self, answers, organization=None):
         items = []
         recommendations_catalog = self._get_recommendations_catalog()
         candidates = [
@@ -971,7 +1103,7 @@ class QuestionnaireAnalyticsService:
         ]
         candidates.sort(
             key=lambda answer: (
-                answer.adopted_level_answer.percentage,
+                self._instrument_weight(answer, organization=organization),
                 self.STAGE_ORDER.get(
                     getattr(answer.statement_answer.sth_stage, "name", ""), 999
                 ),
@@ -987,8 +1119,20 @@ class QuestionnaireAnalyticsService:
                 "name",
                 None,
             )
-            track = "Adopt now" if level.percentage <= 10 else "Consolidate"
-            priority = "High" if level.percentage <= 10 else "Medium"
+            calibrated_score = self._instrument_weight(
+                answer,
+                organization=organization,
+            )
+            adopt_now_threshold = self._weight_for_percentage(
+                10,
+                organization=organization,
+            )
+            track = (
+                "Adopt now"
+                if calibrated_score <= adopt_now_threshold
+                else "Consolidate"
+            )
+            priority = "High" if track == "Adopt now" else "Medium"
             catalog_entry = recommendations_catalog.get(statement.code, {})
             element_name = self._resolve_element_name(answer)
 
@@ -1008,7 +1152,10 @@ class QuestionnaireAnalyticsService:
                     "element_name": element_name,
                     "track": track,
                     "priority": priority,
-                    "current_level": level.name,
+                    "current_level": self._resolve_average_level(
+                        calibrated_score,
+                        organization=organization,
+                    ),
                     "title": self._recommendation_title(answer),
                     "recommendation": self._recommendation_copy(
                         answer,
@@ -1049,9 +1196,9 @@ class QuestionnaireAnalyticsService:
             )
             grouped[key].append(answer)
             if answer.questionnaire_answer_id is not None:
-                questionnaires[
-                    answer.questionnaire_answer_id
-                ] = answer.questionnaire_answer
+                questionnaires[answer.questionnaire_answer_id] = (
+                    answer.questionnaire_answer
+                )
 
         if organization:
             org_questionnaires = Questionnaire.objects.filter(
@@ -1082,8 +1229,14 @@ class QuestionnaireAnalyticsService:
         cycles = []
         for key, cycle_answers in sorted(grouped.items(), key=sort_key):
             questionnaire = questionnaires.get(key)
-            overall_score = self._score_for_answers(cycle_answers)
-            stage_scores = self._build_stage_scores(cycle_answers)
+            overall_score = self._score_for_answers(
+                cycle_answers,
+                organization=organization,
+            )
+            stage_scores = self._build_stage_scores(
+                cycle_answers,
+                organization=organization,
+            )
             adoption_counts = {
                 item["key"]: item["count"]
                 for item in self._build_adoption_distribution(cycle_answers)
@@ -1096,10 +1249,12 @@ class QuestionnaireAnalyticsService:
                         f"Questionnaire {questionnaire.id}"
                         if questionnaire and questionnaire.applied_date is None
                         else (
-                            questionnaire.applied_date or questionnaire.uploaded_at
-                        ).strftime("%B %Y")
-                        if questionnaire
-                        else "Aggregated snapshot"
+                            (
+                                questionnaire.applied_date or questionnaire.uploaded_at
+                            ).strftime("%B %Y")
+                            if questionnaire
+                            else "Aggregated snapshot"
+                        )
                     ),
                     "applied_date": (
                         questionnaire.applied_date or questionnaire.uploaded_at
@@ -1107,7 +1262,10 @@ class QuestionnaireAnalyticsService:
                         else None
                     ),
                     "overall_score": overall_score,
-                    "overall_level": self._resolve_average_level(overall_score),
+                    "overall_level": self._resolve_average_level(
+                        overall_score,
+                        organization=organization,
+                    ),
                     "answered_practices": len(cycle_answers),
                     "recommendation_count": len(
                         [
@@ -1138,7 +1296,7 @@ class QuestionnaireAnalyticsService:
         return statement_code.startswith(("CI.", "CD."))
 
     # Padroniza o formato de forças e gargalos para o frontend.
-    def _serialize_insight(self, answer):
+    def _serialize_insight(self, answer, organization=None):
         stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
         return {
             "id": answer.id,
@@ -1148,8 +1306,11 @@ class QuestionnaireAnalyticsService:
                 stage_name,
                 stage_name,
             ),
-            "current_level": answer.adopted_level_answer.name,
-            "score": answer.adopted_level_answer.percentage,
+            "current_level": self._resolve_average_level(
+                self._instrument_weight(answer, organization=organization),
+                organization=organization,
+            ),
+            "score": self._instrument_weight(answer, organization=organization),
             "title": self._compact_statement(answer.statement_answer.text),
             "evidence": self._insight_evidence(answer),
         }
@@ -1220,9 +1381,33 @@ class QuestionnaireAnalyticsService:
 
         return None
 
-    def _instrument_weight(self, answer):
+    def _resolve_organization_type_key(self, organization=None):
+        organization_type_name = getattr(
+            getattr(organization, "organization_type", None),
+            "name",
+            "",
+        )
+        normalized = slugify((organization_type_name or "").strip())
+
+        if normalized in self.ORGANIZATION_TYPE_WEIGHT_MAP:
+            return normalized
+
+        return self.ORGANIZATION_TYPE_ALIASES.get(
+            normalized,
+            self.DEFAULT_ORGANIZATION_TYPE_KEY,
+        )
+
+    def _weights_for_organization(self, organization=None):
+        return self.ORGANIZATION_TYPE_WEIGHT_MAP[
+            self._resolve_organization_type_key(organization)
+        ]
+
+    def _weight_for_percentage(self, percentage, organization=None):
+        return self._weights_for_organization(organization).get(percentage, percentage)
+
+    def _instrument_weight(self, answer, organization=None):
         percentage = getattr(answer.adopted_level_answer, "percentage", 0)
-        return self.INSTRUMENT_WEIGHT_BY_PERCENTAGE.get(percentage, percentage)
+        return self._weight_for_percentage(percentage, organization=organization)
 
     # Encurta textos longos para caber melhor nos cards e listas.
     def _compact_statement(self, text, limit=110):

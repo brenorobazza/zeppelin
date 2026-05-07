@@ -379,57 +379,77 @@ export const elementOverview = {
 };
 
 export const adoptionLevelStageOverview = {
+  stages: [
+    { key: "agile", title: "Agile R&D Organization" },
+    { key: "ci", title: "Continuous Integration" },
+    { key: "cd", title: "Continuous Deployment" },
+    { key: "experimentation", title: "R&D as an Experiment System" }
+  ],
   levels: [
     {
       key: "not-adopted",
       label: "Not adopted",
       weight: 0,
+      agileCount: 0,
       ciCount: 0,
       cdCount: 4,
-      organizationCount: 4
+      experimentationCount: 8,
+      organizationCount: 12
     },
     {
       key: "abandoned",
       label: "Abandoned",
       weight: 22,
+      agileCount: 0,
       ciCount: 0,
       cdCount: 0,
+      experimentationCount: 0,
       organizationCount: 0
     },
     {
       key: "project-product-level",
       label: "Realized at project/product level",
       weight: 38,
+      agileCount: 2,
       ciCount: 0,
       cdCount: 6,
-      organizationCount: 6
+      experimentationCount: 5,
+      organizationCount: 13
     },
     {
       key: "process-level",
       label: "Realized at process level",
       weight: 68,
+      agileCount: 20,
       ciCount: 15,
       cdCount: 7,
-      organizationCount: 22
+      experimentationCount: 0,
+      organizationCount: 42
     },
     {
       key: "institutionalized",
       label: "Institutionalized",
       weight: 100,
+      agileCount: 4,
       ciCount: 0,
       cdCount: 0,
-      organizationCount: 0
+      experimentationCount: 0,
+      organizationCount: 4
     }
   ],
   totals: {
+    agileCount: 26,
     ciCount: 15,
     cdCount: 17,
-    organizationCount: 32
+    experimentationCount: 13,
+    organizationCount: 71
   },
   degreeOfAdoption: {
+    agileScore: 71,
     ciScore: 68,
     cdScore: 41,
-    organizationScore: 55
+    experimentationScore: 15,
+    organizationScore: 53
   }
 };
 

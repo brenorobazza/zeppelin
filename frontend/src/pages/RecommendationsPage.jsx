@@ -123,19 +123,16 @@ export function RecommendationsPage({ data, loading }) {
         <article className="metric-card">
           <p>Recommendations generated</p>
           <h2>{view.summary.triggeredRecommendations}</h2>
-          <small>Practices below process level are converted into recommended actions</small>
         </article>
 
         <article className="metric-card">
           <p>Practices to adopt</p>
           <h2>{view.summary.adoptNowCount}</h2>
-          <small>Practices still classified as Not adopted or Abandoned</small>
         </article>
 
         <article className="metric-card">
           <p>Practices to consolidate</p>
           <h2>{view.summary.consolidateCount}</h2>
-          <small>Practices that exist locally but still need to reach process level</small>
         </article>
       </section>
 
