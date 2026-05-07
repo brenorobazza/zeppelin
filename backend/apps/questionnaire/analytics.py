@@ -1196,9 +1196,9 @@ class QuestionnaireAnalyticsService:
             )
             grouped[key].append(answer)
             if answer.questionnaire_answer_id is not None:
-                questionnaires[answer.questionnaire_answer_id] = (
-                    answer.questionnaire_answer
-                )
+                questionnaires[
+                    answer.questionnaire_answer_id
+                ] = answer.questionnaire_answer
 
         if organization:
             org_questionnaires = Questionnaire.objects.filter(
