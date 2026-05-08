@@ -59,7 +59,8 @@ function mapRecommendation(item) {
 export const fallbackDashboardData = {
   maturitySnapshot: {
     ...maturitySnapshot,
-    questionnaireStatus: "Incomplete"
+    questionnaireStatus: "Under assessment",
+    isQuestionnaireComplete: false
   },
   stageScores,
   adoptionLevels,
@@ -73,7 +74,7 @@ export const fallbackDashboardData = {
 export const fallbackResultsData = {
   summary: {
     answeredPractices: maturitySnapshot.answeredPractices,
-    questionnaireStatus: "Incomplete",
+    questionnaireStatus: "Under assessment",
     stageGap: Math.abs(maturitySnapshot.ciScore - maturitySnapshot.cdScore),
     calibratedProfile: maturitySnapshot.calibratedProfile,
     overallScore: maturitySnapshot.overallScore,
@@ -91,10 +92,28 @@ export const fallbackResultsData = {
 
 // Recommendations em modo demonstracao.
 export const fallbackRecommendationsData = {
+  selectedCycleLabel: maturitySnapshot.cycleLabel,
   summary: {
     triggeredRecommendations: maturitySnapshot.recommendationCount,
     adoptNowCount: recommendations.filter((item) => item.track === "Adopt now").length,
-    consolidateCount: recommendations.filter((item) => item.track === "Consolidate").length
+    consolidateCount: recommendations.filter((item) => item.track === "Consolidate").length,
+    answeredPractices: maturitySnapshot.answeredPractices,
+    expectedPractices: stageScores.reduce(
+      (total, item) => total + (item.totalPractices || item.answeredPractices || 0),
+      0
+    ),
+    representedStages: stageScores.filter((item) => (item.answeredPractices || 0) > 0).length,
+    totalStages: stageScores.length,
+    missingStages: stageScores
+      .filter((item) => (item.answeredPractices || 0) === 0)
+      .map((item) => item.shortName),
+    coverageHeadline: `${stageScores.filter((item) => (item.answeredPractices || 0) > 0).length}/${stageScores.length} stages represented`,
+    coverageDetail: `Missing evidence in: ${stageScores
+      .filter((item) => (item.answeredPractices || 0) === 0)
+      .map((item) => item.shortName)
+      .join(", ")}`,
+    questionnaireStatus: "Under assessment",
+    isQuestionnaireComplete: false
   },
   recommendationTracks: recommendationTracks.map((lane) => ({
     ...lane,

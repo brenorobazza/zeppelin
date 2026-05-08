@@ -528,6 +528,28 @@
   text-transform: none;
 }
 
+.table--stage-distribution {
+  table-layout: fixed;
+}
+
+.table--stage-distribution__col-label {
+  width: 46%;
+}
+
+.table--stage-distribution__col-stage {
+  width: 13.5%;
+}
+
+.table--stage-distribution th:not(:first-child),
+.table--stage-distribution td:not(:first-child) {
+  text-align: center;
+}
+
+.table--stage-distribution .table-stage-head {
+  justify-items: center;
+  text-align: center;
+}
+
 .progress {
   width: 100%;
   height: 10px;
@@ -636,6 +658,10 @@
 
 .assessment-context-grid--compact {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.assessment-context-grid--dashboard {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .context-card {
@@ -2015,6 +2041,10 @@
   }
 
   .assessment-context-grid--compact {
+    grid-template-columns: 1fr;
+  }
+
+  .assessment-context-grid--dashboard {
     grid-template-columns: 1fr;
   }
 

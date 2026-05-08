@@ -473,7 +473,7 @@ export default function App() {
   const pageMap = {
     dashboard: {
       title: "Diagnostic Summary",
-      subtitle: "Initial view of the organization's current maturity position in the selected assessment cycle.",
+      subtitle: "",
       component: (
         <DashboardPage
           onNavigate={goToScreen}

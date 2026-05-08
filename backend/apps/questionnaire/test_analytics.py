@@ -361,7 +361,34 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
             payload = self.service.get_results_payload(request)
 
         self.assertEqual(payload["summary"]["questionnaire_status"], "Incomplete")
+        self.assertEqual(payload["summary"]["represented_stages"], 2)
+        self.assertEqual(payload["summary"]["total_stages"], 2)
+        self.assertEqual(payload["summary"]["missing_stages"], [])
         self.assertEqual(payload["summary"]["overall_score"], 58)
+
+    def test_recommendations_payload_reports_questionnaire_status(self):
+        organization = make_organization("Startup")
+        request = SimpleNamespace(query_params={}, user=None)
+
+        with patch.object(
+            self.service,
+            "_resolve_context",
+            return_value={
+                "organization": organization,
+                "questionnaire": self.current_cycle,
+                "stage_scope": "ci_cd",
+                "all_answers": self.all_answers,
+                "current_answers": self.current_answers,
+                "expected_statement_count": 4,
+                "expected_stage_counts": {
+                    "Continuous Integration": 2,
+                    "Continuous Deployment": 2,
+                },
+            },
+        ):
+            payload = self.service.get_recommendations_payload(request)
+
+        self.assertEqual(payload["summary"]["questionnaire_status"], "Incomplete")
 
     def test_adoption_level_stage_overview_reproduces_all_stage_counts(self):
         agile_answer = make_answer(

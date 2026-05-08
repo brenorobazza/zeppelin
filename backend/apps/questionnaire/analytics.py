@@ -383,8 +383,17 @@ class QuestionnaireAnalyticsService:
         answers = context["current_answers"]
         selected_answers = context.get("selected_answers", answers)
         selected_cycle_empty = context.get("selected_cycle_empty", False)
+        expected_statement_count = context.get("expected_statement_count", len(answers))
+        expected_stage_counts = context.get("expected_stage_counts")
         recommendations = self._build_recommendations(
             answers, organization=organization
+        )
+        questionnaire_status = self._questionnaire_status(
+            len(answers), expected_statement_count
+        )
+        stage_coverage = self._build_stage_coverage(
+            answers,
+            expected_stage_counts=expected_stage_counts,
         )
 
         grouped_tracks = []
@@ -408,6 +417,12 @@ class QuestionnaireAnalyticsService:
                 "consolidate_count": len(
                     [item for item in recommendations if item["track"] == "Consolidate"]
                 ),
+                "questionnaire_status": questionnaire_status,
+                "answered_practices": len(answers),
+                "expected_practices": expected_statement_count,
+                "represented_stages": stage_coverage["represented_stages"],
+                "total_stages": stage_coverage["total_stages"],
+                "missing_stages": stage_coverage["missing_stages"],
             },
             "filters": {
                 "available_stages": sorted(
@@ -649,6 +664,36 @@ class QuestionnaireAnalyticsService:
         if expected_total <= 0:
             return "Incomplete"
         return "Complete" if answered_count >= expected_total else "Incomplete"
+
+    def _build_stage_coverage(self, answers, expected_stage_counts=None):
+        grouped_counts = defaultdict(int)
+        for answer in answers:
+            stage = getattr(answer.statement_answer, "sth_stage", None)
+            stage_name = getattr(stage, "name", None) or "Unknown stage"
+            grouped_counts[stage_name] += 1
+
+        stage_names = list(grouped_counts.keys())
+        if expected_stage_counts:
+            stage_names = list(
+                dict.fromkeys([*expected_stage_counts.keys(), *stage_names]).keys()
+            )
+
+        represented = 0
+        missing = []
+
+        for stage_name in stage_names:
+            count = grouped_counts.get(stage_name, 0)
+            short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
+            if count > 0:
+                represented += 1
+            else:
+                missing.append(short_name)
+
+        return {
+            "represented_stages": represented,
+            "total_stages": len(stage_names),
+            "missing_stages": missing,
+        }
 
     # Traduz um score numérico para o nível de adoção mais próximo.
     def _resolve_average_level(self, score, organization=None):

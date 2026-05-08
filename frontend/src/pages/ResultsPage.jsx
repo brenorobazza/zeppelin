@@ -565,14 +565,9 @@ export function ResultsPage({ data, overview, loading }) {
     <>
       <section className="panel">
         <p className="eyebrow">Diagnostic detail</p>
-
         <div className="section-head">
           <div>
             <h3>Detailed diagnostic interpretation</h3>
-            <p>
-              This page explains the current maturity position by combining stage-level evidence
-              with the analysis of related practice groups.
-            </p>
           </div>
         </div>
 
@@ -598,31 +593,38 @@ export function ResultsPage({ data, overview, loading }) {
           adoption levels defined by the diagnostic instrument.
         </p>
 
-        <div className="level-rows">
-          {adoptionLevels.map((item) => (
-            <div key={item.key} className="level-row">
-              <div className="level-row__meta">
-                <strong>{item.label}</strong>
-                <small>{item.count} statements</small>
-              </div>
-              <PercentageScale
-                score={item.percentage}
-                showMarker
-                className="level-row__scale"
-              />
-            </div>
-          ))}
-        </div>
+        {adoptionLevels.length ? (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Adoption level</th>
+                <th>Statements</th>
+                <th>Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              {adoptionLevels.map((item) => (
+                <tr key={item.key}>
+                  <td>
+                    <strong>{item.label}</strong>
+                  </td>
+                  <td>{item.count}</td>
+                  <td>{item.percentage}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="empty-state">
+            No adoption-level distribution is available for this cycle.
+          </p>
+        )}
       </section>
 
       <section className="panel">
         <div className="section-head">
           <div>
             <h3>Adoption by level and stage</h3>
-            <p>
-              This view shows how submitted practices are distributed across adoption levels in
-              each assessed stage and in the combined organizational reading.
-            </p>
           </div>
         </div>
 
@@ -632,41 +634,38 @@ export function ResultsPage({ data, overview, loading }) {
               <div className="results-adoption-breakdown">
                 <div className="results-adoption-breakdown__section">
                   <small className="eyebrow">Distribution table</small>
-                  <table className="table">
+                  <table className="table table--stage-distribution">
+                    <colgroup>
+                      <col className="table--stage-distribution__col-label" />
+                      <col className="table--stage-distribution__col-stage" />
+                      <col className="table--stage-distribution__col-stage" />
+                      <col className="table--stage-distribution__col-stage" />
+                      <col className="table--stage-distribution__col-stage" />
+                    </colgroup>
                     <thead>
                       <tr>
                         <th rowSpan="2">Adoption level</th>
-                        <th colSpan="5">Number of CSE practices</th>
+                        <th colSpan="4">Number of CSE practices</th>
                       </tr>
                       <tr>
                         <th>
                           <div className="table-stage-head">
                             <strong>Agile R&amp;D</strong>
-                            <span>Agile R&amp;D Organization</span>
                           </div>
                         </th>
                         <th>
                           <div className="table-stage-head">
                             <strong>CI</strong>
-                            <span>Continuous Integration</span>
                           </div>
                         </th>
                         <th>
                           <div className="table-stage-head">
                             <strong>CD</strong>
-                            <span>Continuous Deployment</span>
                           </div>
                         </th>
                         <th>
                           <div className="table-stage-head">
                             <strong>Experiment system</strong>
-                            <span>R&amp;D as an Experiment System</span>
-                          </div>
-                        </th>
-                        <th>
-                          <div className="table-stage-head">
-                            <strong>Organization</strong>
-                            <span>Combined reading</span>
                           </div>
                         </th>
                       </tr>
@@ -681,7 +680,6 @@ export function ResultsPage({ data, overview, loading }) {
                           <td>{level.ciCount}</td>
                           <td>{level.cdCount}</td>
                           <td>{level.experimentationCount}</td>
-                          <td>{level.organizationCount}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -710,10 +708,6 @@ export function ResultsPage({ data, overview, loading }) {
                           <dt>Experiment system</dt>
                           <dd>{adoptionLevelStageOverview.totals.experimentationCount}</dd>
                         </div>
-                        <div className="results-adoption-summary__row">
-                          <dt>Organization</dt>
-                          <dd>{adoptionLevelStageOverview.totals.organizationCount}</dd>
-                        </div>
                       </dl>
                     </article>
 
@@ -737,14 +731,6 @@ export function ResultsPage({ data, overview, loading }) {
                           <dd>
                             {formatDimensionValue(
                               adoptionLevelStageOverview.degreeOfAdoption.experimentationScore
-                            )}
-                          </dd>
-                        </div>
-                        <div className="results-adoption-summary__row">
-                          <dt>Organization</dt>
-                          <dd>
-                            {formatDimensionValue(
-                              adoptionLevelStageOverview.degreeOfAdoption.organizationScore
                             )}
                           </dd>
                         </div>
@@ -773,10 +759,6 @@ export function ResultsPage({ data, overview, loading }) {
         <div className="section-head">
           <div>
             <h3>Dimension adoption overview</h3>
-            <p>
-              This section reproduces the most useful part of the spreadsheet analysis in a
-              web-friendly format, comparing CI, CD and organization-level adoption by dimension.
-            </p>
           </div>
         </div>
 
@@ -823,10 +805,6 @@ export function ResultsPage({ data, overview, loading }) {
         <div className="section-head">
           <div>
             <h3>Element adoption by dimension</h3>
-            <p>
-              This detailed table expands the dimension reading by showing which analytical
-              elements currently sustain the CI, CD and organization-level adoption scores.
-            </p>
           </div>
         </div>
 
@@ -879,10 +857,6 @@ export function ResultsPage({ data, overview, loading }) {
         <div className="section-head">
           <div>
             <h3>Practice-group analysis</h3>
-            <p>
-              Practice groups are used here as a secondary analytical lens. They do not replace the
-              stage reading; they clarify where related practices reinforce or constrain it.
-            </p>
           </div>
         </div>
 

@@ -5,15 +5,14 @@ function getRoadmapLaneCopy(lane) {
   if (lane.key === "Adopt now") {
     return {
       title: "Practices to adopt",
-      description: "Practices that are still absent or have not been sustained."
+      description: ""
     };
   }
 
   if (lane.key === "Consolidate") {
     return {
       title: "Practices to consolidate",
-      description:
-        "Practices already used locally, but not yet established at process level."
+      description: ""
     };
   }
 
@@ -30,6 +29,10 @@ function buildRoadmapSummary(total, stage) {
 
 function buildRecommendationTitle(item) {
   return item.questionId || item.title || "Recommendation";
+}
+
+function buildAnswerProgress(answered, total) {
+  return `${answered || 0}/${total || 0} statements answered`;
 }
 
 function normalizeCurrentLevel(level) {
@@ -98,6 +101,20 @@ export function RecommendationsPage({ data, loading }) {
     items: filtered.filter((item) => item.track === lane.key)
   }));
   const roadmapSummary = buildRoadmapSummary(filtered.length, stage);
+  const assessmentContext = [
+    { label: "Assessment cycle", value: view.selectedCycleLabel || "Current cycle" },
+    {
+      label: "Questionnaire status",
+      value: view.summary.questionnaireStatus || "Under assessment"
+    },
+    {
+      label: "Answer progress",
+      value: buildAnswerProgress(
+        view.summary.answeredPractices,
+        view.summary.expectedPractices
+      )
+    }
+  ];
 
   if (loading && !data) {
     return <section className="panel">Loading the improvement roadmap...</section>;
@@ -111,6 +128,34 @@ export function RecommendationsPage({ data, loading }) {
         <p>
           The selected assessment cycle does not contain submitted answers yet. Recommendations
           will be generated after the cycle receives recorded answers.
+        </p>
+      </section>
+    );
+  }
+
+  if (!view.summary.isQuestionnaireComplete) {
+    return (
+      <section className="panel">
+        <p className="eyebrow">Recommendations</p>
+        <h3>Recommended actions for the current cycle</h3>
+
+        <div className="assessment-context-grid assessment-context-grid--dashboard">
+          {assessmentContext.map((item) => (
+            <article key={item.label} className="context-card">
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </article>
+          ))}
+
+          <article className="context-card context-card--coverage">
+            <span>Assessment coverage</span>
+            <strong>{view.summary.coverageHeadline}</strong>
+            <p>{view.summary.coverageDetail}</p>
+          </article>
+        </div>
+
+        <p className="support-copy">
+          Recommendations become available only after the selected assessment cycle is completed.
         </p>
       </section>
     );
@@ -140,7 +185,6 @@ export function RecommendationsPage({ data, loading }) {
         <div className="section-head">
           <div>
             <h3>Recommended actions for the current cycle</h3>
-            <p>Review the recommended actions by stage.</p>
           </div>
         </div>
 
@@ -195,7 +239,7 @@ export function RecommendationsPage({ data, loading }) {
           <article key={lane.key} className="panel roadmap-lane">
             <div>
               <h3>{lane.title}</h3>
-              <p>{lane.description}</p>
+              {lane.description ? <p>{lane.description}</p> : null}
             </div>
 
             {lane.items.length === 0 ? (

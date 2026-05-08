@@ -25,6 +25,24 @@ async function parseResponse(response, fallbackMessage) {
   return data;
 }
 
+function normalizeQuestionnaireStatus(status) {
+  return status === "Complete" ? "Complete" : "Under assessment";
+}
+
+function isQuestionnaireComplete(status) {
+  return status === "Complete";
+}
+
+function buildCoverageHeadline(representedStages, totalStages) {
+  return `${representedStages || 0}/${totalStages || 0} stages represented`;
+}
+
+function buildCoverageDetail(missingStages = []) {
+  return missingStages.length
+    ? `Missing evidence in: ${missingStages.join(", ")}`
+    : "All stages contain at least one answered statement in this cycle.";
+}
+
 // Converte os filtros da interface para query string.
 function buildQuery(filters = {}) {
   const params = new URLSearchParams();
@@ -115,7 +133,12 @@ function normalizeDashboard(payload) {
       organizationType: payload.organization.type || "",
       cycleLabel: payload.cycle.label,
       answeredPractices: payload.snapshot.answered_practices,
-      questionnaireStatus: payload.snapshot.questionnaire_status || "Incomplete",
+      questionnaireStatus: normalizeQuestionnaireStatus(
+        payload.snapshot.questionnaire_status
+      ),
+      isQuestionnaireComplete: isQuestionnaireComplete(
+        payload.snapshot.questionnaire_status
+      ),
       overallScore: payload.snapshot.overall_score,
       overallLevel: payload.snapshot.overall_level,
       ciScore: findStageScore(stageScores, "CI"),
@@ -147,7 +170,9 @@ function normalizeResults(payload) {
     selectedCycleLabel: payload.cycle?.label || "",
     summary: {
       answeredPractices: payload.summary.answered_practices,
-      questionnaireStatus: payload.summary.questionnaire_status || "Incomplete",
+      questionnaireStatus: normalizeQuestionnaireStatus(
+        payload.summary.questionnaire_status
+      ),
       stageGap: payload.summary.stage_gap,
       calibratedProfile: payload.organization.type || "Current organization profile",
       overallScore: payload.summary.overall_score,
@@ -257,7 +282,23 @@ function normalizeRecommendations(payload) {
     summary: {
       triggeredRecommendations: payload.summary.triggered_recommendations,
       adoptNowCount: payload.summary.adopt_now_count,
-      consolidateCount: payload.summary.consolidate_count
+      consolidateCount: payload.summary.consolidate_count,
+      answeredPractices: payload.summary.answered_practices ?? 0,
+      expectedPractices: payload.summary.expected_practices ?? 0,
+      representedStages: payload.summary.represented_stages ?? 0,
+      totalStages: payload.summary.total_stages ?? 0,
+      missingStages: payload.summary.missing_stages || [],
+      coverageHeadline: buildCoverageHeadline(
+        payload.summary.represented_stages,
+        payload.summary.total_stages
+      ),
+      coverageDetail: buildCoverageDetail(payload.summary.missing_stages || []),
+      questionnaireStatus: normalizeQuestionnaireStatus(
+        payload.summary.questionnaire_status
+      ),
+      isQuestionnaireComplete: isQuestionnaireComplete(
+        payload.summary.questionnaire_status
+      )
     },
     recommendationTracks,
     recommendations: payload.items.map(mapRecommendation),

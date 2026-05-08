@@ -20,6 +20,10 @@ function buildStageInterpretation(stage) {
   return `${answered}/${total} statements answered`;
 }
 
+function buildAnswerProgress(answered, total) {
+  return `${answered || 0}/${total || 0} statements answered`;
+}
+
 function renderScaleLabel(label) {
   return label.replace("/", "/\u2009");
 }
@@ -131,12 +135,22 @@ export function DashboardPage({ data, loading }) {
   const view = data || fallbackDashboardData;
   const stages = mapStagesToJourney(view.stageScores);
   const coverage = buildCoverageSummary(stages);
+  const totalStatements = stages.reduce(
+    (total, stage) => total + (stage.totalPractices || stage.answeredPractices || 0),
+    0
+  );
+  const isQuestionnaireUnderAssessment =
+    !view.maturitySnapshot.isQuestionnaireComplete;
 
   const assessmentContext = [
     { label: "Assessment cycle", value: view.maturitySnapshot.cycleLabel },
     {
       label: "Questionnaire status",
       value: view.maturitySnapshot.questionnaireStatus || "Incomplete"
+    },
+    {
+      label: "Answer progress",
+      value: buildAnswerProgress(view.maturitySnapshot.answeredPractices, totalStatements)
     }
   ];
 
@@ -161,72 +175,72 @@ export function DashboardPage({ data, loading }) {
     <>
       <section className="panel">
         <p className="eyebrow">Diagnostic summary</p>
+        <h3>Current maturity position</h3>
 
-        <div className="diagnostic-summary-layout">
-          <div>
-            <h3>Current maturity position</h3>
+        <div className="assessment-context-grid assessment-context-grid--dashboard">
+          {assessmentContext.map((item) => (
+            <article key={item.label} className="context-card">
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </article>
+          ))}
 
-            <div className="assessment-context-grid assessment-context-grid--compact">
-              {assessmentContext.map((item) => (
-                <article key={item.label} className="context-card">
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
-                </article>
-              ))}
+          <article className="context-card context-card--coverage">
+            <span>Assessment coverage</span>
+            <strong>{coverage.headline}</strong>
+            <p>{coverage.detail}</p>
+          </article>
+        </div>
+      </section>
 
-              <article className="context-card context-card--coverage">
-                <span>Assessment coverage</span>
-                <strong>{coverage.headline}</strong>
-                <p>{coverage.detail}</p>
-              </article>
+      {isQuestionnaireUnderAssessment ? (
+        <section className="panel">
+          <div className="section-head">
+            <div>
+              <h3>Stage-level diagnostic overview</h3>
+              <p>
+                The stage-level reading becomes available only after the selected assessment cycle
+                is completed.
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="panel">
+          <div className="section-head">
+            <div>
+              <h3>Stage-level diagnostic overview</h3>
             </div>
           </div>
 
-          <aside className="maturity-highlight-card">
-            <span>Current maturity level</span>
-            <strong>{view.maturitySnapshot.overallLevel}</strong>
-          </aside>
-        </div>
-      </section>
-
-      <section className="panel">
-        <div className="section-head">
-          <div>
-            <h3>Stage-level diagnostic overview</h3>
-            <p>
-              The stage-level reading below positions the organization within the Stairway to
-              Heaven model.
-            </p>
-          </div>
-        </div>
-
-        <div className="journey-grid">
-          {stages.map((stage, index) => (
-            <article
-              key={stage.key}
-              className={`stage-card stage-card--journey ${stage.available ? "" : "stage-card--missing"}`.trim()}
-            >
-              <div className="stage-card__head">
-                <div>
-                  <h4>{stage.name}</h4>
+          <div className="journey-grid">
+            {stages.map((stage) => (
+              <article
+                key={stage.key}
+                className={`stage-card stage-card--journey ${stage.available ? "" : "stage-card--missing"}`.trim()}
+              >
+                <div className="stage-card__head">
+                  <div>
+                    <h4>{stage.name}</h4>
+                  </div>
+                  <strong>{stage.available ? stage.score : "N/A"}</strong>
                 </div>
-                <strong>{stage.available ? stage.score : "N/A"}</strong>
-              </div>
 
-              <MaturityScale
-                score={stage.score}
-                currentLevel={stage.currentLevel}
-                available={stage.available}
-                compact
-              />
+                <MaturityScale
+                  score={stage.score}
+                  currentLevel={stage.currentLevel}
+                  available={stage.available}
+                  compact
+                />
 
-              <p>{buildStageInterpretation(stage)}</p>
-            </article>
-          ))}
-        </div>
+                <p>{buildStageInterpretation(stage)}</p>
+              </article>
+            ))}
+          </div>
 
-        <p className="support-copy">Unanswered statements count as zero in this summary.</p>
-      </section>
+          <p className="support-copy">Unanswered statements count as zero in this summary.</p>
+        </section>
+      )}
     </>
   );
 }
