@@ -757,6 +757,9 @@ class QuestionnaireAnalyticsService:
         },
     }
 
+    # Numero minimo de empresas para formar um benchmark significativo.
+    BENCHMARK_MIN_COMPANY_THRESHOLD = 5
+
     # Carrega os níveis de adoção uma única vez para reutilização ao longo dos cálculos.
     def __init__(self):
         self.adopted_levels = list(AdoptedLevel.objects.order_by("percentage"))
@@ -1084,6 +1087,185 @@ class QuestionnaireAnalyticsService:
             },
         }
 
+    # Monta a resposta de benchmark baseada em um cohort de empresas.
+    def get_benchmark_payload(self, request):
+        # Resolve current org context (keeps organization info consistent)
+        context = self._resolve_context(request)
+        stage_scope = context["stage_scope"]
+        expected_statement_count = context["expected_statement_count"]
+
+        def pick_latest_complete_cycle(answer_rows):
+            grouped = self._group_answers_by_questionnaire(answer_rows)
+            complete_groups = []
+
+            for questionnaire_id, cycle_answers in grouped.items():
+                questionnaire = (
+                    cycle_answers[0].questionnaire_answer
+                    if cycle_answers and questionnaire_id is not None
+                    else None
+                )
+                if questionnaire is None:
+                    continue
+                if len(cycle_answers) >= expected_statement_count:
+                    complete_groups.append((questionnaire, cycle_answers))
+
+            if not complete_groups:
+                return None, []
+
+            complete_groups.sort(key=lambda item: self._questionnaire_sort_key(item[0]))
+            return complete_groups[-1]
+
+        # Current organization must have at least one complete snapshot.
+        current_questionnaire, current_answers = pick_latest_complete_cycle(
+            context["all_answers"]
+        )
+
+        available_cycles = self._build_history_cycles(
+            context["all_answers"], context["organization"]
+        )
+
+        base_payload = {
+            "organization": self._serialize_organization(context["organization"]),
+            "scope": stage_scope,
+            "selection": {
+                "reference_mode": "cohort-aggregate",
+                "current_cycle": {
+                    "id": None,
+                    "label": "Aggregated organization snapshot",
+                    "applied_date": None,
+                    "answered_practices": 0,
+                },
+                "reference_cycle": None,
+                "available_cycles": available_cycles,
+            },
+            "summary": {
+                "current_score": 0,
+                "reference_score": 0,
+                "delta": 0,
+                "current_answered_practices": 0,
+                "reference_answered_practices": 0,
+            },
+            "lenses": {},
+        }
+
+        cohort_orgs = list(self._resolve_benchmark_cohort_organizations(request))
+        company_count = 0
+        reference_answers = []
+        snapshot_ids = set()
+
+        for org in cohort_orgs:
+            org_answers = list(self._base_answers_queryset(org.id, stage_scope))
+            org_questionnaire, org_complete_answers = pick_latest_complete_cycle(
+                org_answers
+            )
+            if org_questionnaire is None:
+                continue
+            company_count += 1
+            snapshot_ids.add(org_questionnaire.id)
+            reference_answers.extend(org_complete_answers)
+
+        snapshot_count = len(snapshot_ids)
+
+        base_payload["selection"]["reference_context"] = {
+            "company_count": company_count,
+            "snapshot_count": snapshot_count,
+            "filters": {
+                "organization_category": request.query_params.get(
+                    "organization_category"
+                ),
+                "organization_size": request.query_params.get("organization_size"),
+                "organization_type": request.query_params.get("organization_type"),
+                "target_audience": request.query_params.get("target_audience"),
+            },
+        }
+
+        if current_questionnaire is None:
+            base_payload["benchmark_state"] = {
+                "code": "empty_results",
+                "title": "No benchmark data yet",
+                "message": (
+                    "The selected organization has no fully submitted questionnaires yet. "
+                    "Benchmark comparison becomes available after the first complete snapshot."
+                ),
+                "error_code": "empty_results",
+                "min_company_threshold": self.BENCHMARK_MIN_COMPANY_THRESHOLD,
+                "company_count": company_count,
+                "snapshot_count": snapshot_count,
+            }
+            return base_payload
+
+        base_payload["selection"]["current_cycle"] = self._serialize_cycle(
+            current_questionnaire,
+            current_answers,
+        )
+
+        if company_count < self.BENCHMARK_MIN_COMPANY_THRESHOLD:
+            base_payload["benchmark_state"] = {
+                "code": "insufficient_data",
+                "title": "Insufficient cohort",
+                "message": (
+                    f"At least {self.BENCHMARK_MIN_COMPANY_THRESHOLD} companies are required to run the benchmark."
+                ),
+                "error_code": "insufficient_data",
+                "min_company_threshold": self.BENCHMARK_MIN_COMPANY_THRESHOLD,
+                "company_count": company_count,
+                "snapshot_count": snapshot_count,
+            }
+            return base_payload
+
+        reference_overall_score = self._score_for_answers(reference_answers)
+        reference_cycle = self._serialize_cycle(None, reference_answers)
+        current_overall_score = self._score_for_answers(current_answers)
+
+        base_payload["selection"]["reference_cycle"] = reference_cycle
+        base_payload["summary"] = {
+            "current_score": current_overall_score,
+            "reference_score": reference_overall_score,
+            "delta": current_overall_score - reference_overall_score,
+            "current_answered_practices": len(current_answers),
+            "reference_answered_practices": len(reference_answers),
+        }
+
+        eye_current = self._build_dimension_results(current_answers)
+        eye_reference = self._build_dimension_results(reference_answers)
+        sth_current = [
+            item
+            for item in self._build_stage_scores(current_answers)
+            if item["short_name"] != "Traditional"
+        ]
+        sth_reference = [
+            item
+            for item in self._build_stage_scores(reference_answers)
+            if item["short_name"] != "Traditional"
+        ]
+
+        base_payload["lenses"]["eye"] = self._build_comparison_lens_payload(
+            lens_key="eye",
+            current_items=eye_current,
+            reference_items=eye_reference,
+            current_overall_score=current_overall_score,
+            reference_overall_score=reference_overall_score,
+        )
+
+        base_payload["lenses"]["sth"] = self._build_comparison_lens_payload(
+            lens_key="sth",
+            current_items=sth_current,
+            reference_items=sth_reference,
+            current_overall_score=current_overall_score,
+            reference_overall_score=reference_overall_score,
+        )
+
+        base_payload["benchmark_state"] = {
+            "code": "ready",
+            "title": "Benchmark ready",
+            "message": "Benchmark cohort is sufficient and ready.",
+            "min_company_threshold": self.BENCHMARK_MIN_COMPANY_THRESHOLD,
+            "company_count": company_count,
+            "snapshot_count": snapshot_count,
+        }
+
+        return base_payload
+
     # Resolve todo o contexto necessário: organização, escopo, ciclo escolhido e respostas filtradas.
     def _resolve_context(self, request):
         organization = self._resolve_organization(request)
@@ -1174,6 +1356,26 @@ class QuestionnaireAnalyticsService:
         raise ValidationError(
             "reference_mode must be first-submission or specific-cycles"
         )
+
+    def _resolve_benchmark_cohort_organizations(self, request):
+        qs = Organization.objects.all()
+        category = request.query_params.get("organization_category")
+        size = request.query_params.get("organization_size")
+        org_type = request.query_params.get("organization_type")
+        target = request.query_params.get("target_audience")
+
+        if category:
+            qs = qs.filter(
+                organization_type__category_organization_type__name__iexact=category
+            )
+        if size:
+            qs = qs.filter(organization_size__name__iexact=size)
+        if org_type:
+            qs = qs.filter(organization_type__name__iexact=org_type)
+        if target:
+            qs = qs.filter(target_audience__icontains=target)
+
+        return qs
 
     def _group_answers_by_questionnaire(self, answers):
         grouped = defaultdict(list)

@@ -562,6 +562,20 @@
   line-height: 1.45;
 }
 
+/* Delta styling for score: negative (red), neutral (black), positive (green) */
+.benchmark-comparison-card__score-card small .is-negative {
+  color: #dc2626;
+  font-weight: 700;
+}
+.benchmark-comparison-card__score-card small .is-positive {
+  color: #16a34a;
+  font-weight: 700;
+}
+.benchmark-comparison-card__score-card small .is-neutral {
+  color: #0f172a;
+  font-weight: 700;
+}
+
 .benchmark-comparison-card__score-card--soft {
   background: #fbfcff;
 }
