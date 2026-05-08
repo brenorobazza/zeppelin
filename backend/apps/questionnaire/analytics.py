@@ -323,13 +323,22 @@ class QuestionnaireAnalyticsService:
         selected_answers = context.get("selected_answers", answers)
         selected_cycle_empty = context.get("selected_cycle_empty", False)
         expected_statement_count = context.get("expected_statement_count", len(answers))
-        stage_scores = self._build_stage_scores(answers, organization=organization)
+        expected_stage_counts = context.get("expected_stage_counts")
+        stage_scores = self._build_stage_scores(
+            answers,
+            expected_stage_counts=expected_stage_counts,
+            organization=organization,
+        )
         recommendations = self._build_recommendations(
             answers, organization=organization
         )
         overall_score = self._score_for_answers(answers, organization=organization)
         questionnaire_status = self._questionnaire_status(
             len(answers), expected_statement_count
+        )
+        stage_coverage = self._build_stage_coverage(
+            answers,
+            expected_stage_counts=expected_stage_counts,
         )
 
         stage_values = [item["score"] for item in stage_scores]
@@ -353,6 +362,9 @@ class QuestionnaireAnalyticsService:
                 ),
                 "answered_practices": len(answers),
                 "questionnaire_status": questionnaire_status,
+                "represented_stages": stage_coverage["represented_stages"],
+                "total_stages": stage_coverage["total_stages"],
+                "missing_stages": stage_coverage["missing_stages"],
                 "stage_gap": stage_gap,
             },
             "stage_scores": stage_scores,
