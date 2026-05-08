@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { BenchmarkFilters } from "../components/BenchmarkFilters";
 import { BenchmarkComparisonCard } from "../components/BenchmarkComparisonCard";
-import { loadComparisonMockAnalytics } from "../services/analytics";
 import "./benchmark-page.css";
 
 /**
  * BenchmarkPage: Displays benchmark comparison against cohorts.
- * Currently uses mock data; will be integrated with backend /comparison endpoint later.
+ * Uses the backend benchmark endpoint for cohort comparisons.
  */
 export function BenchmarkPage({ filters = {} }) {
   const baseFilters = {
@@ -65,7 +64,6 @@ export function BenchmarkPage({ filters = {} }) {
             type: appliedFilters.type,
             targetAudience: appliedFilters.targetAudience
           }}
-          mockLoader={loadComparisonMockAnalytics}
         />
       </section>
     </div>

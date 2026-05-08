@@ -6,7 +6,6 @@ import {
   fallbackRecommendationsData,
   fallbackResultsData
 } from "../mock/analyticsFallback";
-import { loadComparisonMock } from "../mock/benchmarkComparisonMock";
 
 // A base da API vem do ambiente para permitir troca de servidor sem editar o código.
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
@@ -91,6 +90,15 @@ async function fetchComparisonAnalytics(filters) {
   });
 
   return parseResponse(response, "Failed to load comparison analytics.");
+}
+
+async function fetchBenchmarkAnalytics(filters) {
+  const query = buildComparisonQuery(filters);
+  const response = await fetch(`${API_BASE}/api/questionnaire/analytics/benchmark/${query}`, {
+    credentials: "include"
+  });
+
+  return parseResponse(response, "Failed to load benchmark analytics.");
 }
 
 // Busca o score de um estágio específico pelo nome curto.
@@ -669,9 +677,10 @@ export async function loadComparisonAnalytics(filters = {}) {
   return normalizeComparison(payload);
 }
 
-// Carrega um payload mock para comparação (uso temporário, sem dependência de backend).
-export function loadComparisonMockAnalytics(filters = {}) {
-  return normalizeComparison(loadComparisonMock(filters));
+// Carrega a comparação de benchmark real usada pelo BenchmarkPage.
+export async function loadBenchmarkAnalytics(filters = {}) {
+  const payload = await fetchBenchmarkAnalytics(filters);
+  return normalizeComparison(payload);
 }
 
 // Entrega um conjunto de dados de demonstração quando o backend não estiver disponível.

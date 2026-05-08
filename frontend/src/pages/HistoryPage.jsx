@@ -95,6 +95,9 @@ export function HistoryPage({ data, loading, filters }) {
     () => buildComparison(baselineCycle, currentCycle),
     [baselineCycle, currentCycle]
   );
+  const hasHistory = Array.isArray(view.historySeries) && view.historySeries.length > 0;
+  const baselineCycle = hasHistory ? view.historySeries[0] : null;
+  const currentCycle = hasHistory ? view.historySeries[view.historySeries.length - 1] : null;
 
   if (loading && !data) {
     return <section className="panel">Loading historical progression from backend...</section>;
@@ -108,6 +111,19 @@ export function HistoryPage({ data, loading, filters }) {
         <p>
           The selected assessment cycle does not contain submitted answers yet. Historical
           comparisons will be available after the cycle receives recorded answers.
+        </p>
+      </section>
+    );
+  }
+
+  if (!hasHistory) {
+    return (
+      <section className="panel">
+        <p className="eyebrow">History</p>
+        <h3>No historical data available</h3>
+        <p>
+          The selected organization does not have a fully submitted assessment snapshot yet, so
+          historical trends and benchmark comparisons cannot be shown.
         </p>
       </section>
     );

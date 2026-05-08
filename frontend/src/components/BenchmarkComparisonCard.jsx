@@ -8,7 +8,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { AlertTriangle, Lock, SearchX, SlidersHorizontal } from "lucide-react";
-import { loadComparisonAnalytics } from "../services/analytics";
+import { loadBenchmarkAnalytics, loadComparisonAnalytics } from "../services/analytics";
 import "./benchmark-comparison-card.css";
 
 const LENS_OPTIONS = [
@@ -155,7 +155,7 @@ function LevelBars({ axes, currentValues, referenceValues, lensKey }) {
   return (
     <div className="benchmark-comparison-card__levels">
       <div className="benchmark-comparison-card__levels-head">
-        <span>Axis breakdown</span>
+        <span>Dimensions breakdown</span>
         <small>Current vs reference</small>
       </div>
 
@@ -369,9 +369,10 @@ export function BenchmarkComparisonCard({
         };
 
         // Use mockLoader if provided; otherwise fetch from backend
-        const bundle = mockLoader
-          ? mockLoader(requestFilters)
-          : await loadComparisonAnalytics(requestFilters);
+        const loadAnalytics = isBenchmarkComparison
+          ? loadBenchmarkAnalytics
+          : loadComparisonAnalytics;
+        const bundle = mockLoader ? mockLoader(requestFilters) : await loadAnalytics(requestFilters);
         if (ignore) return;
 
         setComparisonData(bundle);
@@ -455,6 +456,10 @@ export function BenchmarkComparisonCard({
     (cycle) => String(cycle.id) !== String(selectedCurrentCycleId)
   );
 
+  // Delta value and class for score styling: negative -> red, zero -> neutral (black), positive -> green
+  const scoreDelta = comparisonData?.summary?.delta ?? 0;
+  const scoreDeltaClass = scoreDelta < 0 ? "is-negative" : scoreDelta > 0 ? "is-positive" : "is-neutral";
+
   const activeLens = comparisonData?.lenses?.[lensKey] || comparisonData?.lenses?.eye;
   const selectedAxes = normalizeAxisValues(activeLens?.axes || []);
   const radarTitle = isBenchmarkComparison
@@ -504,7 +509,7 @@ export function BenchmarkComparisonCard({
         icon={<Lock size={24} strokeWidth={2.2} />}
         title={benchmarkState.title || "Insufficient data for comparison"}
         message={benchmarkState.message || "The selected cohort does not meet the minimum company threshold."}
-        details={`Minimum cohort size: ${benchmarkState.minCompanyThreshold || 5} companies · Current: ${benchmarkState.companyCount || 0} companies`}
+        details={`Minimum cohort size: ${benchmarkState.minCompanyThreshold || 5} companies`}
         actionLabel="Clear filters"
         onAction={onClearFilters}
       />
@@ -519,9 +524,6 @@ export function BenchmarkComparisonCard({
         icon={<SearchX size={24} strokeWidth={2.2} />}
         title={benchmarkState.title || "No data found"}
         message={benchmarkState.message || "No benchmark snapshots match the selected filters."}
-        details="Try broadening one or more filters to rebuild the cohort."
-        actionLabel="Adjust filters"
-        onAction={onAdjustFilters || onClearFilters}
       />
     );
   }
@@ -653,10 +655,13 @@ export function BenchmarkComparisonCard({
 
         <aside className="benchmark-comparison-card__summary">
           <article className="benchmark-comparison-card__score-card">
-            <span>Score general</span>
+            <span>General Score</span>
             <strong>{comparisonData.summary.currentScore}/100</strong>
             <small>
-              {comparisonData.summary.delta >= 0 ? `+${comparisonData.summary.delta}` : comparisonData.summary.delta} vs {isBenchmarkComparison ? benchmarkReferenceLabel : referenceCycleLabel}
+              <span className={scoreDeltaClass}>
+                {scoreDelta >= 0 ? `+${scoreDelta}` : scoreDelta}
+                {" "}vs {isBenchmarkComparison ? benchmarkReferenceLabel : referenceCycleLabel}
+              </span>
             </small>
           </article>
 

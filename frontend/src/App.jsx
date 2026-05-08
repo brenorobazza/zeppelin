@@ -148,6 +148,7 @@ export default function App() {
           return;
         }
 
+        console.error("Failed to load analytics bundle:", error, { filters: analyticsFilters });
         setAnalytics({
           ...getFallbackAnalyticsBundle(),
           loading: false,
@@ -587,7 +588,7 @@ export default function App() {
   if (user && pageMap[screen]) {
     const page = pageMap[screen];
     return (
-      <PlatformLayout
+        <PlatformLayout
         activePage={screen}
         title={page.title}
         subtitle={page.subtitle}
@@ -603,6 +604,7 @@ export default function App() {
         onCycleChange={(value) => updateAnalyticsFilters({ questionnaireId: value })}
         usingMockData={analytics.usingMockData}
         analyticsError={analytics.error}
+        analyticsLoading={analytics.loading}
         disableGlobalSelectors={disableGlobalSelectors}
         hideCycleSelector={screen === "assessment"}
       >
@@ -646,4 +648,5 @@ export default function App() {
       }}
     />
   );
+  // debug logging removed
 }

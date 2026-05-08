@@ -264,3 +264,17 @@ class QuestionnaireComparisonAnalyticsView(APIView):
         except ValidationError as exc:
             return Response({"error": exc.message}, status=400)
         return Response(payload)
+
+
+# Endpoint agregado para benchmark de cohort externo.
+class QuestionnaireBenchmarkAnalyticsView(APIView):
+    authentication_classes = [OAuth2Authentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        service = QuestionnaireAnalyticsService()
+        try:
+            payload = service.get_benchmark_payload(request)
+        except ValidationError as exc:
+            return Response({"error": exc.message}, status=400)
+        return Response(payload)
