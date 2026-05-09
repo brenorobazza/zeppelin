@@ -134,8 +134,11 @@ export const fallbackRecommendationsData = {
 export const fallbackHistoryData = {
   summary: {
     overallDelta: historySeries[historySeries.length - 1].overall - historySeries[0].overall,
+    agileDelta: historySeries[historySeries.length - 1].agile - historySeries[0].agile,
     ciDelta: historySeries[historySeries.length - 1].ci - historySeries[0].ci,
     cdDelta: historySeries[historySeries.length - 1].cd - historySeries[0].cd,
+    experimentationDelta:
+      historySeries[historySeries.length - 1].experimentation - historySeries[0].experimentation,
     recommendationReduction:
       historySeries[0].recommendationCount -
       historySeries[historySeries.length - 1].recommendationCount,
@@ -149,8 +152,36 @@ export const fallbackHistoryData = {
     period: item.period,
     overall: item.overall,
     overallLevel: resolveLevelFromScore(item.overall),
+    agile: item.agile,
     ci: item.ci,
     cd: item.cd,
+    experimentation: item.experimentation,
+    stages: [
+      {
+        key: "agile",
+        name: "Agile R&D Organization",
+        shortName: "Agile",
+        score: item.agile
+      },
+      {
+        key: "ci",
+        name: "Continuous Integration",
+        shortName: "CI",
+        score: item.ci
+      },
+      {
+        key: "cd",
+        name: "Continuous Deployment",
+        shortName: "CD",
+        score: item.cd
+      },
+      {
+        key: "experimentation",
+        name: "R&D as an Experiment System",
+        shortName: "Experimentation",
+        score: item.experimentation
+      }
+    ],
     recommendationCount: item.recommendationCount,
     delta: index === 0 ? null : item.overall - historySeries[index - 1].overall,
     adoptionLevels: item.adoptionLevels

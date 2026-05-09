@@ -22,13 +22,8 @@ function getRoadmapLaneCopy(lane) {
   };
 }
 
-function buildRoadmapSummary(total, stage) {
-  const stageLabel = stage === "All" ? "all stages" : `stage ${stage}`;
-  return `Showing ${total} recommendations for ${stageLabel}.`;
-}
-
 function buildRecommendationTitle(item) {
-  return item.questionId || item.title || "Recommendation";
+  return item.questionDescription || item.title || item.questionId || "Recommendation";
 }
 
 function buildAnswerProgress(answered, total) {
@@ -100,7 +95,6 @@ export function RecommendationsPage({ data, loading }) {
     ...getRoadmapLaneCopy(lane),
     items: filtered.filter((item) => item.track === lane.key)
   }));
-  const roadmapSummary = buildRoadmapSummary(filtered.length, stage);
   const assessmentContext = [
     { label: "Assessment cycle", value: view.selectedCycleLabel || "Current cycle" },
     {
@@ -182,12 +176,6 @@ export function RecommendationsPage({ data, loading }) {
       </section>
 
       <section className="panel">
-        <div className="section-head">
-          <div>
-            <h3>Recommended actions for the current cycle</h3>
-          </div>
-        </div>
-
         <div className="roadmap-toolbar">
           <div className="roadmap-filters roadmap-filters--one">
             <label className="roadmap-filter-field">
@@ -199,36 +187,6 @@ export function RecommendationsPage({ data, loading }) {
                 ))}
               </select>
             </label>
-          </div>
-
-          <div className="roadmap-toolbar__meta">
-            <p className="roadmap-summary">{roadmapSummary}</p>
-
-            <details className="roadmap-help">
-              <summary>
-                <span className="roadmap-help__icon">?</span>
-                <span>About the rule</span>
-              </summary>
-              <div className="roadmap-help__content">
-                <p>
-                  Recommendations are generated through a rule-based gap analysis that identifies
-                  practices that still require adoption or consolidation.
-                </p>
-                <ul className="roadmap-help__list">
-                  <li>
-                    <strong>Not adopted or Abandoned:</strong> prioritize adoption.
-                  </li>
-                  <li>
-                    <strong>Project/Product level:</strong> prioritize consolidation at process
-                    level.
-                  </li>
-                  <li>
-                    <strong>Process level or Institutionalized:</strong> no action is generated for
-                    the current cycle.
-                  </li>
-                </ul>
-              </div>
-            </details>
           </div>
         </div>
       </section>
@@ -249,6 +207,9 @@ export function RecommendationsPage({ data, loading }) {
                 <div key={item.id} className="roadmap-card">
                   <div className="roadmap-card__meta">
                     <span className="tag">{item.questionId}</span>
+                    <strong className="roadmap-card__question">
+                      {buildRecommendationTitle(item)}
+                    </strong>
                   </div>
 
                   <dl className="roadmap-card__details">
@@ -256,15 +217,11 @@ export function RecommendationsPage({ data, loading }) {
                       <dt>Current adoption level</dt>
                       <dd>{normalizeCurrentLevel(item.currentLevel)}</dd>
                     </div>
-                    <div>
-                      <dt>Original practice statement</dt>
-                      <dd>{item.questionDescription || "Not available"}</dd>
-                    </div>
                   </dl>
 
                   {item.catalogRecommendation ? (
                     <details className="roadmap-reference">
-                      <summary>More context and source</summary>
+                      <summary>Recommendations</summary>
                       <div className="roadmap-card__details roadmap-card__details--compact">
                         <div>
                           <dt>Practice group</dt>

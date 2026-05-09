@@ -336,11 +336,72 @@ function getHistoryCount(cycle, key) {
   return matchedKey ? cycle.adoption_levels[matchedKey] : 0;
 }
 
+const HISTORY_STAGE_DEFINITIONS = [
+  {
+    key: "agile",
+    name: "Agile R&D Organization",
+    shortName: "Agile",
+    aliases: ["agile", "aro", "agile-rd-organization"]
+  },
+  {
+    key: "ci",
+    name: "Continuous Integration",
+    shortName: "CI",
+    aliases: ["ci", "continuous-integration"]
+  },
+  {
+    key: "cd",
+    name: "Continuous Deployment",
+    shortName: "CD",
+    aliases: ["cd", "continuous-deployment"]
+  },
+  {
+    key: "experimentation",
+    name: "R&D as an Experiment System",
+    shortName: "Experimentation",
+    aliases: ["experimentation", "exp", "experiment-system"]
+  }
+];
+
+function normalizeHistoryStageValue(value = "") {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function buildHistoryStageValues(stageScores = []) {
+  return HISTORY_STAGE_DEFINITIONS.map((definition) => {
+    const source = stageScores.find((stage) => {
+      const candidates = [stage.key, stage.name, stage.shortName].map(
+        normalizeHistoryStageValue
+      );
+
+      return candidates.some((candidate) => definition.aliases.includes(candidate));
+    });
+
+    return {
+      ...definition,
+      score: source?.score ?? null,
+      currentLevel: source?.currentLevel || ""
+    };
+  });
+}
+
+function findHistoryStageScore(stages, key) {
+  return stages.find((stage) => stage.key === key)?.score ?? null;
+}
+
 // Converte o histórico bruto em um formato pronto para comparação entre ciclos.
 function normalizeHistory(payload) {
-  const historySeries = payload.cycles.map((item, index) => {
-    const ci = item.stage_scores.find((stage) => stage.short_name === "CI")?.score || 0;
-    const cd = item.stage_scores.find((stage) => stage.short_name === "CD")?.score || 0;
+  const historyCycles = (payload.cycles || []).filter(
+    (item) => item.id != null && item.label !== "Aggregated snapshot"
+  );
+
+  const historySeries = historyCycles.map((item, index) => {
+    const stageScores = item.stage_scores.map(mapStageScore);
+    const stages = buildHistoryStageValues(stageScores);
+    const agile = findHistoryStageScore(stages, "agile");
+    const ci = findHistoryStageScore(stages, "ci");
+    const cd = findHistoryStageScore(stages, "cd");
+    const experimentation = findHistoryStageScore(stages, "experimentation");
 
     return {
       id: item.id ? String(item.id) : "",
@@ -348,10 +409,13 @@ function normalizeHistory(payload) {
       period: item.label,
       overall: item.overall_score,
       overallLevel: item.overall_level,
+      agile,
       ci,
       cd,
+      experimentation,
+      stages,
       recommendationCount: item.recommendation_count,
-      delta: index === 0 ? null : item.overall_score - payload.cycles[index - 1].overall_score,
+      delta: index === 0 ? null : item.overall_score - historyCycles[index - 1].overall_score,
       adoptionLevels: {
         notAdopted: getHistoryCount(item, "not-adopted"),
         abandoned: getHistoryCount(item, "abandoned"),
@@ -369,10 +433,21 @@ function normalizeHistory(payload) {
     selectedCycleEmpty: payload.selected_cycle_empty || false,
     selectedCycleLabel: payload.cycle?.label || "",
     summary: {
-      overallDelta: payload.summary.overall_delta,
-      ciDelta: last ? last.ci - first.ci : 0,
-      cdDelta: last ? last.cd - first.cd : 0,
-      recommendationReduction: payload.summary.recommendation_reduction,
+      overallDelta: last && first ? last.overall - first.overall : 0,
+      agileDelta:
+        last && first && last.agile != null && first.agile != null
+          ? last.agile - first.agile
+          : null,
+      ciDelta:
+        last && first && last.ci != null && first.ci != null ? last.ci - first.ci : null,
+      cdDelta:
+        last && first && last.cd != null && first.cd != null ? last.cd - first.cd : null,
+      experimentationDelta:
+        last && first && last.experimentation != null && first.experimentation != null
+          ? last.experimentation - first.experimentation
+          : null,
+      recommendationReduction:
+        last && first ? first.recommendationCount - last.recommendationCount : 0,
       institutionalizedGrowth: last
         ? last.adoptionLevels.institutionalized - first.adoptionLevels.institutionalized
         : 0

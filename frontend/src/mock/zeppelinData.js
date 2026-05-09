@@ -124,54 +124,60 @@ export const stageScores = [
 
 export const practiceThemes = [
   {
-    key: "architecture",
-    name: "Architecture and Modularity",
-    focus: "CI.01, CI.02 and CD.05",
-    score: 72,
-    strength:
-      "The architecture is modular enough to support automated builds and tests in most core services.",
-    bottleneck:
-      "Independent deployment is still constrained by a few tightly coupled components and release dependencies."
+    key: "quality",
+    name: "Quality",
+    focus: "CD.02, CI.04, CI.05",
+    score: 60,
+    strengthItem: { questionId: "CD.02" },
+    bottleneckItem: { questionId: "CD.02" }
   },
   {
-    key: "automation",
-    name: "Automation and Release Flow",
-    focus: "CI.03 to CI.07 and CD.02 to CD.03",
-    score: 63,
-    strength:
-      "Integration automation is already routine, which lowers the cost of validating code changes before merge.",
-    bottleneck:
-      "Release automation still depends on manual gates and does not yet behave as a fully reliable production flow."
-  },
-  {
-    key: "metrics",
-    name: "Metrics and Continuous Improvement",
-    focus: "CI.11 to CI.14 and CD.13 to CD.16",
-    score: 61,
-    strength:
-      "Some operational data is already stored and can support process analysis and quality discussions.",
-    bottleneck:
-      "Metrics are not yet consistently turned into systematic improvement plans for CI and CD."
-  },
-  {
-    key: "feedback",
-    name: "Customer and Business Feedback",
-    focus: "CD.01, CD.04 and CD.06 to CD.12",
-    score: 66,
-    strength:
-      "Customer and business signals already influence prioritization in key products.",
-    bottleneck:
-      "The information flow between business, operations and development still depends on local routines instead of shared short cycles."
+    key: "technical-solution",
+    name: "Technical Solution",
+    focus: "CI.08, CI.09",
+    score: 60,
+    strengthItem: { questionId: "CI.08" },
+    bottleneckItem: { questionId: "CI.08" }
   },
   {
     key: "knowledge",
-    name: "Knowledge Sharing and Collaboration",
-    focus: "CI.10, CI.15 and CD.17",
+    name: "Knowledge",
+    focus: "CD.14, CD.16, CD.17",
     score: 58,
-    strength:
-      "Teams already exchange delivery knowledge informally through reviews and operational collaboration.",
-    bottleneck:
-      "Knowledge sharing and collaboration with external contributors remain weakly formalized and sensitive to organizational context."
+    strengthItem: { questionId: "CD.17" },
+    bottleneckItem: { questionId: "CD.14" }
+  },
+  {
+    key: "development",
+    name: "Development",
+    focus: "CD.05, CI.01, CI.02",
+    score: 42,
+    strengthItem: { questionId: "CI.02" },
+    bottleneckItem: { questionId: "CD.05" }
+  },
+  {
+    key: "software-management",
+    name: "Software Management",
+    focus: "CI.03, CI.13, CD.03",
+    score: 30,
+    strengthItem: { questionId: "CI.03" },
+    bottleneckItem: { questionId: "CD.03" }
+  },
+  {
+    key: "business",
+    name: "Business",
+    focus: "CD.10, CD.11, CD.12",
+    score: 28,
+    strengthItem: { questionId: "CD.12" },
+    bottleneckItem: { questionId: "CD.10" }
+  },
+  {
+    key: "user-customer",
+    name: "User/Customer",
+    focus: "CD.01, CD.04, CD.06",
+    score: 19,
+    strengthItem: { questionId: "CD.01" },
+    bottleneckItem: { questionId: "CD.06" }
   }
 ];
 
@@ -697,8 +703,10 @@ export const historySeries = [
     cycle: "Cycle 01",
     period: "April 2024 baseline",
     overall: 52,
+    agile: 45,
     ci: 55,
     cd: 49,
+    experimentation: 20,
     recommendationCount: 15,
     adoptionLevels: {
       notAdopted: 6,
@@ -712,8 +720,10 @@ export const historySeries = [
     cycle: "Cycle 02",
     period: "May 2025 recalibrated",
     overall: 61,
+    agile: 62,
     ci: 64,
     cd: 58,
+    experimentation: 28,
     recommendationCount: 11,
     adoptionLevels: {
       notAdopted: 4,
@@ -727,8 +737,10 @@ export const historySeries = [
     cycle: "Cycle 03",
     period: "March 2026 current",
     overall: 67,
+    agile: 71,
     ci: 69,
     cd: 64,
+    experimentation: 15,
     recommendationCount: 9,
     adoptionLevels: {
       notAdopted: 2,

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { fallbackDashboardData, fallbackResultsData } from "../mock/analyticsFallback";
 import {
   getConstrainingStage,
@@ -360,6 +361,129 @@ function buildElementOverviewRows(rows) {
   });
 }
 
+function buildDimensionFilterOptions(rows) {
+  return [...new Set(rows.map((row) => row.dimensionName))].map((dimensionName) => ({
+    value: dimensionName,
+    label: dimensionName
+  }));
+}
+
+function buildElementFilterOptions(rows) {
+  return rows.map((row) => ({
+    value: row.key,
+    label: row.elementName,
+    meta: row.dimensionName
+  }));
+}
+
+function buildMultiSelectSummary(selectedValues, options, singularLabel, pluralLabel) {
+  if (!options.length) {
+    return `No ${pluralLabel}`;
+  }
+
+  if (selectedValues.length === options.length) {
+    return `All ${pluralLabel}`;
+  }
+
+  if (selectedValues.length === 1) {
+    return `1 ${singularLabel}`;
+  }
+
+  if (selectedValues.length === 0) {
+    return `No ${pluralLabel}`;
+  }
+
+  return `${selectedValues.length} ${pluralLabel}`;
+}
+
+function averageVisibleScore(rows, field) {
+  const values = rows
+    .map((row) => row[field])
+    .filter((value) => typeof value === "number");
+
+  if (!values.length) {
+    return null;
+  }
+
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return Math.round(total / values.length);
+}
+
+function buildFilteredElementSummary(rows) {
+  return {
+    ciScore: averageVisibleScore(rows, "ciScore"),
+    cdScore: averageVisibleScore(rows, "cdScore"),
+    organizationScore: averageVisibleScore(rows, "organizationScore")
+  };
+}
+
+function FilterDropdown({
+  label,
+  summary,
+  options,
+  selectedValues,
+  onToggle,
+  onSelectAll,
+  onClearAll
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <details
+      className="results-filter-dropdown"
+      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+    >
+      <summary className="results-filter-dropdown__summary">
+        <div className="results-filter-dropdown__copy">
+          <span>{label}</span>
+          <strong>{summary}</strong>
+        </div>
+
+        <div className="results-filter-dropdown__indicator">
+          <span
+            className={[
+              "results-filter-dropdown__chevron",
+              isOpen ? "results-filter-dropdown__chevron--open" : ""
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria-hidden="true"
+          />
+        </div>
+      </summary>
+
+      <div className="results-filter-dropdown__menu">
+        <div className="results-filter-dropdown__actions">
+          <button type="button" className="btn-secondary-ui" onClick={onSelectAll}>
+            Select all
+          </button>
+          <button type="button" className="btn-secondary-ui" onClick={onClearAll}>
+            Clear
+          </button>
+        </div>
+
+        <div className="results-filter-dropdown__options">
+          {options.length ? (
+            options.map((option) => (
+              <label key={option.value} className="results-filter-dropdown__option">
+                <input
+                  type="checkbox"
+                  checked={selectedValues.includes(option.value)}
+                  onChange={() => onToggle(option.value)}
+                />
+                <span>{option.label}</span>
+                {option.meta ? <small>{option.meta}</small> : null}
+              </label>
+            ))
+          ) : (
+            <p className="results-filter-dropdown__empty">No options available.</p>
+          )}
+        </div>
+      </div>
+    </details>
+  );
+}
+
 const ADOPTION_LEVEL_COLORS = {
   "not-adopted": "#4f79c7",
   abandoned: "#f4a62a",
@@ -515,13 +639,16 @@ function AdoptionLevelStageChart({ overview }) {
 
 export function ResultsPage({ data, overview, loading }) {
   // A Tela 2 funciona como aprofundamento analitico do diagnostico, sem repetir o resumo inicial.
+  const [selectedDimensions, setSelectedDimensions] = useState([]);
+  const [selectedElements, setSelectedElements] = useState([]);
+  const [selectedGroupDimensions, setSelectedGroupDimensions] = useState([]);
   const view = data || fallbackResultsData;
   const overviewData = overview || fallbackDashboardData;
   const stages = mapStagesToJourney(view.stageScores);
   const leadingStage = getLeadingStage(stages);
   const constrainingStage = getConstrainingStage(stages);
   const analyticalNarrative = buildAnalyticalNarrative(leadingStage, constrainingStage);
-  const practiceGroups = (view.practiceThemes || []).filter(
+  const dimensionGroupsSource = (view.practiceThemes || []).filter(
     (group) =>
       group.name !== "Agile Development" &&
       group.name !== "Continuous Experimentation"
@@ -534,7 +661,86 @@ export function ResultsPage({ data, overview, loading }) {
     degreeOfAdoption: {}
   };
   const adoptionLevels = overviewData.adoptionLevels || [];
-  const elementRows = buildElementOverviewRows(elementOverview.rows || []);
+  const allElementRows = elementOverview.rows || [];
+  const dimensionFilterOptions = buildDimensionFilterOptions(allElementRows);
+  const dimensionSelectionSet = new Set(selectedDimensions);
+  const elementFilterOptions = buildElementFilterOptions(
+    allElementRows.filter((row) => dimensionSelectionSet.has(row.dimensionName))
+  );
+  const dimensionFilterKey = dimensionFilterOptions.map((item) => item.value).join("|");
+  const elementFilterKey = elementFilterOptions.map((item) => item.value).join("|");
+
+  useEffect(() => {
+    const availableDimensions = new Set(dimensionFilterOptions.map((item) => item.value));
+
+    setSelectedDimensions((current) => {
+      const next = current.filter((item) => availableDimensions.has(item));
+      return next.length || !dimensionFilterOptions.length
+        ? next
+        : dimensionFilterOptions.map((item) => item.value);
+    });
+  }, [dimensionFilterKey]);
+
+  useEffect(() => {
+    const availableElements = new Set(elementFilterOptions.map((item) => item.value));
+
+    setSelectedElements((current) => {
+      const next = current.filter((item) => availableElements.has(item));
+      return next.length || !elementFilterOptions.length
+        ? next
+        : elementFilterOptions.map((item) => item.value);
+    });
+  }, [elementFilterKey]);
+
+  function toggleMultiSelectValue(value, setter) {
+    setter((current) =>
+      current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value]
+    );
+  }
+
+  const filteredElementBaseRows = allElementRows.filter(
+    (row) =>
+      selectedDimensions.includes(row.dimensionName) &&
+      selectedElements.includes(row.key)
+  );
+  const elementRows = buildElementOverviewRows(filteredElementBaseRows);
+  const isFilteredElementView =
+    selectedDimensions.length !== dimensionFilterOptions.length ||
+    selectedElements.length !== elementFilterOptions.length;
+  const visibleElementSummary = isFilteredElementView
+    ? buildFilteredElementSummary(filteredElementBaseRows)
+    : elementOverview.summary;
+  const filteredDimensionCount = new Set(
+    filteredElementBaseRows.map((row) => row.dimensionName)
+  ).size;
+  const elementFilterSummary = `${filteredElementBaseRows.length} of ${allElementRows.length} elements shown across ${filteredDimensionCount} dimensions.`;
+  const groupDimensionFilterOptions = dimensionGroupsSource.map((group) => ({
+    value: group.name,
+    label: group.name
+  }));
+  const groupDimensionFilterKey = groupDimensionFilterOptions
+    .map((item) => item.value)
+    .join("|");
+
+  useEffect(() => {
+    const availableGroupDimensions = new Set(
+      groupDimensionFilterOptions.map((item) => item.value)
+    );
+
+    setSelectedGroupDimensions((current) => {
+      const next = current.filter((item) => availableGroupDimensions.has(item));
+      return next.length || !groupDimensionFilterOptions.length
+        ? next
+        : groupDimensionFilterOptions.map((item) => item.value);
+    });
+  }, [groupDimensionFilterKey]);
+
+  const practiceGroups = dimensionGroupsSource.filter((group) =>
+    selectedGroupDimensions.includes(group.name)
+  );
+  const practiceGroupSummary = `${practiceGroups.length} of ${dimensionGroupsSource.length} dimensions shown.`;
 
   const diagnosticFacts = [
     {
@@ -588,10 +794,6 @@ export function ResultsPage({ data, overview, loading }) {
 
       <section className="panel support-panel">
         <h3>Adoption level distribution across assessed statements</h3>
-        <p>
-          This distribution shows how the assessed statements are currently positioned across the
-          adoption levels defined by the diagnostic instrument.
-        </p>
 
         {adoptionLevels.length ? (
           <table className="table">
@@ -808,46 +1010,106 @@ export function ResultsPage({ data, overview, loading }) {
           </div>
         </div>
 
-        {elementRows.length ? (
-          <table className="table table--grouped">
-            <thead>
-              <tr>
-                <th rowSpan="2">Dimension</th>
-                <th rowSpan="2">Element</th>
-                <th colSpan="3">Stages of StH</th>
-              </tr>
-              <tr>
-                <th>Continuous Integration</th>
-                <th>Continuous Deployment</th>
-                <th>Organization</th>
-              </tr>
-            </thead>
-            <tbody>
-              {elementRows.map((row) => (
-                <tr key={row.key}>
-                  {row.showDimension ? (
-                    <td rowSpan={row.rowSpan} className="table-group-cell">
-                      <strong>{row.dimensionName}</strong>
+        {allElementRows.length ? (
+          <>
+            <div className="roadmap-toolbar">
+              <div className="roadmap-filters roadmap-filters--two">
+                <div className="roadmap-filter-field">
+                  <span>Filter dimensions</span>
+                  <FilterDropdown
+                    label="Dimensions"
+                    summary={buildMultiSelectSummary(
+                      selectedDimensions,
+                      dimensionFilterOptions,
+                      "dimension",
+                      "dimensions"
+                    )}
+                    options={dimensionFilterOptions}
+                    selectedValues={selectedDimensions}
+                    onToggle={(value) => toggleMultiSelectValue(value, setSelectedDimensions)}
+                    onSelectAll={() =>
+                      setSelectedDimensions(dimensionFilterOptions.map((item) => item.value))
+                    }
+                    onClearAll={() => setSelectedDimensions([])}
+                  />
+                </div>
+
+                <div className="roadmap-filter-field">
+                  <span>Filter elements</span>
+                  <FilterDropdown
+                    label="Elements"
+                    summary={buildMultiSelectSummary(
+                      selectedElements,
+                      elementFilterOptions,
+                      "element",
+                      "elements"
+                    )}
+                    options={elementFilterOptions}
+                    selectedValues={selectedElements}
+                    onToggle={(value) => toggleMultiSelectValue(value, setSelectedElements)}
+                    onSelectAll={() =>
+                      setSelectedElements(elementFilterOptions.map((item) => item.value))
+                    }
+                    onClearAll={() => setSelectedElements([])}
+                  />
+                </div>
+              </div>
+
+              <div className="roadmap-toolbar__meta">
+                <p className="roadmap-summary">{elementFilterSummary}</p>
+              </div>
+            </div>
+
+            {elementRows.length ? (
+              <table className="table table--grouped">
+                <thead>
+                  <tr>
+                    <th rowSpan="2">Dimension</th>
+                    <th rowSpan="2">Element</th>
+                    <th colSpan="3">Stages of StH</th>
+                  </tr>
+                  <tr>
+                    <th>Continuous Integration</th>
+                    <th>Continuous Deployment</th>
+                    <th>Organization</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {elementRows.map((row) => (
+                    <tr key={row.key}>
+                      {row.showDimension ? (
+                        <td rowSpan={row.rowSpan} className="table-group-cell">
+                          <strong>{row.dimensionName}</strong>
+                        </td>
+                      ) : null}
+                      <td>
+                        <strong>{row.elementName}</strong>
+                      </td>
+                      <td>{formatDimensionValue(row.ciScore)}</td>
+                      <td>{formatDimensionValue(row.cdScore)}</td>
+                      <td>{formatDimensionValue(row.organizationScore)}</td>
+                    </tr>
+                  ))}
+                  <tr className="table-summary-row table-summary-row--final">
+                    <td colSpan="2">
+                      <strong>
+                        {isFilteredElementView
+                          ? "Average of visible selection"
+                          : "Degree of adoption"}
+                      </strong>
                     </td>
-                  ) : null}
-                  <td>
-                    <strong>{row.elementName}</strong>
-                  </td>
-                  <td>{formatDimensionValue(row.ciScore)}</td>
-                  <td>{formatDimensionValue(row.cdScore)}</td>
-                  <td>{formatDimensionValue(row.organizationScore)}</td>
-                </tr>
-              ))}
-              <tr className="table-summary-row table-summary-row--final">
-                <td colSpan="2">
-                  <strong>Degree of adoption</strong>
-                </td>
-                <td>{formatDimensionValue(elementOverview.summary.ciScore)}</td>
-                <td>{formatDimensionValue(elementOverview.summary.cdScore)}</td>
-                <td>{formatDimensionValue(elementOverview.summary.organizationScore)}</td>
-              </tr>
-            </tbody>
-          </table>
+                    <td>{formatDimensionValue(visibleElementSummary.ciScore)}</td>
+                    <td>{formatDimensionValue(visibleElementSummary.cdScore)}</td>
+                    <td>{formatDimensionValue(visibleElementSummary.organizationScore)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            ) : (
+              <p className="empty-state">
+                No elements match the selected dimensions and elements.
+              </p>
+            )}
+          </>
         ) : (
           <p className="empty-state">No element-level evidence is available for this cycle.</p>
         )}
@@ -856,42 +1118,77 @@ export function ResultsPage({ data, overview, loading }) {
       <section className="panel">
         <div className="section-head">
           <div>
-            <h3>Practice-group analysis</h3>
+            <h3>Dimension-group analysis</h3>
           </div>
         </div>
 
-        {practiceGroups.length ? (
-          <div className="dimension-grid">
-            {practiceGroups.map((item) => (
-              <article key={item.key} className="dimension-card dimension-card--detailed">
-                <div className="dimension-card__head">
-                  <div>
-                    <h4>{item.name}</h4>
-                  </div>
-                  <strong>{item.score}</strong>
+        {dimensionGroupsSource.length ? (
+          <>
+            <div className="roadmap-toolbar">
+              <div className="roadmap-filters roadmap-filters--one">
+                <div className="roadmap-filter-field">
+                  <span>Filter dimensions</span>
+                  <FilterDropdown
+                    label="Dimensions"
+                    summary={buildMultiSelectSummary(
+                      selectedGroupDimensions,
+                      groupDimensionFilterOptions,
+                      "dimension",
+                      "dimensions"
+                    )}
+                    options={groupDimensionFilterOptions}
+                    selectedValues={selectedGroupDimensions}
+                    onToggle={(value) => toggleMultiSelectValue(value, setSelectedGroupDimensions)}
+                    onSelectAll={() =>
+                      setSelectedGroupDimensions(groupDimensionFilterOptions.map((item) => item.value))
+                    }
+                    onClearAll={() => setSelectedGroupDimensions([])}
+                  />
                 </div>
+              </div>
 
-                <PercentageScale
-                  score={item.score}
-                  showMarker
-                  className="dimension-card__scale"
-                />
+              <div className="roadmap-toolbar__meta">
+                <p className="roadmap-summary">{practiceGroupSummary}</p>
+              </div>
+            </div>
 
-                <div className="dimension-card__evidence">
-                  <div>
-                    <span>What supports this group</span>
-                    <strong>{buildPracticeGroupSignal(item, "strength")}</strong>
-                  </div>
-                  <div>
-                    <span>What constrains this group</span>
-                    <strong>{buildPracticeGroupSignal(item, "bottleneck")}</strong>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+            {practiceGroups.length ? (
+              <div className="dimension-grid">
+                {practiceGroups.map((item) => (
+                  <article key={item.key} className="dimension-card dimension-card--detailed">
+                    <div className="dimension-card__head">
+                      <div>
+                        <h4>{item.name}</h4>
+                        {item.focus ? <span>{item.focus}</span> : null}
+                      </div>
+                      <strong>{item.score}</strong>
+                    </div>
+
+                    <PercentageScale
+                      score={item.score}
+                      showMarker
+                      className="dimension-card__scale"
+                    />
+
+                    <div className="dimension-card__evidence">
+                      <div>
+                        <span>What supports this group</span>
+                        <strong>{buildPracticeGroupSignal(item, "strength")}</strong>
+                      </div>
+                      <div>
+                        <span>What constrains this group</span>
+                        <strong>{buildPracticeGroupSignal(item, "bottleneck")}</strong>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="empty-state">No dimensions match the selected filter.</p>
+            )}
+          </>
         ) : (
-          <p className="empty-state">No practice-group evidence is available in the current payload.</p>
+          <p className="empty-state">No dimension-group evidence is available in the current payload.</p>
         )}
       </section>
     </>

@@ -1286,6 +1286,9 @@ class QuestionnaireAnalyticsService:
         cycles = []
         for key, cycle_answers in sorted(grouped.items(), key=sort_key):
             questionnaire = questionnaires.get(key)
+            if questionnaire is None:
+                continue
+
             overall_score = self._score_for_answers(
                 cycle_answers,
                 organization=organization,

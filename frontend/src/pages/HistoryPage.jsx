@@ -1,10 +1,99 @@
+import { useMemo, useState } from "react";
 import { fallbackHistoryData } from "../mock/analyticsFallback";
+
+const HISTORY_STAGE_METRICS = [
+  {
+    key: "agile",
+    title: "Agile R&D evolution",
+    label: "Agile R&D Organization"
+  },
+  {
+    key: "ci",
+    title: "CI evolution",
+    label: "Continuous Integration"
+  },
+  {
+    key: "cd",
+    title: "CD evolution",
+    label: "Continuous Deployment"
+  },
+  {
+    key: "experimentation",
+    title: "Experiment System evolution",
+    label: "R&D as an Experiment System"
+  }
+];
+
+function getCycleStageScore(cycle, stageKey) {
+  if (!cycle) return null;
+  if (cycle[stageKey] != null) return cycle[stageKey];
+  return cycle.stages?.find((stage) => stage.key === stageKey)?.score ?? null;
+}
+
+function formatDelta(value) {
+  if (value == null) return "-";
+  return value >= 0 ? `+${value}` : `${value}`;
+}
+
+function formatScore(value) {
+  return value == null ? "-" : value;
+}
+
+function buildComparison(baselineCycle, currentCycle) {
+  const stageDeltas = HISTORY_STAGE_METRICS.reduce((acc, stage) => {
+    const baselineScore = getCycleStageScore(baselineCycle, stage.key);
+    const currentScore = getCycleStageScore(currentCycle, stage.key);
+
+    acc[stage.key] =
+      baselineScore != null && currentScore != null ? currentScore - baselineScore : null;
+    return acc;
+  }, {});
+
+  return {
+    overallDelta:
+      baselineCycle && currentCycle ? currentCycle.overall - baselineCycle.overall : null,
+    recommendationReduction:
+      baselineCycle && currentCycle
+        ? baselineCycle.recommendationCount - currentCycle.recommendationCount
+        : null,
+    institutionalizedGrowth:
+      baselineCycle && currentCycle
+        ? currentCycle.adoptionLevels.institutionalized -
+          baselineCycle.adoptionLevels.institutionalized
+        : null,
+    stageDeltas
+  };
+}
 
 export function HistoryPage({ data, loading }) {
   // O historico compara ciclos para mostrar progressao real de maturidade ao longo do tempo.
   const view = data || fallbackHistoryData;
-  const baselineCycle = view.historySeries[0];
-  const currentCycle = view.historySeries[view.historySeries.length - 1];
+  const historySeries = view.historySeries || [];
+  const [baselineIndex, setBaselineIndex] = useState("0");
+  const [comparisonIndex, setComparisonIndex] = useState("");
+  const lastCycleIndex = Math.max(historySeries.length - 1, 0);
+  const baselineOptions =
+    historySeries.length > 1 ? historySeries.slice(0, -1) : historySeries;
+  const safeBaselineIndex = Math.min(
+    Math.max(Number(baselineIndex) || 0, 0),
+    Math.max(baselineOptions.length - 1, 0)
+  );
+  const comparisonOptions = historySeries
+    .map((item, index) => ({ item, index }))
+    .filter(({ index }) => index > safeBaselineIndex);
+  const requestedComparisonIndex = comparisonIndex === "" ? null : Number(comparisonIndex);
+  const safeComparisonIndex = comparisonOptions.some(
+    ({ index }) => index === requestedComparisonIndex
+  )
+    ? requestedComparisonIndex
+    : comparisonOptions[comparisonOptions.length - 1]?.index ?? lastCycleIndex;
+  const baselineCycle = baselineOptions[safeBaselineIndex] || historySeries[0];
+  const currentCycle =
+    historySeries[safeComparisonIndex] || historySeries[lastCycleIndex] || baselineCycle;
+  const comparison = useMemo(
+    () => buildComparison(baselineCycle, currentCycle),
+    [baselineCycle, currentCycle]
+  );
 
   if (loading && !data) {
     return <section className="panel">Loading historical progression from backend...</section>;
@@ -26,28 +115,60 @@ export function HistoryPage({ data, loading }) {
   return (
     <>
       {/* Resumo rapido da evolucao desde o ciclo base. */}
-      <section className="grid-4">
+      <section className="panel">
+        <div className="roadmap-toolbar">
+          <div className="roadmap-filters roadmap-filters--two">
+            <label className="roadmap-filter-field">
+              <span>Baseline cycle</span>
+              <select
+                value={String(safeBaselineIndex)}
+                onChange={(event) => setBaselineIndex(event.target.value)}
+              >
+                {baselineOptions.map((item, index) => (
+                  <option key={`${item.cycle}-${item.period}`} value={String(index)}>
+                    {item.cycle} - {item.period}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="roadmap-filter-field">
+              <span>Comparison cycle</span>
+              <select
+                value={String(safeComparisonIndex)}
+                onChange={(event) => setComparisonIndex(event.target.value)}
+              >
+                {comparisonOptions.map(({ item, index }) => (
+                  <option key={`${item.cycle}-${item.period}`} value={String(index)}>
+                    {item.cycle} - {item.period}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid-3">
         <article className="metric-card">
           <p>Overall evolution</p>
-          <h2>{view.summary.overallDelta >= 0 ? `+${view.summary.overallDelta}` : view.summary.overallDelta}</h2>
-          <small>From baseline to current cycle</small>
+          <h2>{formatDelta(comparison.overallDelta)}</h2>
+          <small>
+            {baselineCycle?.cycle || "Baseline"} to {currentCycle?.cycle || "comparison cycle"}
+          </small>
         </article>
 
-        <article className="metric-card">
-          <p>CI evolution</p>
-          <h2>{view.summary.ciDelta >= 0 ? `+${view.summary.ciDelta}` : view.summary.ciDelta}</h2>
-          <small>Continuous Integration gain across cycles</small>
-        </article>
-
-        <article className="metric-card">
-          <p>CD evolution</p>
-          <h2>{view.summary.cdDelta >= 0 ? `+${view.summary.cdDelta}` : view.summary.cdDelta}</h2>
-          <small>Continuous Deployment gain across cycles</small>
-        </article>
+        {HISTORY_STAGE_METRICS.map((stage) => (
+          <article key={stage.key} className="metric-card">
+            <p>{stage.title}</p>
+            <h2>{formatDelta(comparison.stageDeltas[stage.key])}</h2>
+            <small>{stage.label}</small>
+          </article>
+        ))}
 
         <article className="metric-card">
           <p>Recommendations reduced</p>
-          <h2>{view.summary.recommendationReduction}</h2>
+          <h2>{formatDelta(comparison.recommendationReduction)}</h2>
           <small>Fewer low-maturity practices needing intervention</small>
         </article>
       </section>
@@ -57,10 +178,6 @@ export function HistoryPage({ data, loading }) {
         <div className="section-head">
           <div>
             <h3>What changed between cycles?</h3>
-            <p>
-              The history below shows how CI, CD and the number of triggered recommendations moved
-              between assessment cycles.
-            </p>
           </div>
         </div>
 
@@ -72,8 +189,16 @@ export function HistoryPage({ data, loading }) {
                   <h4>{item.cycle}</h4>
                   <p>{item.period}</p>
                 </div>
-                <span className={`history-cycle-card__delta ${item.delta < 0 ? "negative" : ""}`}>
-                  {index === 0 ? "Baseline" : item.delta >= 0 ? `+${item.delta}` : `${item.delta}`}
+                <span
+                  className={`history-cycle-card__delta ${
+                    item.overall - baselineCycle.overall < 0 ? "negative" : ""
+                  }`}
+                >
+                  {index === safeBaselineIndex
+                    ? "Baseline"
+                    : index === safeComparisonIndex
+                      ? `Target ${formatDelta(item.overall - baselineCycle.overall)}`
+                      : formatDelta(item.overall - baselineCycle.overall)}
                 </span>
               </div>
 
@@ -87,14 +212,12 @@ export function HistoryPage({ data, loading }) {
               </div>
 
               <ul className="trend-list">
-                <li>
-                  <span>Continuous Integration</span>
-                  <strong>{item.ci}</strong>
-                </li>
-                <li>
-                  <span>Continuous Deployment</span>
-                  <strong>{item.cd}</strong>
-                </li>
+                {HISTORY_STAGE_METRICS.map((stage) => (
+                  <li key={`${item.cycle}-${stage.key}`}>
+                    <span>{stage.label}</span>
+                    <strong>{formatScore(getCycleStageScore(item, stage.key))}</strong>
+                  </li>
+                ))}
                 <li>
                   <span>Triggered recommendations</span>
                   <strong>{item.recommendationCount}</strong>
@@ -108,10 +231,6 @@ export function HistoryPage({ data, loading }) {
       {/* Tabela que explicita a migracao das praticas entre niveis de adocao. */}
       <section className="panel">
         <h3>Adoption-level shift across cycles</h3>
-        <p>
-          The dissertation highlights a migration from localized practices to process-level and
-          institutionalized adoption. The table below makes that movement explicit.
-        </p>
 
         <table className="table">
           <thead>
@@ -143,13 +262,13 @@ export function HistoryPage({ data, loading }) {
       </section>
 
       {/* Interpretacao final em linguagem mais humana para apresentacao do TCC. */}
-      <section className="grid-3">
+      <section className="history-insight-grid">
         <article className="panel">
           <h3>Main improvements</h3>
           <ul className="insight-list">
             <li className="insight-item">
               <small>Stage evolution</small>
-              <h4>Continuous Integration gained {view.summary.ciDelta} points</h4>
+              <h4>Continuous Integration changed {formatDelta(comparison.stageDeltas.ci)} points</h4>
               <p>
                 CI moved faster than CD across the tracked cycles, reinforcing the thesis finding
                 that stronger integration foundations tend to emerge before more advanced delivery capability.
@@ -157,7 +276,7 @@ export function HistoryPage({ data, loading }) {
             </li>
             <li className="insight-item">
               <small>Adoption profile</small>
-              <h4>Institutionalized practices grew by {view.summary.institutionalizedGrowth}</h4>
+              <h4>Institutionalized practices changed by {formatDelta(comparison.institutionalizedGrowth)}</h4>
               <p>Mature practices now represent the largest share of the assessed CI/CD subset.</p>
             </li>
           </ul>
@@ -177,20 +296,6 @@ export function HistoryPage({ data, loading }) {
           </ul>
         </article>
 
-        <article className="panel">
-          <h3>Reading for the next cycle</h3>
-          <ul className="insight-list">
-            <li className="insight-item">
-              <small>Recommended interpretation</small>
-              <h4>Fewer recommendations, higher maturity</h4>
-              <p>
-                The number of triggered recommendations dropped from {baselineCycle.recommendationCount} to{" "}
-                {currentCycle.recommendationCount}, indicating that more practices crossed the threshold
-                from local adoption to process-level or institutionalized use.
-              </p>
-            </li>
-          </ul>
-        </article>
       </section>
     </>
   );

@@ -51,6 +51,7 @@ function getScaleLabelClass(value, safeScore) {
   return [
     "maturity-scale__label",
     edgeClass,
+    `maturity-scale__label--value-${value}`,
     safeScore >= value ? "is-reached" : ""
   ]
     .filter(Boolean)
@@ -104,12 +105,14 @@ function MaturityScale({ score, currentLevel, available, compact = false }) {
             style={getScaleLabelStyle(item.value)}
           >
             <strong>{item.value}</strong>
-            <span>{renderScaleLabel(item.label)}</span>
+            {!compact ? <span>{renderScaleLabel(item.label)}</span> : null}
           </div>
         ))}
       </div>
 
-      <p className="maturity-scale__reading">Current position: {currentLevel}</p>
+      <p className="maturity-scale__reading">
+        Current position: <strong>{currentLevel}</strong>
+      </p>
     </div>
   );
 }

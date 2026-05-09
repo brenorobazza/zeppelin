@@ -511,7 +511,7 @@ export default function App() {
     },
     results: {
       title: "Diagnostic Detail",
-      subtitle: "Detailed analytical interpretation of the current diagnosis by stage and practice group.",
+      subtitle: "",
       component: (
         <ResultsPage
           data={analytics.results}
@@ -522,7 +522,7 @@ export default function App() {
     },
     recommendations: {
       title: "Recommendations",
-      subtitle: "Actions derived from the current diagnostic reading.",
+      subtitle: "",
       component: (
         <RecommendationsPage
           data={analytics.recommendations}
@@ -532,7 +532,7 @@ export default function App() {
     },
     history: {
       title: "Evolution by Cycle",
-      subtitle: "What changed across assessment cycles in CI, CD and recommendation load?",
+      subtitle: "",
       component: (
         <HistoryPage
           data={analytics.history}

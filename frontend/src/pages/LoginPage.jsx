@@ -91,8 +91,8 @@ export function LoginPage({ onCreateAccountClick, onLoginSuccess }) {
               Explore the practices you <span>master</span>.
             </h1>
             <p>
-              Zeppelin helps your team measure CI/CD maturity, identify bottlenecks, and evolve with
-              confidence.
+              Zeppelin measures maturity across the four stages: Agile R&amp;D Organization,
+              Continuous Integration, Continuous Deployment, and R&amp;D as an Experiment System.
             </p>
           </div>
         </aside>

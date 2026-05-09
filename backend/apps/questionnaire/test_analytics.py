@@ -294,6 +294,31 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         self.assertEqual(cycles[0]["recommendation_count"], 2)
         self.assertEqual(cycles[1]["recommendation_count"], 1)
 
+    def test_build_history_cycles_skips_aggregated_snapshot_without_questionnaire(
+        self,
+    ):
+        aggregate_answer = make_answer(
+            99,
+            "CI.99",
+            "Aggregated answer without a questionnaire cycle.",
+            "Continuous Integration",
+            "Integration practices",
+            self.service.adopted_levels[3],
+            self.current_cycle,
+        )
+        aggregate_answer.questionnaire_answer = None
+        aggregate_answer.questionnaire_answer_id = None
+
+        cycles = self.service._build_history_cycles(
+            self.all_answers + [aggregate_answer]
+        )
+
+        self.assertEqual(len(cycles), 2)
+        self.assertNotIn(
+            "Aggregated snapshot",
+            [cycle["label"] for cycle in cycles],
+        )
+
     def test_resolve_dimension_name_uses_instrument_catalog_for_ci_cd_questions(self):
         dimension_name = self.service._resolve_dimension_name(self.old_answers[0])
 

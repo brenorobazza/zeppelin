@@ -508,6 +508,129 @@
   text-align: right;
 }
 
+.results-filter-dropdown {
+  position: relative;
+}
+
+.results-filter-dropdown__summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #d5dfed;
+  border-radius: 10px;
+  padding: 0.6rem 0.72rem;
+  background: #ffffff;
+  color: #173256;
+  cursor: pointer;
+}
+
+.results-filter-dropdown__summary::-webkit-details-marker {
+  display: none;
+}
+
+.results-filter-dropdown__copy {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.results-filter-dropdown__summary span {
+  color: #4b5d79;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.results-filter-dropdown__summary strong {
+  color: #173256;
+  font-size: 0.88rem;
+}
+
+.results-filter-dropdown__indicator {
+  display: inline-flex;
+  align-items: center;
+  color: #60708a;
+}
+
+.results-filter-dropdown__chevron {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid #60708a;
+  border-bottom: 2px solid #60708a;
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform 160ms ease;
+}
+
+.results-filter-dropdown__chevron--open {
+  transform: rotate(-135deg) translateY(-1px);
+}
+
+.results-filter-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 10;
+  width: min(100%, 340px);
+  min-width: 100%;
+  border: 1px solid #dbe5f3;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 14px 28px rgba(20, 41, 70, 0.12);
+  padding: 0.8rem;
+}
+
+.results-filter-dropdown__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.results-filter-dropdown__actions .btn-secondary-ui {
+  padding: 0.36rem 0.72rem;
+  font-size: 0.82rem;
+}
+
+.results-filter-dropdown__options {
+  display: grid;
+  gap: 0.45rem;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.results-filter-dropdown__option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.55rem;
+  align-items: start;
+  border: 1px solid #edf2f8;
+  border-radius: 12px;
+  background: #fbfdff;
+  padding: 0.58rem 0.7rem;
+}
+
+.results-filter-dropdown__option input {
+  margin: 0.18rem 0 0;
+  accent-color: #1f5ea8;
+}
+
+.results-filter-dropdown__option span {
+  color: #203251;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.results-filter-dropdown__option small {
+  grid-column: 2;
+  color: #6a7a93;
+  font-size: 0.8rem;
+}
+
+.results-filter-dropdown__empty {
+  margin: 0;
+  color: #6a7a93;
+  font-size: 0.88rem;
+}
+
 .table-stage-head {
   display: grid;
   gap: 0.18rem;
@@ -867,7 +990,7 @@
 }
 
 .maturity-scale--compact .maturity-scale__labels {
-  min-height: 3rem;
+  min-height: 1.1rem;
 }
 
 .maturity-scale--compact .maturity-scale__reading {
@@ -975,6 +1098,11 @@
   font-size: 0.88rem;
 }
 
+.maturity-scale__reading strong {
+  color: #123764;
+  font-weight: 800;
+}
+
 .maturity-scale--percentage .maturity-scale__label {
   gap: 0;
   max-width: none;
@@ -1014,6 +1142,14 @@
 
 .maturity-scale:not(.maturity-scale--percentage) .maturity-scale__label span {
   font-size: 0.67rem;
+}
+
+.maturity-scale--compact.maturity-scale:not(.maturity-scale--percentage) .maturity-scale__label {
+  max-width: none;
+}
+
+.maturity-scale--compact.maturity-scale:not(.maturity-scale--percentage) .maturity-scale__labels {
+  min-height: 1.1rem;
 }
 
 .support-panel {
@@ -1140,7 +1276,6 @@
   align-items: end;
   gap: 0.9rem;
   height: 260px;
-  padding-top: 0.75rem;
 }
 
 .adoption-stage-chart__gridline {
@@ -1166,6 +1301,7 @@
   justify-content: flex-start;
   width: min(100%, 118px);
   height: 260px;
+  box-sizing: border-box;
   overflow: hidden;
   border-radius: 12px 12px 0 0;
   border: 1px solid #dce6f3;
@@ -1480,6 +1616,13 @@
   align-items: center;
 }
 
+.roadmap-card__question {
+  flex: 1 1 220px;
+  color: #142946;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
 .roadmap-card h4 {
   margin: 0.6rem 0 0.35rem;
   color: #142946;
@@ -1556,6 +1699,17 @@
 
 .history-cycles--three {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.history-insight-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.history-insight-grid > .panel {
+  min-width: 0;
 }
 
 .history-cycle-card {
@@ -2012,7 +2166,8 @@
   .stage-grid,
   .journey-grid,
   .roadmap-grid,
-  .history-cycles {
+  .history-cycles,
+  .history-insight-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2054,6 +2209,10 @@
 
   .results-adoption-summary {
     grid-template-columns: 1fr;
+  }
+
+  .results-filter-dropdown__menu {
+    width: 100%;
   }
 
   .adoption-stage-chart__plot {
