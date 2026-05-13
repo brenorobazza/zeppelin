@@ -2,7 +2,7 @@ import csv
 from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
-from statistics import mean
+from statistics import mean, median
 
 from apps.organization.models import Organization
 from django.core.exceptions import ValidationError
@@ -790,7 +790,7 @@ class QuestionnaireAnalyticsService:
             answers, organization=organization
         )
         history_cycles = self._build_history_cycles(
-            context["all_answers"], organization
+            context["all_answers"], context["organization"], expected_statement_count
         )
         overall_score = self._score_for_answers(
             answers,
@@ -987,7 +987,18 @@ class QuestionnaireAnalyticsService:
         selected_answers = context.get("selected_answers", context["current_answers"])
         selected_cycle_empty = context.get("selected_cycle_empty", False)
         cycles = self._build_history_cycles(
-            context["all_answers"], context["organization"]
+            context["all_answers"],
+            context["organization"],
+            context.get("expected_statement_count"),
+        )
+
+        # Also expose only-complete cycles for UI components that must ignore
+        # incomplete snapshots (e.g., radar/comparison visuals).
+        complete_cycles = self._build_history_cycles(
+            context["all_answers"],
+            context["organization"],
+            context.get("expected_statement_count"),
+            filter_incomplete=True,
         )
 
         if len(cycles) >= 2:
@@ -1015,6 +1026,7 @@ class QuestionnaireAnalyticsService:
                 "recommendation_reduction": recommendation_reduction,
             },
             "cycles": cycles,
+            "complete_cycles": complete_cycles,
         }
 
     # Monta a resposta agregada de comparacao para o card de benchmark.
@@ -1042,8 +1054,14 @@ class QuestionnaireAnalyticsService:
             reference_answers,
         )
 
-        current_overall_score = self._score_for_answers(current_answers)
-        reference_overall_score = self._score_for_answers(reference_answers)
+        current_overall_score = self._score_for_answers(
+            current_answers,
+            organization=organization,
+        )
+        reference_overall_score = self._score_for_answers(
+            reference_answers,
+            organization=organization,
+        )
 
         return {
             "organization": self._serialize_organization(organization),
@@ -1052,7 +1070,12 @@ class QuestionnaireAnalyticsService:
                 "reference_mode": reference_mode,
                 "current_cycle": current_cycle,
                 "reference_cycle": reference_cycle,
-                "available_cycles": self._build_history_cycles(all_answers),
+                "available_cycles": self._build_history_cycles(
+                    all_answers,
+                    None,
+                    context.get("expected_statement_count"),
+                    filter_incomplete=True,
+                ),
             },
             "summary": {
                 "current_score": current_overall_score,
@@ -1091,6 +1114,7 @@ class QuestionnaireAnalyticsService:
     def get_benchmark_payload(self, request):
         # Resolve current org context (keeps organization info consistent)
         context = self._resolve_context(request)
+        organization = context["organization"]
         stage_scope = context["stage_scope"]
         expected_statement_count = context["expected_statement_count"]
 
@@ -1121,7 +1145,10 @@ class QuestionnaireAnalyticsService:
         )
 
         available_cycles = self._build_history_cycles(
-            context["all_answers"], context["organization"]
+            context["all_answers"],
+            context["organization"],
+            expected_statement_count,
+            filter_incomplete=True,
         )
 
         base_payload = {
@@ -1213,9 +1240,15 @@ class QuestionnaireAnalyticsService:
             }
             return base_payload
 
-        reference_overall_score = self._score_for_answers(reference_answers)
+        reference_overall_score = self._score_for_answers(
+            reference_answers,
+            organization=organization,
+        )
         reference_cycle = self._serialize_cycle(None, reference_answers)
-        current_overall_score = self._score_for_answers(current_answers)
+        current_overall_score = self._score_for_answers(
+            current_answers,
+            organization=organization,
+        )
 
         base_payload["selection"]["reference_cycle"] = reference_cycle
         base_payload["summary"] = {
@@ -1559,20 +1592,27 @@ class QuestionnaireAnalyticsService:
             "answered_practices": len(answers),
         }
 
-    # Calcula a pontuação média do conjunto de respostas.
+    # Calcula a pontuação do conjunto de respostas.
     def _score_for_answers(self, answers, expected_total=None, organization=None):
+        """Calculate score for a set of answers.
+
+        Uses instrument weights with median aggregation. When an
+        expected_total is provided and the cycle is partial, missing answers
+        are imputed as zeros before the median is computed.
+        """
         weights = [
             self._instrument_weight(answer, organization=organization)
             for answer in answers
             if answer.adopted_level_answer is not None
         ]
-        total = len(weights)
-        if expected_total is not None:
-            total = max(total, expected_total)
 
-        if total == 0:
+        if not weights:
             return 0
-        return round(sum(weights) / total)
+
+        if expected_total is not None and len(weights) < expected_total:
+            weights = weights + [0] * (expected_total - len(weights))
+
+        return round(median(weights))
 
     def _questionnaire_status(self, answered_count, expected_total):
         if expected_total <= 0:
@@ -2509,7 +2549,9 @@ class QuestionnaireAnalyticsService:
         return items
 
     # Reconstrói a linha do tempo dos ciclos da organização.
-    def _build_history_cycles(self, answers, organization=None):
+    def _build_history_cycles(
+        self, answers, organization=None, expected_total=None, filter_incomplete=False
+    ):
         grouped = defaultdict(list)
         questionnaires = {}
 
@@ -2553,11 +2595,17 @@ class QuestionnaireAnalyticsService:
         cycles = []
         for key, cycle_answers in sorted(grouped.items(), key=sort_key):
             questionnaire = questionnaires.get(key)
-            if questionnaire is None:
+            is_complete = (
+                True if expected_total is None else len(cycle_answers) >= expected_total
+            )
+
+            # When requested, skip incomplete cycles (used by radar/comparison selections).
+            if filter_incomplete and not is_complete:
                 continue
 
             overall_score = self._score_for_answers(
                 cycle_answers,
+                expected_total=expected_total,
                 organization=organization,
             )
             stage_scores = self._build_stage_scores(
@@ -2594,6 +2642,7 @@ class QuestionnaireAnalyticsService:
                         organization=organization,
                     ),
                     "answered_practices": len(cycle_answers),
+                    "complete": is_complete,
                     "recommendation_count": len(
                         [
                             answer

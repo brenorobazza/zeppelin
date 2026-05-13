@@ -7,8 +7,9 @@ import {
   RadarChart,
   ResponsiveContainer
 } from "recharts";
-import { AlertTriangle, Lock, SearchX, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, Lock, SearchX } from "lucide-react";
 import { loadBenchmarkAnalytics, loadComparisonAnalytics } from "../services/analytics";
+import { BenchmarkStatePanel } from "./BenchmarkStatePanel";
 import "./benchmark-comparison-card.css";
 
 const LENS_OPTIONS = [
@@ -260,41 +261,6 @@ function getCycleLabel(comparisonData, cycleId) {
 function getDifferentCycleId(cycles = [], excludedId = "") {
   const candidate = cycles.find((cycle) => String(cycle.id) !== String(excludedId));
   return candidate ? String(candidate.id) : "";
-}
-
-function BenchmarkStatePanel({
-  tone = "neutral",
-  title,
-  message,
-  badge,
-  details,
-  actionLabel,
-  onAction,
-  icon = null
-}) {
-  return (
-    <section className={["benchmark-state", `benchmark-state--${tone}`].join(" ")}>
-      <header className="benchmark-state__head">
-        {badge ? <span className="benchmark-state__badge">{badge}</span> : null}
-      </header>
-
-      <div className="benchmark-state__icon" aria-hidden="true">
-        {icon}
-      </div>
-
-      <h3>{title}</h3>
-      <p>{message}</p>
-
-      {details ? <small className="benchmark-state__details">{details}</small> : null}
-
-      {actionLabel && typeof onAction === "function" ? (
-        <button type="button" className="benchmark-state__action" onClick={onAction}>
-          <SlidersHorizontal size={14} strokeWidth={2.2} />
-          {actionLabel}
-        </button>
-      ) : null}
-    </section>
-  );
 }
 
 /**

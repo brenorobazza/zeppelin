@@ -393,7 +393,8 @@ function normalizeRecommendations(payload) {
 
 // Resolve pequenas variações de nome nas chaves de histórico.
 function getHistoryCount(cycle, key) {
-  if (cycle.adoption_levels[key] != null) return cycle.adoption_levels[key];
+  const adoptionLevels = cycle?.adoption_levels || {};
+  if (adoptionLevels[key] != null) return adoptionLevels[key];
 
   const aliases = {
     "not-adopted": ["nao-adotada", "not-adopted"],
@@ -412,10 +413,10 @@ function getHistoryCount(cycle, key) {
   };
 
   const candidates = aliases[key] || [key];
-  const matchedKey = Object.keys(cycle.adoption_levels || {}).find((itemKey) =>
+  const matchedKey = Object.keys(adoptionLevels).find((itemKey) =>
     candidates.includes(itemKey)
   );
-  return matchedKey ? cycle.adoption_levels[matchedKey] : 0;
+  return matchedKey ? adoptionLevels[matchedKey] : 0;
 }
 
 const HISTORY_STAGE_DEFINITIONS = [
@@ -508,8 +509,12 @@ function normalizeHistory(payload) {
     };
   });
 
-  const first = historySeries[0];
-  const last = historySeries[historySeries.length - 1];
+  const historySeries = mapCyclesToSeries(payload.cycles || []);
+  const completeHistorySeries = mapCyclesToSeries(payload.complete_cycles || []);
+
+  const baselineSeries = completeHistorySeries.length > 0 ? completeHistorySeries : historySeries;
+  const first = baselineSeries[0];
+  const last = baselineSeries[baselineSeries.length - 1];
 
   return {
     selectedCycleEmpty: payload.selected_cycle_empty || false,
@@ -534,6 +539,9 @@ function normalizeHistory(payload) {
         ? last.adoptionLevels.institutionalized - first.adoptionLevels.institutionalized
         : 0
     },
+    completeCycleCount: completeHistorySeries.length,
+    insufficientData: completeHistorySeries.length < 2,
+    completeHistorySeries,
     historySeries
   };
 }
