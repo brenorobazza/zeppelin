@@ -1,0 +1,110 @@
+.benchmark-state {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 26px;
+  border-radius: 16px;
+  border: 1px solid #dbeafe;
+  background: #ffffff;
+}
+
+.benchmark-state__head {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.benchmark-state__badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.benchmark-state__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+}
+
+.benchmark-state h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.benchmark-state p {
+  margin: 0;
+  max-width: 56ch;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.benchmark-state__details {
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+.benchmark-state__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
+}
+
+.benchmark-state--warning {
+  border-color: #f59e0b;
+  background: linear-gradient(180deg, #fffbeb, #ffffff);
+}
+
+.benchmark-state--warning .benchmark-state__badge {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.benchmark-state--warning .benchmark-state__icon {
+  color: #d97706;
+  background: #fffbeb;
+  border: 1px solid #f59e0b;
+}
+
+.benchmark-state--neutral .benchmark-state__badge {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.benchmark-state--neutral .benchmark-state__icon {
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+}
+
+.benchmark-state--error {
+  border-color: #fca5a5;
+  background: linear-gradient(180deg, #fef2f2, #ffffff);
+}
+
+.benchmark-state--error .benchmark-state__badge {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.benchmark-state--error .benchmark-state__icon {
+  color: #dc2626;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+}

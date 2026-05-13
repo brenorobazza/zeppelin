@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { BenchmarkComparisonCard } from "../components/BenchmarkComparisonCard";
+import { BenchmarkStatePanel } from "../components/BenchmarkStatePanel";
+import { Lock } from "lucide-react";
 import { fallbackHistoryData } from "../mock/analyticsFallback";
 
 const HISTORY_STAGE_METRICS = [
@@ -96,8 +98,25 @@ export function HistoryPage({ data, loading, filters }) {
     [baselineCycle, currentCycle]
   );
   const hasHistory = Array.isArray(view.historySeries) && view.historySeries.length > 0;
-  const baselineCycle = hasHistory ? view.historySeries[0] : null;
-  const currentCycle = hasHistory ? view.historySeries[view.historySeries.length - 1] : null;
+  const hasCompleteHistory =
+    Array.isArray(view.completeHistorySeries) && view.completeHistorySeries.length > 0;
+  const completeCycleCount =
+    view.completeCycleCount ?? (Array.isArray(view.completeHistorySeries) ? view.completeHistorySeries.length : 0);
+  const hasEnoughCompleteCycles = completeCycleCount >= 2;
+
+  // Use complete cycles for radar/comparison context when available,
+  // but keep the full `historySeries` for lists and tables so incomplete
+  // questionnaires remain editable/visible.
+  const baselineCycle = hasCompleteHistory
+    ? view.completeHistorySeries[0]
+    : hasHistory
+    ? view.historySeries[0]
+    : null;
+  const currentCycle = hasCompleteHistory
+    ? view.completeHistorySeries[view.completeHistorySeries.length - 1]
+    : hasHistory
+    ? view.historySeries[view.historySeries.length - 1]
+    : null;
 
   if (loading && !data) {
     return <section className="panel">Loading historical progression from backend...</section>;
@@ -190,7 +209,18 @@ export function HistoryPage({ data, loading, filters }) {
         </article>
       </section>
 
-      <BenchmarkComparisonCard filters={filters} />
+      {hasEnoughCompleteCycles ? (
+        <BenchmarkComparisonCard filters={filters} />
+      ) : (
+        <BenchmarkStatePanel
+          tone="warning"
+          badge="Insufficient Data"
+          icon={<Lock size={24} strokeWidth={2.2} />}
+          title="At least two complete cycles are required for comparison"
+          message="The comparative radar chart will be enabled once at least two complete cycles are available."
+          details="Minimum required: 2 complete cycles"
+        />
+      )}
 
       {/* Cards comparativos por ciclo. */}
       <section className="panel">
