@@ -113,15 +113,17 @@ class QuestionnaireAnalyticsService:
         "Development": 0,
         "Quality": 1,
         "Software Management": 2,
-        "Technical Solution": 3,
-        "Knowledge": 4,
-        "Business": 5,
-        "User/Customer": 6,
-        "Agile Development": 7,
-        "Continuous Integration": 8,
-        "Continuous Deployment": 9,
-        "Continuous Experimentation": 10,
-        "Traditional Development": 11,
+        "Team": 3,
+        "Technical Solution": 4,
+        "Knowledge": 5,
+        "Operation": 6,
+        "Business": 7,
+        "User/Customer": 8,
+        "Agile Development": 9,
+        "Continuous Integration": 10,
+        "Continuous Deployment": 11,
+        "Continuous Experimentation": 12,
+        "Traditional Development": 13,
         "Unclassified": 999,
     }
     ADOPTION_OVERVIEW_STAGES = (
@@ -158,7 +160,255 @@ class QuestionnaireAnalyticsService:
             "title": "R&D as an Experiment System",
         },
     )
+    DIMENSION_STAGE_MATRIX_DIMENSIONS = (
+        "Development",
+        "Quality",
+        "Software Management",
+        "Team",
+        "Technical Solution",
+        "Knowledge",
+        "Operation",
+        "Business",
+        "User/Customer",
+    )
+    DIMENSION_STAGE_BASELINE_COUNTS = {
+        "Development": {"agile": 8, "experimentation": 0},
+        "Quality": {"agile": 2, "experimentation": 0},
+        "Software Management": {"agile": 10, "experimentation": 0},
+        "Team": {"agile": 2, "experimentation": 2},
+        "Technical Solution": {"agile": 1, "experimentation": 0},
+        "Knowledge": {"agile": 2, "experimentation": 3},
+        "Operation": {"agile": 0, "experimentation": 2},
+        "Business": {"agile": 1, "experimentation": 3},
+        "User/Customer": {"agile": 0, "experimentation": 3},
+    }
+    ELEMENT_STAGE_BASELINE_COUNTS = (
+        {
+            "dimension": "Development",
+            "element": "Continuous planning activities",
+            "agile": 6,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Development",
+            "element": "Continuous requirements engineering",
+            "agile": 1,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Development",
+            "element": "Focus on Feature",
+            "agile": 1,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Development",
+            "element": "Modularized architecture and design",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {"dimension": "Quality", "element": "Audits", "agile": 2, "experimentation": 0},
+        {
+            "dimension": "Quality",
+            "element": "Automated Tests",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Quality",
+            "element": "Code coverage",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Quality",
+            "element": "Pull-Request",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Quality",
+            "element": "Regular Builds",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Software Management",
+            "element": "Agile Practice",
+            "agile": 10,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Software Management",
+            "element": "Continuous delivery",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Software Management",
+            "element": "Continuous deployment of releases",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Software Management",
+            "element": "Continuous integration of work",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Team",
+            "element": "Contemporary and continuously evolving skills",
+            "agile": 1,
+            "experimentation": 2,
+        },
+        {
+            "dimension": "Team",
+            "element": "Self-reflection and discipline",
+            "agile": 1,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Technical Solution",
+            "element": "Branching strategies",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Technical Solution",
+            "element": "Code review",
+            "agile": 1,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Technical Solution",
+            "element": "Version control",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Knowledge",
+            "element": "Capturing decisions and rationale",
+            "agile": 1,
+            "experimentation": 3,
+        },
+        {
+            "dimension": "Knowledge",
+            "element": "Continuous learning",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Knowledge",
+            "element": "Sharing Knowledge",
+            "agile": 1,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "Operation",
+            "element": "Logging and monitoring",
+            "agile": 0,
+            "experimentation": 1,
+        },
+        {
+            "dimension": "Operation",
+            "element": "Reusable infrastructure",
+            "agile": 0,
+            "experimentation": 1,
+        },
+        {
+            "dimension": "Business",
+            "element": "Appropriate product idea",
+            "agile": 0,
+            "experimentation": 2,
+        },
+        {
+            "dimension": "Business",
+            "element": "Management commitment",
+            "agile": 1,
+            "experimentation": 1,
+        },
+        {
+            "dimension": "User/Customer",
+            "element": "Involved users other stakeholders",
+            "agile": 0,
+            "experimentation": 0,
+        },
+        {
+            "dimension": "User/Customer",
+            "element": "Learning from usage data and feedback",
+            "agile": 0,
+            "experimentation": 3,
+        },
+        {
+            "dimension": "User/Customer",
+            "element": "Proactive customers",
+            "agile": 0,
+            "experimentation": 0,
+        },
+    )
+    ELEMENT_NAME_ALIASES = {
+        "Appropriate product ideia": "Appropriate product idea",
+        "Continuos delivery": "Continuous delivery",
+        "Continuos deployment of releases": "Continuous deployment of releases",
+        "Continuos integration of work": "Continuous integration of work",
+        "Continuos learning": "Continuous learning",
+        "Management commitement": "Management commitment",
+    }
     INSTRUMENT_PRACTICE_CATALOG = {
+        "AO.01": {"dimension": "Business", "element": "Management commitement"},
+        "AO.02": {"dimension": "Software Management", "element": "Agile Practice"},
+        "AO.03": {
+            "dimension": "Development",
+            "element": "Continuous planning activities",
+        },
+        "AO.04": {
+            "dimension": "Development",
+            "element": "Continuous planning activities",
+        },
+        "AO.05": {
+            "dimension": "Development",
+            "element": "Continuous planning activities",
+        },
+        "AO.06": {"dimension": "Development", "element": "Focus on Feature"},
+        "AO.07": {"dimension": "Software Management", "element": "Agile Practice"},
+        "AO.08": {"dimension": "Software Management", "element": "Agile Practice"},
+        "AO.09": {
+            "dimension": "Development",
+            "element": "Continuous requirements engineering",
+        },
+        "AO.10": {"dimension": "Software Management", "element": "Agile Practice"},
+        "AO.11": {"dimension": "Software Management", "element": "Agile Practice"},
+        "AO.12": {"dimension": "Software Management", "element": "Agile Practice"},
+        "AO.13": {
+            "dimension": "Team",
+            "element": "Contemporary and continuously evolving skills",
+        },
+        "AO.14": {"dimension": "Software Management", "element": "Agile Practice"},
+        "AO.15": {"dimension": "Software Management", "element": "Agile Practice"},
+        "AO.16": {"dimension": "Team", "element": "Self-reflection and discipline"},
+        "AO.17": {"dimension": "Technical Solution", "element": "Code review"},
+        "AO.18": {"dimension": "Software Management", "element": "Agile Practice"},
+        "AO.19": {"dimension": "Quality", "element": "Audits"},
+        "AO.20": {"dimension": "Quality", "element": "Audits"},
+        "AO.21": {
+            "dimension": "Knowledge",
+            "element": "Capturing decisions and rationale",
+        },
+        "AO.22": {
+            "dimension": "Development",
+            "element": "Continuous planning activities",
+        },
+        "AO.23": {"dimension": "Software Management", "element": "Agile Practice"},
+        "AO.24": {
+            "dimension": "Development",
+            "element": "Continuous planning activities",
+        },
+        "AO.25": {"dimension": "Knowledge", "element": "Sharing Knowledge"},
+        "AO.26": {
+            "dimension": "Development",
+            "element": "Continuous planning activities",
+        },
         "CI.01": {
             "dimension": "Development",
             "element": "Modularized architecture and design",
@@ -224,6 +474,34 @@ class QuestionnaireAnalyticsService:
         "CD.15": {"dimension": "Software Management", "element": "Agile Practice"},
         "CD.16": {"dimension": "Knowledge", "element": "Continuos learning"},
         "CD.17": {"dimension": "Knowledge", "element": "Sharing Knowledge"},
+        "IS.01": {"dimension": "Knowledge", "element": "Continuos learning"},
+        "IS.02": {"dimension": "Operation", "element": "Logging and monitoring"},
+        "IS.03": {"dimension": "Business", "element": "Appropriate product ideia"},
+        "IS.04": {"dimension": "Business", "element": "Appropriate product ideia"},
+        "IS.05": {
+            "dimension": "User/Customer",
+            "element": "Learning from usage data and feedback",
+        },
+        "IS.06": {
+            "dimension": "User/Customer",
+            "element": "Learning from usage data and feedback",
+        },
+        "IS.07": {"dimension": "Operation", "element": "Reusable infrastructure"},
+        "IS.08": {"dimension": "Knowledge", "element": "Continuos learning"},
+        "IS.09": {"dimension": "Business", "element": "Management commitement"},
+        "IS.10": {
+            "dimension": "Team",
+            "element": "Contemporary and continuously evolving skills",
+        },
+        "IS.11": {
+            "dimension": "User/Customer",
+            "element": "Learning from usage data and feedback",
+        },
+        "IS.12": {
+            "dimension": "Team",
+            "element": "Contemporary and continuously evolving skills",
+        },
+        "IS.13": {"dimension": "Knowledge", "element": "Continuos learning"},
     }
     # Agrupa as recomendações em trilhas simples de roadmap.
     RECOMMENDATION_TRACKS = (
@@ -375,13 +653,13 @@ class QuestionnaireAnalyticsService:
             "dimensions": self._build_dimension_results(
                 answers, organization=organization
             ),
-            "dimension_overview": self._build_dimension_stage_overview(
-                answers,
-                organization=organization,
+            "dimension_overview": self._build_dimension_stage_matrix(
+                stage_scope=context["stage_scope"],
             ),
             "element_overview": self._build_dimension_element_overview(
                 answers,
                 organization=organization,
+                stage_scope=context["stage_scope"],
             ),
             "strengths": self._build_strengths(answers, organization=organization),
             "bottlenecks": self._build_bottlenecks(answers, organization=organization),
@@ -932,48 +1210,63 @@ class QuestionnaireAnalyticsService:
         grouped = defaultdict(
             lambda: {
                 "organization": [],
+                "Agile": [],
                 "CI": [],
                 "CD": [],
+                "Experimentation": [],
             }
         )
 
         for answer in answers:
-            statement_code = getattr(answer.statement_answer, "code", "") or ""
-            if statement_code not in self.INSTRUMENT_PRACTICE_CATALOG:
+            dimension_name = self._resolve_dimension_name(answer)
+            if not dimension_name or dimension_name == "Unclassified":
                 continue
 
-            dimension_name = self._resolve_dimension_name(answer)
             stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
             stage_short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
             score = self._instrument_weight(answer, organization=organization)
 
             grouped[dimension_name]["organization"].append(score)
-            if stage_short_name in {"CI", "CD"}:
+            if stage_short_name in {"Agile", "CI", "CD", "Experimentation"}:
                 grouped[dimension_name][stage_short_name].append(score)
 
         items = []
+        agile_aggregate = []
         ci_aggregate = []
         cd_aggregate = []
+        experimentation_aggregate = []
         organization_aggregate = []
 
         for dimension_name, buckets in grouped.items():
+            agile_scores = buckets["Agile"]
             ci_scores = buckets["CI"]
             cd_scores = buckets["CD"]
+            experimentation_scores = buckets["Experimentation"]
             org_scores = buckets["organization"]
 
+            agile_aggregate.extend(agile_scores)
             ci_aggregate.extend(ci_scores)
             cd_aggregate.extend(cd_scores)
+            experimentation_aggregate.extend(experimentation_scores)
             organization_aggregate.extend(org_scores)
 
             items.append(
                 {
                     "key": slugify(dimension_name),
                     "name": dimension_name,
+                    "agile_score": round(mean(agile_scores)) if agile_scores else None,
                     "ci_score": round(mean(ci_scores)) if ci_scores else None,
                     "cd_score": round(mean(cd_scores)) if cd_scores else None,
+                    "experimentation_score": (
+                        round(mean(experimentation_scores))
+                        if experimentation_scores
+                        else None
+                    ),
                     "organization_score": round(mean(org_scores)) if org_scores else 0,
+                    "agile_practice_count": len(agile_scores),
                     "ci_practice_count": len(ci_scores),
                     "cd_practice_count": len(cd_scores),
+                    "experimentation_practice_count": len(experimentation_scores),
                     "practice_count": len(org_scores),
                 }
             )
@@ -988,13 +1281,112 @@ class QuestionnaireAnalyticsService:
         return {
             "dimensions": items,
             "summary": {
+                "agile_score": (
+                    round(mean(agile_aggregate)) if agile_aggregate else None
+                ),
                 "ci_score": round(mean(ci_aggregate)) if ci_aggregate else None,
                 "cd_score": round(mean(cd_aggregate)) if cd_aggregate else None,
+                "experimentation_score": (
+                    round(mean(experimentation_aggregate))
+                    if experimentation_aggregate
+                    else None
+                ),
                 "organization_score": (
                     round(mean(organization_aggregate)) if organization_aggregate else 0
                 ),
                 "statement_count": len(organization_aggregate),
             },
+        }
+
+    def _build_dimension_stage_matrix(
+        self,
+        stage_scope="all",
+        statements=None,
+        include_baseline=True,
+    ):
+        stage_name_to_key = {}
+        stage_key_to_title = {}
+        for stage in self.ADOPTION_OVERVIEW_STAGES:
+            stage_key_to_title[stage["key"]] = stage["title"]
+            for label in stage["labels"]:
+                stage_name_to_key[label] = stage["key"]
+
+        stage_order = [stage["key"] for stage in self.ADOPTION_OVERVIEW_STAGES]
+        grouped = {
+            dimension_name: {stage_key: 0 for stage_key in stage_order}
+            for dimension_name in self.DIMENSION_STAGE_MATRIX_DIMENSIONS
+        }
+
+        if include_baseline and stage_scope != "ci_cd":
+            for dimension_name, counts in self.DIMENSION_STAGE_BASELINE_COUNTS.items():
+                grouped[dimension_name]["agile"] = counts["agile"]
+                grouped[dimension_name]["experimentation"] = counts["experimentation"]
+
+        if statements is None:
+            queryset = Statement.objects.select_related(
+                "sth_stage", "pe_element__dimension"
+            )
+            if stage_scope == "ci_cd" and hasattr(queryset, "filter"):
+                queryset = queryset.filter(sth_stage__name__in=self.CI_CD_STAGE_NAMES)
+            statements = list(queryset)
+        elif stage_scope == "ci_cd":
+            statements = [
+                statement
+                for statement in statements
+                if getattr(getattr(statement, "sth_stage", None), "name", None)
+                in self.CI_CD_STAGE_NAMES
+            ]
+
+        for statement in statements:
+            stage_name = getattr(getattr(statement, "sth_stage", None), "name", None)
+            stage_key = stage_name_to_key.get(stage_name)
+            if not stage_key:
+                continue
+
+            if include_baseline and stage_key in {"agile", "experimentation"}:
+                continue
+
+            dimension_name = self._resolve_statement_dimension_name(statement)
+            if dimension_name not in grouped:
+                continue
+
+            grouped[dimension_name][stage_key] += 1
+
+        rows = []
+        summary = {f"{stage_key}_count": 0 for stage_key in stage_order}
+        statement_count = 0
+
+        for dimension_name in self.DIMENSION_STAGE_MATRIX_DIMENSIONS:
+            buckets = grouped[dimension_name]
+            practice_count = sum(buckets.values())
+            statement_count += practice_count
+
+            for stage_key in stage_order:
+                summary[f"{stage_key}_count"] += buckets[stage_key]
+
+            rows.append(
+                {
+                    "key": slugify(dimension_name),
+                    "name": dimension_name,
+                    "agile_count": buckets["agile"],
+                    "ci_count": buckets["ci"],
+                    "cd_count": buckets["cd"],
+                    "experimentation_count": buckets["experimentation"],
+                    "practice_count": practice_count,
+                }
+            )
+
+        summary["statement_count"] = statement_count
+        summary["stage_titles"] = {
+            "agile": "Agile Organization",
+            "ci": stage_key_to_title["ci"],
+            "cd": stage_key_to_title["cd"],
+            "experimentation": "R&D as Innovation System",
+        }
+
+        return {
+            "dimensions": rows,
+            "summary": summary,
         }
 
     def _build_adoption_level_stage_overview(self, answers, organization=None):
@@ -1081,74 +1473,205 @@ class QuestionnaireAnalyticsService:
             },
         }
 
-    def _build_dimension_element_overview(self, answers, organization=None):
-        grouped = defaultdict(
-            lambda: {
-                "organization": [],
-                "CI": [],
-                "CD": [],
-            }
-        )
+    def _build_dimension_element_overview(
+        self,
+        answers=None,
+        organization=None,
+        stage_scope="all",
+        statements=None,
+        include_baseline=True,
+    ):
+        stage_name_to_key = {}
+        stage_order = [stage["key"] for stage in self.ADOPTION_OVERVIEW_STAGES]
+        for stage in self.ADOPTION_OVERVIEW_STAGES:
+            for label in stage["labels"]:
+                stage_name_to_key[label] = stage["key"]
 
-        for answer in answers:
-            statement_code = getattr(answer.statement_answer, "code", "") or ""
-            if statement_code not in self.INSTRUMENT_PRACTICE_CATALOG:
+        row_order = {}
+        grouped = {}
+        for order_index, item in enumerate(self.ELEMENT_STAGE_BASELINE_COUNTS):
+            key = (item["dimension"], item["element"])
+            row_order[key] = order_index
+            grouped[key] = {stage_key: 0 for stage_key in stage_order}
+            if include_baseline and stage_scope != "ci_cd":
+                grouped[key]["agile"] = item["agile"]
+                grouped[key]["experimentation"] = item["experimentation"]
+
+        if statements is None:
+            queryset = Statement.objects.select_related(
+                "sth_stage", "pe_element__dimension"
+            )
+            if stage_scope == "ci_cd" and hasattr(queryset, "filter"):
+                queryset = queryset.filter(sth_stage__name__in=self.CI_CD_STAGE_NAMES)
+            statements = list(queryset)
+        elif stage_scope == "ci_cd":
+            statements = [
+                statement
+                for statement in statements
+                if getattr(getattr(statement, "sth_stage", None), "name", None)
+                in self.CI_CD_STAGE_NAMES
+            ]
+
+        for statement in statements:
+            stage_name = getattr(getattr(statement, "sth_stage", None), "name", None)
+            stage_key = stage_name_to_key.get(stage_name)
+            if not stage_key:
                 continue
 
-            dimension_name = self._resolve_dimension_name(answer)
-            element_name = self._resolve_element_name(answer) or "Unclassified element"
-            stage_name = getattr(answer.statement_answer.sth_stage, "name", None)
-            stage_short_name = self.STAGE_SHORT_NAMES.get(stage_name, stage_name)
-            score = self._instrument_weight(answer, organization=organization)
+            if include_baseline and stage_key in {"agile", "experimentation"}:
+                continue
 
-            grouped[(dimension_name, element_name)]["organization"].append(score)
-            if stage_short_name in {"CI", "CD"}:
-                grouped[(dimension_name, element_name)][stage_short_name].append(score)
+            dimension_name = self._resolve_statement_dimension_name(statement)
+            element_name = self._resolve_statement_element_name(statement)
+            if (
+                not dimension_name
+                or dimension_name == "Unclassified"
+                or not element_name
+            ):
+                continue
 
-        element_order = {}
-        order_index = 0
-        for code, item in self.INSTRUMENT_PRACTICE_CATALOG.items():
-            dimension_name = item.get("dimension") or "Unclassified"
-            element_name = item.get("element") or "Unclassified element"
+            dimension_name, element_name = self._normalize_element_matrix_key(
+                dimension_name,
+                element_name,
+            )
             key = (dimension_name, element_name)
-            if key not in element_order:
-                element_order[key] = order_index
-                order_index += 1
+            if key not in grouped:
+                row_order[key] = len(row_order)
+                grouped[key] = {stage_key: 0 for stage_key in stage_order}
+
+            grouped[key][stage_key] += 1
+
+        score_grouped = defaultdict(
+            lambda: {stage_key: [] for stage_key in stage_order}
+        )
+        score_summary = {stage_key: [] for stage_key in stage_order}
+
+        if answers:
+            for answer in answers:
+                statement = answer.statement_answer
+                stage_name = getattr(
+                    getattr(statement, "sth_stage", None), "name", None
+                )
+                if stage_scope == "ci_cd" and stage_name not in self.CI_CD_STAGE_NAMES:
+                    continue
+
+                stage_key = stage_name_to_key.get(stage_name)
+                if not stage_key:
+                    continue
+
+                dimension_name = self._resolve_statement_dimension_name(statement)
+                element_name = self._resolve_statement_element_name(statement)
+                if (
+                    not dimension_name
+                    or dimension_name == "Unclassified"
+                    or not element_name
+                ):
+                    continue
+
+                dimension_name, element_name = self._normalize_element_matrix_key(
+                    dimension_name,
+                    element_name,
+                )
+                key = (dimension_name, element_name)
+                if key not in grouped:
+                    row_order[key] = len(row_order)
+                    grouped[key] = {stage_key: 0 for stage_key in stage_order}
+
+                score = self._instrument_weight(answer, organization=organization)
+                score_grouped[key][stage_key].append(score)
+                score_summary[stage_key].append(score)
 
         rows = []
-        for (dimension_name, element_name), buckets in grouped.items():
-            ci_scores = buckets["CI"]
-            cd_scores = buckets["CD"]
-            org_scores = buckets["organization"]
+        summary = {f"{stage_key}_count": 0 for stage_key in stage_order}
+        statement_count = 0
+
+        sorted_items = sorted(
+            grouped.items(),
+            key=lambda item: (
+                self.DIMENSION_ORDER.get(item[0][0], 500),
+                row_order.get(item[0], 9999),
+                item[0][1],
+            ),
+        )
+
+        for (dimension_name, element_name), buckets in sorted_items:
+            practice_count = sum(buckets.values())
+            score_buckets = score_grouped.get(
+                (dimension_name, element_name),
+                {stage_key: [] for stage_key in stage_order},
+            )
+            organization_scores = [
+                score for stage_key in stage_order for score in score_buckets[stage_key]
+            ]
+            statement_count += practice_count
+            for stage_key in stage_order:
+                summary[f"{stage_key}_count"] += buckets[stage_key]
 
             rows.append(
                 {
                     "key": slugify(f"{dimension_name}-{element_name}"),
                     "dimension_name": dimension_name,
                     "element_name": element_name,
-                    "ci_score": round(mean(ci_scores)) if ci_scores else None,
-                    "cd_score": round(mean(cd_scores)) if cd_scores else None,
-                    "organization_score": round(mean(org_scores)) if org_scores else 0,
+                    "agile_count": buckets["agile"],
+                    "ci_count": buckets["ci"],
+                    "cd_count": buckets["cd"],
+                    "experimentation_count": buckets["experimentation"],
+                    "practice_count": practice_count,
+                    "agile_score": (
+                        round(mean(score_buckets["agile"]))
+                        if score_buckets["agile"]
+                        else None
+                    ),
+                    "ci_score": (
+                        round(mean(score_buckets["ci"]))
+                        if score_buckets["ci"]
+                        else None
+                    ),
+                    "cd_score": (
+                        round(mean(score_buckets["cd"]))
+                        if score_buckets["cd"]
+                        else None
+                    ),
+                    "experimentation_score": (
+                        round(mean(score_buckets["experimentation"]))
+                        if score_buckets["experimentation"]
+                        else None
+                    ),
+                    "organization_score": (
+                        round(mean(organization_scores))
+                        if organization_scores
+                        else None
+                    ),
+                    "agile_score_count": len(score_buckets["agile"]),
+                    "ci_score_count": len(score_buckets["ci"]),
+                    "cd_score_count": len(score_buckets["cd"]),
+                    "experimentation_score_count": len(
+                        score_buckets["experimentation"]
+                    ),
+                    "score_count": len(organization_scores),
                 }
             )
 
-        rows.sort(
-            key=lambda item: (
-                self.DIMENSION_ORDER.get(item["dimension_name"], 500),
-                element_order.get(
-                    (item["dimension_name"], item["element_name"]),
-                    9999,
-                ),
-                item["element_name"],
+        summary["statement_count"] = statement_count
+        for stage_key in stage_order:
+            summary[f"{stage_key}_score"] = (
+                round(mean(score_summary[stage_key]))
+                if score_summary[stage_key]
+                else None
             )
+
+        organization_summary_scores = [
+            score for stage_scores in score_summary.values() for score in stage_scores
+        ]
+        summary["organization_score"] = (
+            round(mean(organization_summary_scores))
+            if organization_summary_scores
+            else None
         )
 
         return {
             "rows": rows,
-            "summary": self._build_dimension_stage_overview(
-                answers,
-                organization=organization,
-            )["summary"],
+            "summary": summary,
         }
 
     # Gera recomendações para práticas abaixo do limiar de 60 por cento.
@@ -1253,9 +1776,9 @@ class QuestionnaireAnalyticsService:
             )
             grouped[key].append(answer)
             if answer.questionnaire_answer_id is not None:
-                questionnaires[
-                    answer.questionnaire_answer_id
-                ] = answer.questionnaire_answer
+                questionnaires[answer.questionnaire_answer_id] = (
+                    answer.questionnaire_answer
+                )
 
         if organization:
             org_questionnaires = Questionnaire.objects.filter(
@@ -1396,13 +1919,16 @@ class QuestionnaireAnalyticsService:
     # Resolve a dimensao exibida na interface mesmo quando o catalogo
     # oficial informa apenas o stage da pergunta.
     def _resolve_dimension_name(self, answer):
-        statement_code = getattr(answer.statement_answer, "code", "") or ""
+        return self._resolve_statement_dimension_name(answer.statement_answer)
+
+    def _resolve_statement_dimension_name(self, statement):
+        statement_code = getattr(statement, "code", "") or ""
         instrument_entry = self.INSTRUMENT_PRACTICE_CATALOG.get(statement_code)
         if instrument_entry:
             return instrument_entry["dimension"]
 
         dimension = getattr(
-            getattr(answer.statement_answer, "pe_element", None),
+            getattr(statement, "pe_element", None),
             "dimension",
             None,
         )
@@ -1410,7 +1936,7 @@ class QuestionnaireAnalyticsService:
             return dimension.name
 
         stage_name = getattr(
-            getattr(answer.statement_answer, "sth_stage", None),
+            getattr(statement, "sth_stage", None),
             "name",
             None,
         )
@@ -1427,19 +1953,26 @@ class QuestionnaireAnalyticsService:
             return "Continuous Experimentation"
         return "Unclassified"
 
-    def _resolve_element_name(self, answer):
-        element_name = getattr(
-            getattr(answer.statement_answer, "pe_element", None), "name", None
+    def _normalize_element_matrix_key(self, dimension_name, element_name):
+        return (
+            dimension_name,
+            self.ELEMENT_NAME_ALIASES.get(element_name, element_name),
         )
+
+    def _resolve_statement_element_name(self, statement):
+        element_name = getattr(getattr(statement, "pe_element", None), "name", None)
         if element_name:
             return element_name
 
-        statement_code = getattr(answer.statement_answer, "code", "") or ""
+        statement_code = getattr(statement, "code", "") or ""
         instrument_entry = self.INSTRUMENT_PRACTICE_CATALOG.get(statement_code)
         if instrument_entry:
             return instrument_entry["element"]
 
         return None
+
+    def _resolve_element_name(self, answer):
+        return self._resolve_statement_element_name(answer.statement_answer)
 
     def _resolve_organization_type_key(self, organization=None):
         organization_type_name = getattr(

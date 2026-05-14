@@ -49,6 +49,7 @@ def make_answer(
     questionnaire,
     comment="",
     organization_id=1,
+    element_name=None,
 ):
     stage = SimpleNamespace(name=stage_name)
     dimension = SimpleNamespace(name=dimension_name)
@@ -56,7 +57,7 @@ def make_answer(
         code=code,
         text=text,
         sth_stage=stage,
-        pe_element=SimpleNamespace(dimension=dimension),
+        pe_element=SimpleNamespace(dimension=dimension, name=element_name),
     )
     return SimpleNamespace(
         id=answer_id,
@@ -66,6 +67,16 @@ def make_answer(
         statement_answer=statement,
         comment_answer=comment,
         organization_answer_id=organization_id,
+    )
+
+
+def make_statement(code, stage_name, dimension_name, element_name=None):
+    stage = SimpleNamespace(name=stage_name)
+    dimension = SimpleNamespace(name=dimension_name)
+    return SimpleNamespace(
+        code=code,
+        sth_stage=stage,
+        pe_element=SimpleNamespace(dimension=dimension, name=element_name),
     )
 
 
@@ -324,6 +335,105 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
 
         self.assertEqual(dimension_name, "Development")
 
+    def test_dimension_stage_overview_includes_non_ci_cd_dimensions(self):
+        team_answer = make_answer(
+            101,
+            "AO.99",
+            "Team practice outside the CI/CD catalog.",
+            "Agile R&D Organization",
+            "Team",
+            self.service.adopted_levels[3],
+            self.current_cycle,
+        )
+        operation_answer = make_answer(
+            102,
+            "IS.99",
+            "Operation practice outside the CI/CD catalog.",
+            "R&D as an Experiment System",
+            "Operation",
+            self.service.adopted_levels[4],
+            self.current_cycle,
+        )
+
+        overview = self.service._build_dimension_stage_overview(
+            self.all_answers + [team_answer, operation_answer]
+        )
+        dimension_names = [item["name"] for item in overview["dimensions"]]
+
+        self.assertIn("Team", dimension_names)
+        self.assertIn("Operation", dimension_names)
+
+    def test_dimension_stage_matrix_counts_statements_by_dimension_and_stage(self):
+        statements = [
+            make_statement("AO.100", "Agile R&D Organization", "Development"),
+            make_statement("AO.101", "Agile R&D Organization", "Development"),
+            make_statement("CI.100", "Continuous Integration", "Quality"),
+            make_statement("CD.100", "Continuous Deployment", "Business"),
+            make_statement(
+                "IS.100",
+                "R&D as an Experiment System",
+                "User/Customer",
+            ),
+        ]
+
+        matrix = self.service._build_dimension_stage_matrix(
+            statements=statements,
+            include_baseline=False,
+        )
+        rows_by_name = {item["name"]: item for item in matrix["dimensions"]}
+
+        self.assertEqual(rows_by_name["Development"]["agile_count"], 2)
+        self.assertEqual(rows_by_name["Quality"]["ci_count"], 1)
+        self.assertEqual(rows_by_name["Business"]["cd_count"], 1)
+        self.assertEqual(
+            rows_by_name["User/Customer"]["experimentation_count"],
+            1,
+        )
+        self.assertEqual(rows_by_name["Development"]["practice_count"], 2)
+        self.assertEqual(matrix["summary"]["agile_count"], 2)
+        self.assertEqual(matrix["summary"]["ci_count"], 1)
+        self.assertEqual(matrix["summary"]["cd_count"], 1)
+        self.assertEqual(matrix["summary"]["experimentation_count"], 1)
+        self.assertEqual(matrix["summary"]["statement_count"], 5)
+
+    def test_dimension_element_overview_includes_non_ci_cd_dimensions(self):
+        team_answer = make_answer(
+            103,
+            "AO.100",
+            "Team element outside the CI/CD catalog.",
+            "Agile R&D Organization",
+            "Team",
+            self.service.adopted_levels[3],
+            self.current_cycle,
+            element_name="Self-reflection and discipline",
+        )
+        operation_answer = make_answer(
+            104,
+            "IS.100",
+            "Operation element outside the CI/CD catalog.",
+            "R&D as an Experiment System",
+            "Operation",
+            self.service.adopted_levels[4],
+            self.current_cycle,
+            element_name="Reusable infrastructure",
+        )
+
+        overview = self.service._build_dimension_element_overview(
+            self.all_answers + [team_answer, operation_answer],
+            statements=[
+                answer.statement_answer
+                for answer in self.all_answers + [team_answer, operation_answer]
+            ],
+            include_baseline=False,
+        )
+        dimension_names = [item["dimension_name"] for item in overview["rows"]]
+        element_names = [item["element_name"] for item in overview["rows"]]
+
+        self.assertIn("Team", dimension_names)
+        self.assertIn("Operation", dimension_names)
+        self.assertIn("Self-reflection and discipline", element_names)
+        self.assertIn("Reusable infrastructure", element_names)
+
     def test_dashboard_payload_uses_current_context_data(self):
         organization = make_organization("Startup")
         request = SimpleNamespace(query_params={}, user=None)
@@ -366,6 +476,12 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
     def test_results_payload_reports_questionnaire_status(self):
         organization = make_organization("Startup")
         request = SimpleNamespace(query_params={}, user=None)
+        statements = [
+            make_statement("CI.01", "Continuous Integration", "Development"),
+            make_statement("CI.04", "Continuous Integration", "Quality"),
+            make_statement("CD.01", "Continuous Deployment", "User/Customer"),
+            make_statement("CD.02", "Continuous Deployment", "Quality"),
+        ]
 
         with patch.object(
             self.service,
@@ -382,6 +498,9 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
                     "Continuous Deployment": 2,
                 },
             },
+        ), patch(
+            "apps.questionnaire.analytics.Statement.objects.select_related",
+            return_value=statements,
         ):
             payload = self.service.get_results_payload(request)
 
@@ -477,12 +596,13 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
     def test_dimension_element_overview_groups_rows_by_dimension_and_element(self):
         overview = self.service._build_dimension_element_overview(
             self.current_answers,
-            organization=make_organization("Organization with IT Department"),
+            statements=[answer.statement_answer for answer in self.current_answers],
+            include_baseline=False,
         )
 
-        self.assertEqual(overview["summary"]["ci_score"], 100)
-        self.assertEqual(overview["summary"]["cd_score"], 22)
-        self.assertEqual(overview["summary"]["organization_score"], 61)
+        self.assertEqual(overview["summary"]["ci_count"], 1)
+        self.assertEqual(overview["summary"]["cd_count"], 1)
+        self.assertEqual(overview["summary"]["statement_count"], 2)
 
         ci_row = next(
             item
@@ -494,10 +614,30 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         )
 
         self.assertEqual(ci_row["dimension_name"], "Development")
+        self.assertEqual(ci_row["ci_count"], 1)
         self.assertEqual(ci_row["ci_score"], 100)
-        self.assertIsNone(ci_row["cd_score"])
+        self.assertEqual(ci_row["practice_count"], 1)
         self.assertEqual(cd_row["dimension_name"], "Quality")
-        self.assertEqual(cd_row["cd_score"], 22)
+        self.assertEqual(cd_row["cd_count"], 1)
+        self.assertEqual(cd_row["cd_score"], 10)
+
+    def test_dimension_element_overview_uses_baseline_for_full_instrument(self):
+        overview = self.service._build_dimension_element_overview(statements=[])
+
+        rows_by_element = {item["element_name"]: item for item in overview["rows"]}
+
+        self.assertEqual(
+            rows_by_element["Continuous planning activities"]["agile_count"],
+            6,
+        )
+        self.assertEqual(
+            rows_by_element["Contemporary and continuously evolving skills"][
+                "experimentation_count"
+            ],
+            2,
+        )
+        self.assertEqual(overview["summary"]["agile_count"], 26)
+        self.assertEqual(overview["summary"]["experimentation_count"], 13)
 
 
 # Esta suite valida se as views expostas ao frontend respondem com o contrato esperado.

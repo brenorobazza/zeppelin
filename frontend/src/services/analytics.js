@@ -219,17 +219,21 @@ function normalizeResults(payload) {
       dimensions: (payload.dimension_overview?.dimensions || []).map((item) => ({
         key: item.key,
         name: item.name,
-        ciScore: item.ci_score,
-        cdScore: item.cd_score,
-        organizationScore: item.organization_score,
+        agileCount: item.agile_count ?? 0,
+        ciCount: item.ci_count ?? 0,
+        cdCount: item.cd_count ?? 0,
+        experimentationCount: item.experimentation_count ?? 0,
+        agilePracticeCount: item.agile_practice_count,
         ciPracticeCount: item.ci_practice_count,
         cdPracticeCount: item.cd_practice_count,
+        experimentationPracticeCount: item.experimentation_practice_count,
         practiceCount: item.practice_count
       })),
       summary: {
-        ciScore: payload.dimension_overview?.summary?.ci_score ?? null,
-        cdScore: payload.dimension_overview?.summary?.cd_score ?? null,
-        organizationScore: payload.dimension_overview?.summary?.organization_score ?? 0,
+        agileCount: payload.dimension_overview?.summary?.agile_count ?? 0,
+        ciCount: payload.dimension_overview?.summary?.ci_count ?? 0,
+        cdCount: payload.dimension_overview?.summary?.cd_count ?? 0,
+        experimentationCount: payload.dimension_overview?.summary?.experimentation_count ?? 0,
         statementCount: payload.dimension_overview?.summary?.statement_count ?? 0
       }
     },
@@ -238,14 +242,35 @@ function normalizeResults(payload) {
         key: item.key,
         dimensionName: item.dimension_name,
         elementName: item.element_name,
-        ciScore: item.ci_score,
-        cdScore: item.cd_score,
-        organizationScore: item.organization_score
+        agileCount: item.agile_count ?? 0,
+        ciCount: item.ci_count ?? 0,
+        cdCount: item.cd_count ?? 0,
+        experimentationCount: item.experimentation_count ?? 0,
+        practiceCount: item.practice_count ?? 0,
+        agileScore: item.agile_score ?? null,
+        ciScore: item.ci_score ?? null,
+        cdScore: item.cd_score ?? null,
+        experimentationScore: item.experimentation_score ?? null,
+        organizationScore: item.organization_score ?? null,
+        agileScoreCount: item.agile_score_count ?? 0,
+        ciScoreCount: item.ci_score_count ?? 0,
+        cdScoreCount: item.cd_score_count ?? 0,
+        experimentationScoreCount: item.experimentation_score_count ?? 0,
+        scoreCount: item.score_count ?? 0
       })),
       summary: {
+        agileCount: payload.element_overview?.summary?.agile_count ?? 0,
+        ciCount: payload.element_overview?.summary?.ci_count ?? 0,
+        cdCount: payload.element_overview?.summary?.cd_count ?? 0,
+        experimentationCount:
+          payload.element_overview?.summary?.experimentation_count ?? 0,
+        statementCount: payload.element_overview?.summary?.statement_count ?? 0,
+        agileScore: payload.element_overview?.summary?.agile_score ?? null,
         ciScore: payload.element_overview?.summary?.ci_score ?? null,
         cdScore: payload.element_overview?.summary?.cd_score ?? null,
-        organizationScore: payload.element_overview?.summary?.organization_score ?? 0
+        experimentationScore:
+          payload.element_overview?.summary?.experimentation_score ?? null,
+        organizationScore: payload.element_overview?.summary?.organization_score ?? null
       }
     },
     practiceThemes: payload.dimensions.map((item) => ({

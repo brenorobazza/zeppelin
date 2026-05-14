@@ -396,25 +396,68 @@ function buildMultiSelectSummary(selectedValues, options, singularLabel, pluralL
   return `${selectedValues.length} ${pluralLabel}`;
 }
 
-function averageVisibleScore(rows, field) {
+function sumVisibleCount(rows, field) {
   const values = rows
     .map((row) => row[field])
     .filter((value) => typeof value === "number");
 
   if (!values.length) {
-    return null;
+    return 0;
   }
 
-  const total = values.reduce((sum, value) => sum + value, 0);
-  return Math.round(total / values.length);
+  return values.reduce((sum, value) => sum + value, 0);
+}
+
+function weightedVisibleScore(rows, scoreField, weightField) {
+  const weighted = rows.reduce(
+    (acc, row) => {
+      const score = row[scoreField];
+      const weight = row[weightField] || 0;
+
+      if (typeof score !== "number" || !weight) {
+        return acc;
+      }
+
+      return {
+        total: acc.total + score * weight,
+        weight: acc.weight + weight
+      };
+    },
+    { total: 0, weight: 0 }
+  );
+
+  return weighted.weight ? Math.round(weighted.total / weighted.weight) : null;
 }
 
 function buildFilteredElementSummary(rows) {
   return {
-    ciScore: averageVisibleScore(rows, "ciScore"),
-    cdScore: averageVisibleScore(rows, "cdScore"),
-    organizationScore: averageVisibleScore(rows, "organizationScore")
+    agileCount: sumVisibleCount(rows, "agileCount"),
+    ciCount: sumVisibleCount(rows, "ciCount"),
+    cdCount: sumVisibleCount(rows, "cdCount"),
+    experimentationCount: sumVisibleCount(rows, "experimentationCount"),
+    statementCount: sumVisibleCount(rows, "practiceCount"),
+    agileScore: weightedVisibleScore(rows, "agileScore", "agileScoreCount"),
+    ciScore: weightedVisibleScore(rows, "ciScore", "ciScoreCount"),
+    cdScore: weightedVisibleScore(rows, "cdScore", "cdScoreCount"),
+    experimentationScore: weightedVisibleScore(
+      rows,
+      "experimentationScore",
+      "experimentationScoreCount"
+    ),
+    organizationScore: weightedVisibleScore(
+      rows,
+      "organizationScore",
+      "scoreCount"
+    )
   };
+}
+
+function formatElementMatrixValue(count, score, mode) {
+  if (mode === "percentage") {
+    return typeof score === "number" ? `${score}%` : "-";
+  }
+
+  return count;
 }
 
 function FilterDropdown({
@@ -641,6 +684,7 @@ export function ResultsPage({ data, overview, loading }) {
   // A Tela 2 funciona como aprofundamento analitico do diagnostico, sem repetir o resumo inicial.
   const [selectedDimensions, setSelectedDimensions] = useState([]);
   const [selectedElements, setSelectedElements] = useState([]);
+  const [elementValueMode, setElementValueMode] = useState("absolute");
   const [selectedGroupDimensions, setSelectedGroupDimensions] = useState([]);
   const view = data || fallbackResultsData;
   const overviewData = overview || fallbackDashboardData;
@@ -741,6 +785,12 @@ export function ResultsPage({ data, overview, loading }) {
     selectedGroupDimensions.includes(group.name)
   );
   const practiceGroupSummary = `${practiceGroups.length} of ${dimensionGroupsSource.length} dimensions shown.`;
+  const dimensionRadarData = (dimensionOverview.dimensions || []).map((item) => ({
+    ...item,
+    organizationScore: dimensionOverview.summary.statementCount
+      ? Math.round((item.practiceCount / dimensionOverview.summary.statementCount) * 100)
+      : 0
+  }));
 
   const diagnosticFacts = [
     {
@@ -964,16 +1014,64 @@ export function ResultsPage({ data, overview, loading }) {
           </div>
         </div>
 
-        <div className="two-column-grid dimension-overview-grid">
+        <div className="two-column-grid dimension-overview-grid dimension-overview-grid--matrix">
           <article className="panel dimension-overview-panel">
-            <table className="table">
+            <table className="table table--stage-distribution table--dimension-matrix">
+              <colgroup>
+                <col className="table--dimension-matrix__col-label" />
+                <col className="table--dimension-matrix__col-stage" />
+                <col className="table--dimension-matrix__col-stage" />
+                <col className="table--dimension-matrix__col-stage" />
+                <col className="table--dimension-matrix__col-stage" />
+                <col className="table--dimension-matrix__col-total" />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Dimension</th>
-                  <th>CI</th>
-                  <th>CD</th>
-                  <th>Organization</th>
-                  <th>CSE practices</th>
+                  <th rowSpan="2">Dimension</th>
+                  <th colSpan="4">Stages of StH</th>
+                  <th rowSpan="2">
+                    <div className="table-stage-head">
+                      <strong>
+                        <span>Number of</span>
+                        <span>CSE practices</span>
+                      </strong>
+                    </div>
+                  </th>
+                </tr>
+                <tr>
+                  <th>
+                    <div className="table-stage-head">
+                      <strong>
+                        <span>Agile</span>
+                        <span>Organization</span>
+                      </strong>
+                    </div>
+                  </th>
+                  <th>
+                    <div className="table-stage-head">
+                      <strong>
+                        <span>Continuous</span>
+                        <span>Integration</span>
+                      </strong>
+                    </div>
+                  </th>
+                  <th>
+                    <div className="table-stage-head">
+                      <strong>
+                        <span>Continuous</span>
+                        <span>Deployment</span>
+                      </strong>
+                    </div>
+                  </th>
+                  <th>
+                    <div className="table-stage-head">
+                      <strong>
+                        <span>R&amp;D as</span>
+                        <span>Innovation</span>
+                        <span>System</span>
+                      </strong>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -982,23 +1080,30 @@ export function ResultsPage({ data, overview, loading }) {
                     <td>
                       <strong>{item.name}</strong>
                     </td>
-                    <td>{formatDimensionValue(item.ciScore)}</td>
-                    <td>{formatDimensionValue(item.cdScore)}</td>
-                    <td>{formatDimensionValue(item.organizationScore)}</td>
+                    <td>{item.agileCount}</td>
+                    <td>{item.ciCount}</td>
+                    <td>{item.cdCount}</td>
+                    <td>{item.experimentationCount}</td>
                     <td>{item.practiceCount}</td>
                   </tr>
                 ))}
+                <tr>
+                  <td>
+                    <strong>Number of the statements</strong>
+                  </td>
+                  <td>{dimensionOverview.summary.agileCount}</td>
+                  <td>{dimensionOverview.summary.ciCount}</td>
+                  <td>{dimensionOverview.summary.cdCount}</td>
+                  <td>{dimensionOverview.summary.experimentationCount}</td>
+                  <td>{dimensionOverview.summary.statementCount}</td>
+                </tr>
               </tbody>
             </table>
           </article>
 
           <article className="panel support-panel">
-            <h3>Organization dimension radar</h3>
-            <p>
-              The radar highlights which dimensions currently show stronger or weaker adoption when
-              the organization is read as a whole.
-            </p>
-            <DimensionRadar dimensions={dimensionOverview.dimensions} />
+            <h3>Dimension distribution radar</h3>
+            <DimensionRadar dimensions={dimensionRadarData} />
           </article>
         </div>
       </section>
@@ -1057,21 +1162,73 @@ export function ResultsPage({ data, overview, loading }) {
 
               <div className="roadmap-toolbar__meta">
                 <p className="roadmap-summary">{elementFilterSummary}</p>
+                <div
+                  className="value-mode-toggle"
+                  role="group"
+                  aria-label="Element table value display"
+                >
+                  <button
+                    type="button"
+                    className={elementValueMode === "absolute" ? "active" : ""}
+                    onClick={() => setElementValueMode("absolute")}
+                  >
+                    Absolute
+                  </button>
+                  <button
+                    type="button"
+                    className={elementValueMode === "percentage" ? "active" : ""}
+                    onClick={() => setElementValueMode("percentage")}
+                  >
+                    Percentage
+                  </button>
+                </div>
               </div>
             </div>
 
             {elementRows.length ? (
-              <table className="table table--grouped">
+              <table className="table table--grouped table--element-matrix">
+                <colgroup>
+                  <col className="table--element-matrix__col-dimension" />
+                  <col className="table--element-matrix__col-element" />
+                  <col className="table--element-matrix__col-stage" />
+                  <col className="table--element-matrix__col-stage" />
+                  <col className="table--element-matrix__col-stage" />
+                  <col className="table--element-matrix__col-stage" />
+                  <col className="table--element-matrix__col-total" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th rowSpan="2">Dimension</th>
                     <th rowSpan="2">Element</th>
-                    <th colSpan="3">Stages of StH</th>
+                    <th colSpan="4" className="table-numeric-head">
+                      Stages of StH
+                    </th>
+                    <th rowSpan="2" className="table-numeric-head">
+                      {elementValueMode === "percentage"
+                        ? "Element adoption"
+                        : "Number of the CSE practices"}
+                    </th>
                   </tr>
                   <tr>
-                    <th>Continuous Integration</th>
-                    <th>Continuous Deployment</th>
-                    <th>Organization</th>
+                    <th className="table-numeric-head">
+                      <div className="table-stage-head">
+                        <strong>
+                          <span>Agile</span>
+                          <span>Organization</span>
+                        </strong>
+                      </div>
+                    </th>
+                    <th className="table-numeric-head">CI</th>
+                    <th className="table-numeric-head">CD</th>
+                    <th className="table-numeric-head">
+                      <div className="table-stage-head">
+                        <strong>
+                          <span>R&amp;D as</span>
+                          <span>Innovation</span>
+                          <span>System</span>
+                        </strong>
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1085,22 +1242,88 @@ export function ResultsPage({ data, overview, loading }) {
                       <td>
                         <strong>{row.elementName}</strong>
                       </td>
-                      <td>{formatDimensionValue(row.ciScore)}</td>
-                      <td>{formatDimensionValue(row.cdScore)}</td>
-                      <td>{formatDimensionValue(row.organizationScore)}</td>
+                      <td className="table-numeric-cell">
+                        {formatElementMatrixValue(
+                          row.agileCount,
+                          row.agileScore,
+                          elementValueMode
+                        )}
+                      </td>
+                      <td className="table-numeric-cell">
+                        {formatElementMatrixValue(
+                          row.ciCount,
+                          row.ciScore,
+                          elementValueMode
+                        )}
+                      </td>
+                      <td className="table-numeric-cell">
+                        {formatElementMatrixValue(
+                          row.cdCount,
+                          row.cdScore,
+                          elementValueMode
+                        )}
+                      </td>
+                      <td className="table-numeric-cell">
+                        {formatElementMatrixValue(
+                          row.experimentationCount,
+                          row.experimentationScore,
+                          elementValueMode
+                        )}
+                      </td>
+                      <td className="table-numeric-cell">
+                        {formatElementMatrixValue(
+                          row.practiceCount,
+                          row.organizationScore,
+                          elementValueMode
+                        )}
+                      </td>
                     </tr>
                   ))}
                   <tr className="table-summary-row table-summary-row--final">
                     <td colSpan="2">
                       <strong>
-                        {isFilteredElementView
-                          ? "Average of visible selection"
-                          : "Degree of adoption"}
+                        {elementValueMode === "percentage"
+                          ? "Degree of adoption"
+                          : isFilteredElementView
+                            ? "Number of visible statements"
+                            : "Number of the statements"}
                       </strong>
                     </td>
-                    <td>{formatDimensionValue(visibleElementSummary.ciScore)}</td>
-                    <td>{formatDimensionValue(visibleElementSummary.cdScore)}</td>
-                    <td>{formatDimensionValue(visibleElementSummary.organizationScore)}</td>
+                    <td className="table-numeric-cell">
+                      {formatElementMatrixValue(
+                        visibleElementSummary.agileCount,
+                        visibleElementSummary.agileScore,
+                        elementValueMode
+                      )}
+                    </td>
+                    <td className="table-numeric-cell">
+                      {formatElementMatrixValue(
+                        visibleElementSummary.ciCount,
+                        visibleElementSummary.ciScore,
+                        elementValueMode
+                      )}
+                    </td>
+                    <td className="table-numeric-cell">
+                      {formatElementMatrixValue(
+                        visibleElementSummary.cdCount,
+                        visibleElementSummary.cdScore,
+                        elementValueMode
+                      )}
+                    </td>
+                    <td className="table-numeric-cell">
+                      {formatElementMatrixValue(
+                        visibleElementSummary.experimentationCount,
+                        visibleElementSummary.experimentationScore,
+                        elementValueMode
+                      )}
+                    </td>
+                    <td className="table-numeric-cell">
+                      {formatElementMatrixValue(
+                        visibleElementSummary.statementCount,
+                        visibleElementSummary.organizationScore,
+                        elementValueMode
+                      )}
+                    </td>
                   </tr>
                 </tbody>
               </table>

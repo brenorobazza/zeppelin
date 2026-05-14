@@ -186,201 +186,384 @@ export const dimensionOverview = {
     {
       key: "development",
       name: "Development",
-      ciScore: 68,
-      cdScore: 68,
-      organizationScore: 68,
+      agileCount: 8,
       ciPracticeCount: 3,
-      cdPracticeCount: 1,
-      practiceCount: 4
+      ciCount: 3,
+      cdCount: 1,
+      experimentationCount: 0,
+      practiceCount: 12
     },
     {
       key: "quality",
       name: "Quality",
-      ciScore: 68,
-      cdScore: 0,
-      organizationScore: 60,
-      ciPracticeCount: 7,
-      cdPracticeCount: 1,
-      practiceCount: 8
+      agileCount: 2,
+      ciCount: 7,
+      cdCount: 1,
+      experimentationCount: 0,
+      practiceCount: 10
     },
     {
       key: "software-management",
       name: "Software Management",
-      ciScore: 68,
-      cdScore: 53,
-      organizationScore: 58,
-      ciPracticeCount: 2,
-      cdPracticeCount: 4,
-      practiceCount: 6
+      agileCount: 10,
+      ciCount: 2,
+      cdCount: 4,
+      experimentationCount: 0,
+      practiceCount: 16
+    },
+    {
+      key: "team",
+      name: "Team",
+      agileCount: 2,
+      ciCount: 0,
+      cdCount: 0,
+      experimentationCount: 2,
+      practiceCount: 4
     },
     {
       key: "technical-solution",
       name: "Technical Solution",
-      ciScore: 68,
-      cdScore: null,
-      organizationScore: 68,
-      ciPracticeCount: 2,
-      cdPracticeCount: 0,
-      practiceCount: 2
+      agileCount: 1,
+      ciCount: 2,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 3
     },
     {
       key: "knowledge",
       name: "Knowledge",
-      ciScore: 68,
-      cdScore: 68,
-      organizationScore: 68,
-      ciPracticeCount: 1,
-      cdPracticeCount: 3,
-      practiceCount: 4
+      agileCount: 2,
+      ciCount: 1,
+      cdCount: 3,
+      experimentationCount: 3,
+      practiceCount: 9
+    },
+    {
+      key: "operation",
+      name: "Operation",
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 0,
+      experimentationCount: 2,
+      practiceCount: 2
     },
     {
       key: "business",
       name: "Business",
-      ciScore: null,
-      cdScore: 36,
-      organizationScore: 36,
-      ciPracticeCount: 0,
-      cdPracticeCount: 4,
-      practiceCount: 4
+      agileCount: 1,
+      ciCount: 0,
+      cdCount: 4,
+      experimentationCount: 3,
+      practiceCount: 8
     },
     {
       key: "user-customer",
       name: "User/Customer",
-      ciScore: null,
-      cdScore: 19,
-      organizationScore: 19,
-      ciPracticeCount: 0,
-      cdPracticeCount: 4,
-      practiceCount: 4
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 4,
+      experimentationCount: 3,
+      practiceCount: 7
     }
   ],
   summary: {
-    ciScore: 68,
-    cdScore: 41,
-    organizationScore: 55,
-    statementCount: 32
+    agileCount: 26,
+    ciCount: 15,
+    cdCount: 17,
+    experimentationCount: 13,
+    statementCount: 71
   }
 };
 
 export const elementOverview = {
   rows: [
     {
+      key: "development-continuous-planning-activities",
+      dimensionName: "Development",
+      elementName: "Continuous planning activities",
+      agileCount: 6,
+      ciCount: 1,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 7
+    },
+    {
+      key: "development-continuous-requirements-engineering",
+      dimensionName: "Development",
+      elementName: "Continuous requirements engineering",
+      agileCount: 1,
+      ciCount: 0,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 1
+    },
+    {
+      key: "development-focus-on-feature",
+      dimensionName: "Development",
+      elementName: "Focus on Feature",
+      agileCount: 1,
+      ciCount: 0,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 1
+    },
+    {
       key: "development-modularized-architecture-and-design",
       dimensionName: "Development",
       elementName: "Modularized architecture and design",
-      ciScore: 68,
-      cdScore: 68,
-      organizationScore: 68
+      agileCount: 0,
+      ciCount: 2,
+      cdCount: 1,
+      experimentationCount: 0,
+      practiceCount: 3
     },
     {
       key: "quality-audits",
       dimensionName: "Quality",
       elementName: "Audits",
-      ciScore: 68,
-      cdScore: 0,
-      organizationScore: 57
+      agileCount: 2,
+      ciCount: 1,
+      cdCount: 1,
+      experimentationCount: 0,
+      practiceCount: 4
     },
     {
       key: "quality-automated-tests",
       dimensionName: "Quality",
       elementName: "Automated Tests",
-      ciScore: 68,
-      cdScore: null,
-      organizationScore: 68
+      agileCount: 0,
+      ciCount: 2,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 2
+    },
+    {
+      key: "quality-code-coverage",
+      dimensionName: "Quality",
+      elementName: "Code coverage",
+      agileCount: 0,
+      ciCount: 1,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 1
+    },
+    {
+      key: "quality-pull-request",
+      dimensionName: "Quality",
+      elementName: "Pull-Request",
+      agileCount: 0,
+      ciCount: 1,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 1
     },
     {
       key: "quality-regular-builds",
       dimensionName: "Quality",
       elementName: "Regular Builds",
-      ciScore: 68,
-      cdScore: null,
-      organizationScore: 68
+      agileCount: 0,
+      ciCount: 2,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 2
     },
     {
-      key: "software-management-continuos-delivery",
+      key: "software-management-agile-practice",
       dimensionName: "Software Management",
-      elementName: "Continuos delivery",
-      ciScore: null,
-      cdScore: 48,
-      organizationScore: 48
+      elementName: "Agile Practice",
+      agileCount: 10,
+      ciCount: 1,
+      cdCount: 1,
+      experimentationCount: 0,
+      practiceCount: 12
     },
     {
-      key: "software-management-continuos-deployment-of-releases",
+      key: "software-management-continuous-delivery",
       dimensionName: "Software Management",
-      elementName: "Continuos deployment of releases",
-      ciScore: null,
-      cdScore: 68,
-      organizationScore: 68
+      elementName: "Continuous delivery",
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 1,
+      experimentationCount: 0,
+      practiceCount: 1
     },
     {
-      key: "software-management-continuos-integration-of-work",
+      key: "software-management-continuous-deployment-of-releases",
       dimensionName: "Software Management",
-      elementName: "Continuos integration of work",
-      ciScore: 68,
-      cdScore: null,
-      organizationScore: 68
+      elementName: "Continuous deployment of releases",
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 2,
+      experimentationCount: 0,
+      practiceCount: 2
+    },
+    {
+      key: "software-management-continuous-integration-of-work",
+      dimensionName: "Software Management",
+      elementName: "Continuous integration of work",
+      agileCount: 0,
+      ciCount: 1,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 1
+    },
+    {
+      key: "team-contemporary-and-continuously-evolving-skills",
+      dimensionName: "Team",
+      elementName: "Contemporary and continuously evolving skills",
+      agileCount: 1,
+      ciCount: 0,
+      cdCount: 0,
+      experimentationCount: 2,
+      practiceCount: 3
+    },
+    {
+      key: "team-self-reflection-and-discipline",
+      dimensionName: "Team",
+      elementName: "Self-reflection and discipline",
+      agileCount: 1,
+      ciCount: 0,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 1
     },
     {
       key: "technical-solution-branching-strategies",
       dimensionName: "Technical Solution",
       elementName: "Branching strategies",
-      ciScore: 68,
-      cdScore: null,
-      organizationScore: 68
+      agileCount: 0,
+      ciCount: 1,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 1
+    },
+    {
+      key: "technical-solution-code-review",
+      dimensionName: "Technical Solution",
+      elementName: "Code review",
+      agileCount: 1,
+      ciCount: 0,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 1
     },
     {
       key: "technical-solution-version-control",
       dimensionName: "Technical Solution",
       elementName: "Version control",
-      ciScore: 68,
-      cdScore: null,
-      organizationScore: 68
+      agileCount: 0,
+      ciCount: 1,
+      cdCount: 0,
+      experimentationCount: 0,
+      practiceCount: 1
     },
     {
       key: "knowledge-capturing-decisions-and-rationale",
       dimensionName: "Knowledge",
       elementName: "Capturing decisions and rationale",
-      ciScore: null,
-      cdScore: 68,
-      organizationScore: 68
+      agileCount: 1,
+      ciCount: 0,
+      cdCount: 1,
+      experimentationCount: 3,
+      practiceCount: 5
+    },
+    {
+      key: "knowledge-continuous-learning",
+      dimensionName: "Knowledge",
+      elementName: "Continuous learning",
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 1,
+      experimentationCount: 0,
+      practiceCount: 1
     },
     {
       key: "knowledge-sharing-knowledge",
       dimensionName: "Knowledge",
       elementName: "Sharing Knowledge",
-      ciScore: 68,
-      cdScore: 68,
-      organizationScore: 68
+      agileCount: 1,
+      ciCount: 1,
+      cdCount: 1,
+      experimentationCount: 0,
+      practiceCount: 3
     },
     {
-      key: "business-appropriate-product-ideia",
-      dimensionName: "Business",
-      elementName: "Appropriate product ideia",
-      ciScore: null,
-      cdScore: 0,
-      organizationScore: 0
+      key: "operation-logging-and-monitoring",
+      dimensionName: "Operation",
+      elementName: "Logging and monitoring",
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 0,
+      experimentationCount: 1,
+      practiceCount: 1
     },
     {
-      key: "business-management-commitement",
+      key: "operation-reusable-infrastructure",
+      dimensionName: "Operation",
+      elementName: "Reusable infrastructure",
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 0,
+      experimentationCount: 1,
+      practiceCount: 1
+    },
+    {
+      key: "business-appropriate-product-idea",
       dimensionName: "Business",
-      elementName: "Management commitement",
-      ciScore: null,
-      cdScore: 48,
-      organizationScore: 48
+      elementName: "Appropriate product idea",
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 1,
+      experimentationCount: 2,
+      practiceCount: 3
+    },
+    {
+      key: "business-management-commitment",
+      dimensionName: "Business",
+      elementName: "Management commitment",
+      agileCount: 1,
+      ciCount: 0,
+      cdCount: 3,
+      experimentationCount: 1,
+      practiceCount: 5
+    },
+    {
+      key: "user-customer-involved-users-other-stakeholders",
+      dimensionName: "User/Customer",
+      elementName: "Involved users other stakeholders",
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 2,
+      experimentationCount: 0,
+      practiceCount: 2
+    },
+    {
+      key: "user-customer-learning-from-usage-data-and-feedback",
+      dimensionName: "User/Customer",
+      elementName: "Learning from usage data and feedback",
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 1,
+      experimentationCount: 3,
+      practiceCount: 4
     },
     {
       key: "user-customer-proactive-customers",
       dimensionName: "User/Customer",
       elementName: "Proactive customers",
-      ciScore: null,
-      cdScore: 19,
-      organizationScore: 19
+      agileCount: 0,
+      ciCount: 0,
+      cdCount: 1,
+      experimentationCount: 0,
+      practiceCount: 1
     }
   ],
   summary: {
-    ciScore: 68,
-    cdScore: 41,
-    organizationScore: 55
+    agileCount: 26,
+    ciCount: 15,
+    cdCount: 17,
+    experimentationCount: 13,
+    statementCount: 71
   }
 };
 

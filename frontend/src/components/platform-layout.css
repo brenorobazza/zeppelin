@@ -673,6 +673,112 @@
   text-align: center;
 }
 
+.table-stage-head strong span {
+  display: block;
+}
+
+.table--dimension-matrix {
+  font-size: 0.92rem;
+}
+
+.table--dimension-matrix th,
+.table--dimension-matrix td {
+  padding-inline: 0.45rem;
+}
+
+.table--dimension-matrix__col-label {
+  width: 36%;
+}
+
+.table--dimension-matrix__col-stage {
+  width: 11.5%;
+}
+
+.table--dimension-matrix__col-total {
+  width: 18%;
+}
+
+.table--dimension-matrix .table-stage-head strong {
+  font-size: 0.7rem;
+  line-height: 1.08;
+}
+
+.table--element-matrix {
+  table-layout: fixed;
+}
+
+.table--element-matrix th,
+.table--element-matrix td {
+  padding-inline: 0.45rem;
+}
+
+.table--element-matrix__col-dimension {
+  width: 14%;
+}
+
+.table--element-matrix__col-element {
+  width: 28%;
+}
+
+.table--element-matrix__col-stage {
+  width: 12%;
+}
+
+.table--element-matrix__col-total {
+  width: 10%;
+}
+
+.table--element-matrix th {
+  text-align: center;
+}
+
+.table--element-matrix thead tr:first-child th:first-child,
+.table--element-matrix thead tr:first-child th:nth-child(2) {
+  text-align: left;
+}
+
+.table--element-matrix th {
+  font-size: 0.68rem;
+  line-height: 1.15;
+}
+
+.table-numeric-head {
+  text-align: center;
+}
+
+.table-numeric-cell {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+}
+
+.value-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.22rem;
+  border: 1px solid #d5dfed;
+  border-radius: 999px;
+  background: #f7fbff;
+}
+
+.value-mode-toggle button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.42rem 0.72rem;
+  background: transparent;
+  color: #4f6382;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.value-mode-toggle button.active {
+  background: #1877f2;
+  color: #ffffff;
+  box-shadow: 0 5px 14px rgba(24, 119, 242, 0.22);
+}
+
 .progress {
   width: 100%;
   height: 10px;
@@ -1159,6 +1265,27 @@
 .dimension-overview-grid {
   align-items: start;
   grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+}
+
+.dimension-overview-grid--matrix {
+  align-items: stretch;
+  grid-template-columns: minmax(0, 1.5fr) minmax(380px, 0.9fr);
+}
+
+.dimension-overview-grid--matrix > .support-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dimension-overview-grid--matrix .dimension-radar-card {
+  flex: 1;
+  align-items: center;
+  padding-top: 0;
+}
+
+.dimension-overview-grid--matrix .dimension-radar {
+  width: min(100%, 620px);
 }
 
 .dimension-overview-panel {
