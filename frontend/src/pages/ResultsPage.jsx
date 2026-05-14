@@ -452,12 +452,8 @@ function buildFilteredElementSummary(rows) {
   };
 }
 
-function formatElementMatrixValue(count, score, mode) {
-  if (mode === "percentage") {
-    return typeof score === "number" ? `${score}%` : "-";
-  }
-
-  return count;
+function formatElementMatrixValue(score) {
+  return typeof score === "number" ? `${score}%` : "-";
 }
 
 function FilterDropdown({
@@ -684,7 +680,6 @@ export function ResultsPage({ data, overview, loading }) {
   // A Tela 2 funciona como aprofundamento analitico do diagnostico, sem repetir o resumo inicial.
   const [selectedDimensions, setSelectedDimensions] = useState([]);
   const [selectedElements, setSelectedElements] = useState([]);
-  const [elementValueMode, setElementValueMode] = useState("absolute");
   const [selectedGroupDimensions, setSelectedGroupDimensions] = useState([]);
   const view = data || fallbackResultsData;
   const overviewData = overview || fallbackDashboardData;
@@ -698,6 +693,7 @@ export function ResultsPage({ data, overview, loading }) {
       group.name !== "Continuous Experimentation"
   );
   const dimensionOverview = view.dimensionOverview || { dimensions: [], summary: {} };
+  const processOverview = view.processOverview || { rows: [], summary: {} };
   const elementOverview = view.elementOverview || { rows: [], summary: {} };
   const adoptionLevelStageOverview = view.adoptionLevelStageOverview || {
     levels: [],
@@ -1111,6 +1107,99 @@ export function ResultsPage({ data, overview, loading }) {
       <section className="panel">
         <div className="section-head">
           <div>
+            <h3>Process adoption by stage</h3>
+          </div>
+        </div>
+
+        {processOverview.rows.length ? (
+          <table className="table table--grouped table--process-matrix">
+            <colgroup>
+              <col className="table--process-matrix__col-label" />
+              <col className="table--process-matrix__col-stage" />
+              <col className="table--process-matrix__col-stage" />
+              <col className="table--process-matrix__col-stage" />
+              <col className="table--process-matrix__col-stage" />
+              <col className="table--process-matrix__col-total" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th rowSpan="2">Processes</th>
+                <th colSpan="4" className="table-numeric-head">
+                  Stages of StH
+                </th>
+                <th rowSpan="2" className="table-numeric-head">
+                  Process adoption
+                </th>
+              </tr>
+              <tr>
+                <th className="table-numeric-head">
+                  <div className="table-stage-head">
+                    <strong>
+                      <span>Agile</span>
+                      <span>Organization</span>
+                    </strong>
+                  </div>
+                </th>
+                <th className="table-numeric-head">CI</th>
+                <th className="table-numeric-head">CD</th>
+                <th className="table-numeric-head">
+                  <div className="table-stage-head">
+                    <strong>
+                      <span>R&amp;D as</span>
+                      <span>Innovation</span>
+                      <span>System</span>
+                    </strong>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {processOverview.rows.map((item) => (
+                <tr key={item.key}>
+                  <td>
+                    <strong>{item.name}</strong>
+                  </td>
+                  <td className="table-numeric-cell">{formatDimensionValue(item.agileScore)}</td>
+                  <td className="table-numeric-cell">{formatDimensionValue(item.ciScore)}</td>
+                  <td className="table-numeric-cell">{formatDimensionValue(item.cdScore)}</td>
+                  <td className="table-numeric-cell">
+                    {formatDimensionValue(item.experimentationScore)}
+                  </td>
+                  <td className="table-numeric-cell">
+                    {formatDimensionValue(item.organizationScore)}
+                  </td>
+                </tr>
+              ))}
+              <tr className="table-summary-row table-summary-row--final">
+                <td>
+                  <strong>Degree of adoption</strong>
+                </td>
+                <td className="table-numeric-cell">
+                  {formatDimensionValue(processOverview.summary.agileScore)}
+                </td>
+                <td className="table-numeric-cell">
+                  {formatDimensionValue(processOverview.summary.ciScore)}
+                </td>
+                <td className="table-numeric-cell">
+                  {formatDimensionValue(processOverview.summary.cdScore)}
+                </td>
+                <td className="table-numeric-cell">
+                  {formatDimensionValue(processOverview.summary.experimentationScore)}
+                </td>
+                <td className="table-numeric-cell">
+                  {formatDimensionValue(processOverview.summary.organizationScore)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        ) : (
+          <p className="empty-state">No process-level adoption evidence is available.</p>
+        )}
+      </section>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
             <h3>Element adoption by dimension</h3>
           </div>
         </div>
@@ -1162,26 +1251,6 @@ export function ResultsPage({ data, overview, loading }) {
 
               <div className="roadmap-toolbar__meta">
                 <p className="roadmap-summary">{elementFilterSummary}</p>
-                <div
-                  className="value-mode-toggle"
-                  role="group"
-                  aria-label="Element table value display"
-                >
-                  <button
-                    type="button"
-                    className={elementValueMode === "absolute" ? "active" : ""}
-                    onClick={() => setElementValueMode("absolute")}
-                  >
-                    Absolute
-                  </button>
-                  <button
-                    type="button"
-                    className={elementValueMode === "percentage" ? "active" : ""}
-                    onClick={() => setElementValueMode("percentage")}
-                  >
-                    Percentage
-                  </button>
-                </div>
               </div>
             </div>
 
@@ -1204,9 +1273,7 @@ export function ResultsPage({ data, overview, loading }) {
                       Stages of StH
                     </th>
                     <th rowSpan="2" className="table-numeric-head">
-                      {elementValueMode === "percentage"
-                        ? "Element adoption"
-                        : "Number of the CSE practices"}
+                      Element adoption
                     </th>
                   </tr>
                   <tr>
@@ -1243,85 +1310,43 @@ export function ResultsPage({ data, overview, loading }) {
                         <strong>{row.elementName}</strong>
                       </td>
                       <td className="table-numeric-cell">
-                        {formatElementMatrixValue(
-                          row.agileCount,
-                          row.agileScore,
-                          elementValueMode
-                        )}
+                        {formatElementMatrixValue(row.agileScore)}
                       </td>
                       <td className="table-numeric-cell">
-                        {formatElementMatrixValue(
-                          row.ciCount,
-                          row.ciScore,
-                          elementValueMode
-                        )}
+                        {formatElementMatrixValue(row.ciScore)}
                       </td>
                       <td className="table-numeric-cell">
-                        {formatElementMatrixValue(
-                          row.cdCount,
-                          row.cdScore,
-                          elementValueMode
-                        )}
+                        {formatElementMatrixValue(row.cdScore)}
                       </td>
                       <td className="table-numeric-cell">
-                        {formatElementMatrixValue(
-                          row.experimentationCount,
-                          row.experimentationScore,
-                          elementValueMode
-                        )}
+                        {formatElementMatrixValue(row.experimentationScore)}
                       </td>
                       <td className="table-numeric-cell">
-                        {formatElementMatrixValue(
-                          row.practiceCount,
-                          row.organizationScore,
-                          elementValueMode
-                        )}
+                        {formatElementMatrixValue(row.organizationScore)}
                       </td>
                     </tr>
                   ))}
                   <tr className="table-summary-row table-summary-row--final">
                     <td colSpan="2">
-                      <strong>
-                        {elementValueMode === "percentage"
-                          ? "Degree of adoption"
-                          : isFilteredElementView
-                            ? "Number of visible statements"
-                            : "Number of the statements"}
-                      </strong>
+                      <strong>Degree of adoption</strong>
+                    </td>
+                    <td className="table-numeric-cell">
+                      {formatElementMatrixValue(visibleElementSummary.agileScore)}
+                    </td>
+                    <td className="table-numeric-cell">
+                      {formatElementMatrixValue(visibleElementSummary.ciScore)}
+                    </td>
+                    <td className="table-numeric-cell">
+                      {formatElementMatrixValue(visibleElementSummary.cdScore)}
                     </td>
                     <td className="table-numeric-cell">
                       {formatElementMatrixValue(
-                        visibleElementSummary.agileCount,
-                        visibleElementSummary.agileScore,
-                        elementValueMode
+                        visibleElementSummary.experimentationScore
                       )}
                     </td>
                     <td className="table-numeric-cell">
                       {formatElementMatrixValue(
-                        visibleElementSummary.ciCount,
-                        visibleElementSummary.ciScore,
-                        elementValueMode
-                      )}
-                    </td>
-                    <td className="table-numeric-cell">
-                      {formatElementMatrixValue(
-                        visibleElementSummary.cdCount,
-                        visibleElementSummary.cdScore,
-                        elementValueMode
-                      )}
-                    </td>
-                    <td className="table-numeric-cell">
-                      {formatElementMatrixValue(
-                        visibleElementSummary.experimentationCount,
-                        visibleElementSummary.experimentationScore,
-                        elementValueMode
-                      )}
-                    </td>
-                    <td className="table-numeric-cell">
-                      {formatElementMatrixValue(
-                        visibleElementSummary.statementCount,
-                        visibleElementSummary.organizationScore,
-                        elementValueMode
+                        visibleElementSummary.organizationScore
                       )}
                     </td>
                   </tr>

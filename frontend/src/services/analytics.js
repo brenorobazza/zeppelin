@@ -273,6 +273,27 @@ function normalizeResults(payload) {
         organizationScore: payload.element_overview?.summary?.organization_score ?? null
       }
     },
+    processOverview: {
+      rows: (payload.process_overview?.rows || []).map((item) => ({
+        key: item.key,
+        name: item.name,
+        agileScore: item.agile_score ?? null,
+        ciScore: item.ci_score ?? null,
+        cdScore: item.cd_score ?? null,
+        experimentationScore: item.experimentation_score ?? null,
+        organizationScore: item.organization_score ?? null,
+        practiceCount: item.practice_count ?? 0
+      })),
+      summary: {
+        processCount: payload.process_overview?.summary?.process_count ?? 0,
+        agileScore: payload.process_overview?.summary?.agile_score ?? null,
+        ciScore: payload.process_overview?.summary?.ci_score ?? null,
+        cdScore: payload.process_overview?.summary?.cd_score ?? null,
+        experimentationScore:
+          payload.process_overview?.summary?.experimentation_score ?? null,
+        organizationScore: payload.process_overview?.summary?.organization_score ?? null
+      }
+    },
     practiceThemes: payload.dimensions.map((item) => ({
       key: item.key,
       name: item.name,

@@ -703,6 +703,32 @@
   line-height: 1.08;
 }
 
+.table--process-matrix {
+  table-layout: fixed;
+}
+
+.table--process-matrix th,
+.table--process-matrix td {
+  padding-inline: 0.45rem;
+}
+
+.table--process-matrix__col-label {
+  width: 42%;
+}
+
+.table--process-matrix__col-stage {
+  width: 11.5%;
+}
+
+.table--process-matrix__col-total {
+  width: 12%;
+}
+
+.table--process-matrix th {
+  font-size: 0.72rem;
+  line-height: 1.15;
+}
+
 .table--element-matrix {
   table-layout: fixed;
 }
@@ -750,33 +776,6 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
   vertical-align: middle;
-}
-
-.value-mode-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.22rem;
-  border: 1px solid #d5dfed;
-  border-radius: 999px;
-  background: #f7fbff;
-}
-
-.value-mode-toggle button {
-  border: 0;
-  border-radius: 999px;
-  padding: 0.42rem 0.72rem;
-  background: transparent;
-  color: #4f6382;
-  cursor: pointer;
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.value-mode-toggle button.active {
-  background: #1877f2;
-  color: #ffffff;
-  box-shadow: 0 5px 14px rgba(24, 119, 242, 0.22);
 }
 
 .progress {

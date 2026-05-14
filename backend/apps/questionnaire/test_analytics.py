@@ -434,6 +434,63 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         self.assertIn("Self-reflection and discipline", element_names)
         self.assertIn("Reusable infrastructure", element_names)
 
+    def test_process_overview_groups_scores_by_process_and_stage(self):
+        organization = make_organization("Startup")
+        answers = [
+            make_answer(
+                105,
+                "AO.01",
+                "Business alignment in agile stage.",
+                "Agile R&D Organization",
+                "Business",
+                self.service.adopted_levels[4],
+                self.current_cycle,
+            ),
+            make_answer(
+                106,
+                "CI.02",
+                "Planning and control in CI.",
+                "Continuous Integration",
+                "Development",
+                self.service.adopted_levels[2],
+                self.current_cycle,
+            ),
+            make_answer(
+                107,
+                "CD.04",
+                "Release controls in CD.",
+                "Continuous Deployment",
+                "Quality",
+                self.service.adopted_levels[1],
+                self.current_cycle,
+            ),
+        ]
+
+        overview = self.service._build_process_overview(
+            answers,
+            organization=organization,
+        )
+        rows_by_name = {item["name"]: item for item in overview["rows"]}
+
+        self.assertEqual(rows_by_name["Business Alignment"]["agile_score"], 100)
+        self.assertEqual(rows_by_name["Business Alignment"]["cd_score"], 17)
+        self.assertEqual(
+            rows_by_name["Continuous Planning, Monitoring and Control"]["ci_score"],
+            33,
+        )
+        self.assertEqual(
+            rows_by_name["Continuous Quality Assurance"]["cd_score"],
+            17,
+        )
+        self.assertEqual(
+            rows_by_name["Continuous Software Measurement"]["cd_score"],
+            17,
+        )
+        self.assertEqual(overview["summary"]["agile_score"], 100)
+        self.assertEqual(overview["summary"]["ci_score"], 33)
+        self.assertEqual(overview["summary"]["cd_score"], 17)
+        self.assertEqual(overview["summary"]["organization_score"], 37)
+
     def test_dashboard_payload_uses_current_context_data(self):
         organization = make_organization("Startup")
         request = SimpleNamespace(query_params={}, user=None)

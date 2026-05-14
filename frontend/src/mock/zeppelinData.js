@@ -275,6 +275,79 @@ export const dimensionOverview = {
   }
 };
 
+export const processOverview = {
+  rows: [
+    {
+      key: "business-alignment",
+      name: "Business Alignment",
+      agileScore: 87,
+      ciScore: null,
+      cdScore: 65,
+      experimentationScore: 81,
+      organizationScore: 73,
+      practiceCount: 21
+    },
+    {
+      key: "continuous-planning-monitoring-and-control",
+      name: "Continuous Planning, Monitoring and Control",
+      agileScore: 53,
+      ciScore: 52,
+      cdScore: 42,
+      experimentationScore: 50,
+      organizationScore: 50,
+      practiceCount: 31
+    },
+    {
+      key: "continuous-quality-assurance",
+      name: "Continuous Quality Assurance",
+      agileScore: 43,
+      ciScore: 46,
+      cdScore: 60,
+      experimentationScore: 30,
+      organizationScore: 46,
+      practiceCount: 23
+    },
+    {
+      key: "continuous-improvement-and-innovation",
+      name: "Continuous Improvement & Innovation",
+      agileScore: 48,
+      ciScore: 30,
+      cdScore: 46,
+      experimentationScore: 66,
+      organizationScore: 50,
+      practiceCount: 24
+    },
+    {
+      key: "continuous-knowledge-management",
+      name: "Continuous Knowledge Management",
+      agileScore: 50,
+      ciScore: 30,
+      cdScore: 45,
+      experimentationScore: 68,
+      organizationScore: 53,
+      practiceCount: 20
+    },
+    {
+      key: "continuous-software-measurement",
+      name: "Continuous Software Measurement",
+      agileScore: 30,
+      ciScore: 40,
+      cdScore: 73,
+      experimentationScore: 20,
+      organizationScore: 41,
+      practiceCount: 16
+    }
+  ],
+  summary: {
+    processCount: 6,
+    agileScore: 50,
+    ciScore: 44,
+    cdScore: 55,
+    experimentationScore: 63,
+    organizationScore: 52
+  }
+};
+
 export const elementOverview = {
   rows: [
     {

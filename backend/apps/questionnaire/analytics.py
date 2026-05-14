@@ -171,6 +171,14 @@ class QuestionnaireAnalyticsService:
         "Business",
         "User/Customer",
     )
+    PROCESS_OVERVIEW_PROCESSES = (
+        "Business Alignment",
+        "Continuous Planning, Monitoring and Control",
+        "Continuous Quality Assurance",
+        "Continuous Improvement & Innovation",
+        "Continuous Knowledge Management",
+        "Continuous Software Measurement",
+    )
     DIMENSION_STAGE_BASELINE_COUNTS = {
         "Development": {"agile": 8, "experimentation": 0},
         "Quality": {"agile": 2, "experimentation": 0},
@@ -354,6 +362,204 @@ class QuestionnaireAnalyticsService:
         "Continuos integration of work": "Continuous integration of work",
         "Continuos learning": "Continuous learning",
         "Management commitement": "Management commitment",
+    }
+    STATEMENT_PROCESS_CATALOG = {
+        "AO.01": ("Business Alignment",),
+        "AO.02": ("Continuous Planning, Monitoring and Control",),
+        "AO.03": ("Continuous Planning, Monitoring and Control",),
+        "AO.04": ("Continuous Planning, Monitoring and Control",),
+        "AO.05": ("Continuous Planning, Monitoring and Control",),
+        "AO.06": (
+            "Business Alignment",
+            "Continuous Planning, Monitoring and Control",
+        ),
+        "AO.07": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Quality Assurance",
+        ),
+        "AO.08": ("Continuous Planning, Monitoring and Control",),
+        "AO.09": (
+            "Continuous Quality Assurance",
+            "Continuous Software Measurement",
+        ),
+        "AO.10": ("Continuous Quality Assurance",),
+        "AO.11": ("Continuous Improvement & Innovation",),
+        "AO.12": ("Continuous Improvement & Innovation",),
+        "AO.13": ("Continuous Knowledge Management",),
+        "AO.14": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Software Measurement",
+        ),
+        "AO.15": ("Continuous Improvement & Innovation",),
+        "AO.16": ("Continuous Knowledge Management",),
+        "AO.17": ("Continuous Quality Assurance",),
+        "AO.18": ("Continuous Quality Assurance",),
+        "AO.19": (
+            "Continuous Quality Assurance",
+            "Continuous Software Measurement",
+        ),
+        "AO.20": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Quality Assurance",
+            "Continuous Software Measurement",
+        ),
+        "AO.21": ("Continuous Knowledge Management",),
+        "AO.22": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Improvement & Innovation",
+        ),
+        "AO.23": ("Continuous Quality Assurance",),
+        "AO.24": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Improvement & Innovation",
+            "Continuous Knowledge Management",
+            "Continuous Software Measurement",
+        ),
+        "AO.25": ("Continuous Knowledge Management",),
+        "AO.26": ("Business Alignment",),
+        "CI.01": ("Continuous Quality Assurance",),
+        "CI.02": ("Continuous Planning, Monitoring and Control",),
+        "CI.03": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Quality Assurance",
+            "Continuous Software Measurement",
+        ),
+        "CI.04": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Quality Assurance",
+            "Continuous Software Measurement",
+        ),
+        "CI.05": ("Continuous Quality Assurance",),
+        "CI.06": ("Continuous Planning, Monitoring and Control",),
+        "CI.07": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Quality Assurance",
+        ),
+        "CI.08": ("Continuous Quality Assurance",),
+        "CI.09": ("Continuous Quality Assurance",),
+        "CI.10": ("Continuous Planning, Monitoring and Control",),
+        "CI.11": ("Continuous Planning, Monitoring and Control",),
+        "CI.12": ("Continuous Planning, Monitoring and Control",),
+        "CI.13": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Improvement & Innovation",
+        ),
+        "CI.14": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Quality Assurance",
+            "Continuous Software Measurement",
+        ),
+        "CI.15": (
+            "Continuous Quality Assurance",
+            "Continuous Software Measurement",
+        ),
+        "CI.16": (
+            "Continuous Quality Assurance",
+            "Continuous Improvement & Innovation",
+            "Continuous Knowledge Management",
+            "Continuous Software Measurement",
+        ),
+        "CI.17": (
+            "Continuous Quality Assurance",
+            "Continuous Improvement & Innovation",
+            "Continuous Knowledge Management",
+            "Continuous Software Measurement",
+        ),
+        "CI.18": (
+            "Continuous Improvement & Innovation",
+            "Continuous Knowledge Management",
+        ),
+        "CD.01": (
+            "Business Alignment",
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Improvement & Innovation",
+        ),
+        "CD.02": (
+            "Business Alignment",
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Improvement & Innovation",
+        ),
+        "CD.03": (
+            "Business Alignment",
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Improvement & Innovation",
+        ),
+        "CD.04": (
+            "Business Alignment",
+            "Continuous Quality Assurance",
+            "Continuous Software Measurement",
+        ),
+        "CD.05": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Quality Assurance",
+            "Continuous Improvement & Innovation",
+            "Continuous Software Measurement",
+        ),
+        "CD.06": ("Continuous Improvement & Innovation",),
+        "CD.07": (
+            "Business Alignment",
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Improvement & Innovation",
+        ),
+        "CD.08": ("Business Alignment",),
+        "CD.09": ("Continuous Knowledge Management",),
+        "CD.10": ("Business Alignment",),
+        "CD.11": ("Business Alignment",),
+        "CD.12": ("Business Alignment",),
+        "CD.13": ("Business Alignment",),
+        "CD.14": (
+            "Business Alignment",
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Improvement & Innovation",
+            "Continuous Software Measurement",
+        ),
+        "CD.15": ("Continuous Quality Assurance",),
+        "CD.16": ("Continuous Knowledge Management",),
+        "CD.17": ("Continuous Improvement & Innovation",),
+        "CD.18": ("Continuous Knowledge Management",),
+        "CD.19": ("Continuous Knowledge Management",),
+        "IS.01": ("Continuous Knowledge Management",),
+        "IS.02": ("Business Alignment", "Continuous Knowledge Management"),
+        "IS.03": (
+            "Business Alignment",
+            "Continuous Improvement & Innovation",
+            "Continuous Knowledge Management",
+        ),
+        "IS.04": ("Business Alignment",),
+        "IS.05": (
+            "Continuous Improvement & Innovation",
+            "Continuous Knowledge Management",
+        ),
+        "IS.06": (
+            "Business Alignment",
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Improvement & Innovation",
+            "Continuous Knowledge Management",
+            "Continuous Software Measurement",
+        ),
+        "IS.07": ("Continuous Improvement & Innovation",),
+        "IS.08": ("Continuous Improvement & Innovation",),
+        "IS.09": (
+            "Business Alignment",
+            "Continuous Planning, Monitoring and Control",
+        ),
+        "IS.10": (
+            "Continuous Planning, Monitoring and Control",
+            "Continuous Quality Assurance",
+            "Continuous Improvement & Innovation",
+            "Continuous Knowledge Management",
+            "Continuous Software Measurement",
+        ),
+        "IS.11": (
+            "Business Alignment",
+            "Continuous Improvement & Innovation",
+            "Continuous Knowledge Management",
+        ),
+        "IS.12": (
+            "Business Alignment",
+            "Continuous Planning, Monitoring and Control",
+        ),
+        "IS.13": ("Continuous Knowledge Management",),
     }
     INSTRUMENT_PRACTICE_CATALOG = {
         "AO.01": {"dimension": "Business", "element": "Management commitement"},
@@ -657,6 +863,11 @@ class QuestionnaireAnalyticsService:
                 stage_scope=context["stage_scope"],
             ),
             "element_overview": self._build_dimension_element_overview(
+                answers,
+                organization=organization,
+                stage_scope=context["stage_scope"],
+            ),
+            "process_overview": self._build_process_overview(
                 answers,
                 organization=organization,
                 stage_scope=context["stage_scope"],
@@ -1674,6 +1885,126 @@ class QuestionnaireAnalyticsService:
             "summary": summary,
         }
 
+    def _build_process_overview(
+        self, answers=None, organization=None, stage_scope="all"
+    ):
+        stage_name_to_key = {}
+        stage_order = [stage["key"] for stage in self.ADOPTION_OVERVIEW_STAGES]
+        for stage in self.ADOPTION_OVERVIEW_STAGES:
+            for label in stage["labels"]:
+                stage_name_to_key[label] = stage["key"]
+
+        grouped = {
+            process_name: {stage_key: [] for stage_key in stage_order}
+            for process_name in self.PROCESS_OVERVIEW_PROCESSES
+        }
+        practice_counts = {
+            process_name: 0 for process_name in self.PROCESS_OVERVIEW_PROCESSES
+        }
+
+        for processes in self.STATEMENT_PROCESS_CATALOG.values():
+            for process_name in processes:
+                if process_name in practice_counts:
+                    practice_counts[process_name] += 1
+
+        score_summary = {stage_key: [] for stage_key in stage_order}
+
+        if answers:
+            for answer in answers:
+                statement = answer.statement_answer
+                stage_name = getattr(
+                    getattr(statement, "sth_stage", None), "name", None
+                )
+                if stage_scope == "ci_cd" and stage_name not in self.CI_CD_STAGE_NAMES:
+                    continue
+
+                stage_key = stage_name_to_key.get(stage_name)
+                if not stage_key:
+                    continue
+
+                score = self._instrument_weight(answer, organization=organization)
+                for process_name in self._resolve_statement_process_names(statement):
+                    if process_name not in grouped:
+                        continue
+                    grouped[process_name][stage_key].append(score)
+                    score_summary[stage_key].append(score)
+
+        rows = []
+        for process_name in self.PROCESS_OVERVIEW_PROCESSES:
+            score_buckets = grouped[process_name]
+            organization_scores = [
+                score for stage_key in stage_order for score in score_buckets[stage_key]
+            ]
+
+            rows.append(
+                {
+                    "key": slugify(process_name),
+                    "name": process_name,
+                    "agile_score": (
+                        round(mean(score_buckets["agile"]))
+                        if score_buckets["agile"]
+                        else None
+                    ),
+                    "ci_score": (
+                        round(mean(score_buckets["ci"]))
+                        if score_buckets["ci"]
+                        else None
+                    ),
+                    "cd_score": (
+                        round(mean(score_buckets["cd"]))
+                        if score_buckets["cd"]
+                        else None
+                    ),
+                    "experimentation_score": (
+                        round(mean(score_buckets["experimentation"]))
+                        if score_buckets["experimentation"]
+                        else None
+                    ),
+                    "organization_score": (
+                        round(mean(organization_scores))
+                        if organization_scores
+                        else None
+                    ),
+                    "practice_count": practice_counts[process_name],
+                    "agile_score_count": len(score_buckets["agile"]),
+                    "ci_score_count": len(score_buckets["ci"]),
+                    "cd_score_count": len(score_buckets["cd"]),
+                    "experimentation_score_count": len(
+                        score_buckets["experimentation"]
+                    ),
+                    "score_count": len(organization_scores),
+                }
+            )
+
+        summary = {
+            "process_count": len(self.PROCESS_OVERVIEW_PROCESSES),
+            "agile_score": (
+                round(mean(score_summary["agile"])) if score_summary["agile"] else None
+            ),
+            "ci_score": (
+                round(mean(score_summary["ci"])) if score_summary["ci"] else None
+            ),
+            "cd_score": (
+                round(mean(score_summary["cd"])) if score_summary["cd"] else None
+            ),
+            "experimentation_score": (
+                round(mean(score_summary["experimentation"]))
+                if score_summary["experimentation"]
+                else None
+            ),
+        }
+        organization_scores = [
+            score for stage_scores in score_summary.values() for score in stage_scores
+        ]
+        summary["organization_score"] = (
+            round(mean(organization_scores)) if organization_scores else None
+        )
+
+        return {
+            "rows": rows,
+            "summary": summary,
+        }
+
     # Gera recomendações para práticas abaixo do limiar de 60 por cento.
     def _build_recommendations(self, answers, organization=None):
         items = []
@@ -1776,9 +2107,9 @@ class QuestionnaireAnalyticsService:
             )
             grouped[key].append(answer)
             if answer.questionnaire_answer_id is not None:
-                questionnaires[
-                    answer.questionnaire_answer_id
-                ] = answer.questionnaire_answer
+                questionnaires[answer.questionnaire_answer_id] = (
+                    answer.questionnaire_answer
+                )
 
         if organization:
             org_questionnaires = Questionnaire.objects.filter(
@@ -1970,6 +2301,10 @@ class QuestionnaireAnalyticsService:
             return instrument_entry["element"]
 
         return None
+
+    def _resolve_statement_process_names(self, statement):
+        statement_code = getattr(statement, "code", "") or ""
+        return self.STATEMENT_PROCESS_CATALOG.get(statement_code, ())
 
     def _resolve_element_name(self, answer):
         return self._resolve_statement_element_name(answer.statement_answer)
