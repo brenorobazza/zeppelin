@@ -1,0 +1,53 @@
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zeppelin_prod
+    restart: always
+    ports:
+      - "8080:8000"
+    depends_on:
+      - db_zeppelin
+      - redis
+    env_file:
+      - .env
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=zeppelin.settings.local # pode ser '.prod' se existir 
+    command: supervisord -c /etc/supervisord.conf
+
+  db_zeppelin:
+    image: postgres:15-alpine
+    container_name: db_zeppelin_prod
+    restart: always
+    # Porta do banco NÃO exposta por questões de segurança
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    env_file:
+      - .env
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_zeppelin_prod
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: zeppelin_frontend_prod
+    restart: always
+    ports:
+      - "3000:5173"
+    depends_on:
+      - app
+    # Em prod, o Vite precisa rodar com --host para aceitar conexões externas
+    command: sh -c "npm run dev -- --host 0.0.0.0"
+
+volumes:
+  postgres_data_prod:
