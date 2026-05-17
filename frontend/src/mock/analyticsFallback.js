@@ -60,7 +60,7 @@ function mapRecommendation(item) {
 export const fallbackDashboardData = {
   maturitySnapshot: {
     ...maturitySnapshot,
-    questionnaireStatus: "Under assessment",
+    questionnaireStatus: "Under Assessment",
     isQuestionnaireComplete: false
   },
   stageScores,
@@ -75,7 +75,7 @@ export const fallbackDashboardData = {
 export const fallbackResultsData = {
   summary: {
     answeredPractices: maturitySnapshot.answeredPractices,
-    questionnaireStatus: "Under assessment",
+    questionnaireStatus: "Under Assessment",
     stageGap: Math.abs(maturitySnapshot.ciScore - maturitySnapshot.cdScore),
     calibratedProfile: maturitySnapshot.calibratedProfile,
     overallScore: maturitySnapshot.overallScore,
@@ -114,7 +114,7 @@ export const fallbackRecommendationsData = {
       .filter((item) => (item.answeredPractices || 0) === 0)
       .map((item) => item.shortName)
       .join(", ")}`,
-    questionnaireStatus: "Under assessment",
+    questionnaireStatus: "Under Assessment",
     isQuestionnaireComplete: false
   },
   recommendationTracks: recommendationTracks.map((lane) => ({

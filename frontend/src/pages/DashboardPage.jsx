@@ -149,7 +149,7 @@ export function DashboardPage({ data, loading }) {
     { label: "Assessment cycle", value: view.maturitySnapshot.cycleLabel },
     {
       label: "Questionnaire status",
-      value: view.maturitySnapshot.questionnaireStatus || "Incomplete"
+      value: view.maturitySnapshot.questionnaireStatus || "Under Assessment"
     },
     {
       label: "Answer progress",

@@ -1163,8 +1163,8 @@ class QuestionnaireAnalyticsService:
 
     def _questionnaire_status(self, answered_count, expected_total):
         if expected_total <= 0:
-            return "Incomplete"
-        return "Complete" if answered_count >= expected_total else "Incomplete"
+            return "Under Assessment"
+        return "Complete" if answered_count >= expected_total else "Under Assessment"
 
     def _build_stage_coverage(self, answers, expected_stage_counts=None):
         grouped_counts = defaultdict(int)

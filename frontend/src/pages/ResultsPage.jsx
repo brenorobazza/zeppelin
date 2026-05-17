@@ -791,7 +791,7 @@ export function ResultsPage({ data, overview, loading }) {
   const diagnosticFacts = [
     {
       label: "Questionnaire status",
-      value: view.summary.questionnaireStatus || "Incomplete"
+      value: view.summary.questionnaireStatus || "Under Assessment"
     },
     { label: "Spread across stages", value: formatStageSpread(leadingStage, constrainingStage) }
   ];

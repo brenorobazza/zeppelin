@@ -211,7 +211,7 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
     def test_questionnaire_status_returns_incomplete_when_answers_are_missing(self):
         status = self.service._questionnaire_status(answered_count=2, expected_total=4)
 
-        self.assertEqual(status, "Incomplete")
+        self.assertEqual(status, "Under Assessment")
 
     def test_build_recommendations_generates_tracks_from_low_maturity_answers(self):
         recommendations = self.service._build_recommendations(self.all_answers)
@@ -524,7 +524,9 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
             "Realized at project/product level",
         )
         self.assertEqual(payload["snapshot"]["answered_practices"], 2)
-        self.assertEqual(payload["snapshot"]["questionnaire_status"], "Incomplete")
+        self.assertEqual(
+            payload["snapshot"]["questionnaire_status"], "Under Assessment"
+        )
         self.assertEqual(payload["snapshot"]["recommendation_count"], 1)
         self.assertEqual(len(payload["stage_scores"]), 2)
         self.assertEqual(payload["stage_scores"][0]["score"], 50)
@@ -561,7 +563,7 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         ):
             payload = self.service.get_results_payload(request)
 
-        self.assertEqual(payload["summary"]["questionnaire_status"], "Incomplete")
+        self.assertEqual(payload["summary"]["questionnaire_status"], "Under Assessment")
         self.assertEqual(payload["summary"]["represented_stages"], 2)
         self.assertEqual(payload["summary"]["total_stages"], 2)
         self.assertEqual(payload["summary"]["missing_stages"], [])
@@ -589,7 +591,7 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         ):
             payload = self.service.get_recommendations_payload(request)
 
-        self.assertEqual(payload["summary"]["questionnaire_status"], "Incomplete")
+        self.assertEqual(payload["summary"]["questionnaire_status"], "Under Assessment")
 
     def test_adoption_level_stage_overview_reproduces_all_stage_counts(self):
         agile_answer = make_answer(

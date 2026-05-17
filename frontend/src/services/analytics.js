@@ -26,7 +26,7 @@ async function parseResponse(response, fallbackMessage) {
 }
 
 function normalizeQuestionnaireStatus(status) {
-  return status === "Complete" ? "Complete" : "Under assessment";
+  return status === "Complete" ? "Complete" : "Under Assessment";
 }
 
 function isQuestionnaireComplete(status) {
