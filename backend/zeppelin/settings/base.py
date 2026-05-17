@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.admindocs",
     # 3rd-party Apps
     "django_cpf_cnpj",
+    "corsheaders",
     "easyaudit",
     "polymorphic",
     "rest_framework",
@@ -69,6 +70,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -239,3 +241,7 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
 CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+
+# CORS configuration
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
