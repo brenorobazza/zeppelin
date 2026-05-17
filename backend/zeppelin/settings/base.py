@@ -25,12 +25,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=True, cast=bool)
 
 # load production server from .env
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1,app").split(",")
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*", cast=str).split(",")
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://143.106.73.11:3000",
+    "http://143.106.73.11:8080",
+]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
