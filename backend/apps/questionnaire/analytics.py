@@ -1047,12 +1047,11 @@ class QuestionnaireAnalyticsService:
             reference_questionnaire_id,
         )
 
-        current_questionnaire = context["questionnaire"]
-        current_cycle = self._serialize_cycle(current_questionnaire, current_answers)
         reference_cycle = self._serialize_cycle(
             reference_questionnaire,
             reference_answers,
         )
+        current_cycle = reference_cycle  # verificar se isso da certo
 
         current_overall_score = self._score_for_answers(
             current_answers,

@@ -85,9 +85,11 @@ async function fetchAnalyticsSection(section, filters) {
 
 async function fetchComparisonAnalytics(filters) {
   const query = buildComparisonQuery(filters);
+  console.log('query', query);
   const response = await fetch(`${API_BASE}/api/questionnaire/analytics/comparison/${query}`, {
     credentials: "include"
   });
+  console.log('response', response);
 
   return parseResponse(response, "Failed to load comparison analytics.");
 }
