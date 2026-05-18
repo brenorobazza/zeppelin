@@ -17,6 +17,7 @@ import {
   registerAccount,
   submitOrganizationRegistration,
 } from "./services/auth";
+import { setCurrentOrganization } from "./services/settings";
 import {
   getAnalyticsFiltersFromUrl,
   getFallbackAnalyticsBundle,
@@ -320,6 +321,56 @@ export default function App() {
     });
   }
 
+  function syncCurrentOrganization(nextOrganizationId, { persistCurrentOrganization = false } = {}) {
+    const nextId = String(nextOrganizationId || "");
+    if (!nextId) {
+      return;
+    }
+
+    setUser((current) => {
+      if (!current) return current;
+
+      const nextUser = {
+        ...current,
+        currentOrganizationId: nextId,
+      };
+      localStorage.setItem("zeppelin_user", JSON.stringify(nextUser));
+      return nextUser;
+    });
+
+    if (persistCurrentOrganization) {
+      setCurrentOrganization(nextId).catch((error) => {
+        console.error("Failed to persist current organization:", error);
+      });
+    }
+
+    updateAnalyticsFilters({
+      organizationId: nextId,
+      questionnaireId: "",
+    });
+  }
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fallbackOrganizationId =
+      user.currentOrganizationId ||
+      (user.organizations && user.organizations.length > 0
+        ? String(user.organizations[0].id)
+        : "");
+
+    if (!fallbackOrganizationId) {
+      return;
+    }
+
+    if (String(analyticsFilters.organizationId || "") !== String(fallbackOrganizationId)) {
+      updateAnalyticsFilters({
+        organizationId: fallbackOrganizationId,
+        questionnaireId: analyticsFilters.questionnaireId || "",
+      });
+    }
+  }, [user, analyticsFilters.organizationId]);
+
   function handleOrganizationQuit(payload) {
     const removedId = String(payload?.organization_id || "");
     if (!removedId) {
@@ -411,21 +462,7 @@ export default function App() {
       return;
     }
 
-    setUser((current) => {
-      if (!current) return current;
-
-      const nextUser = {
-        ...current,
-        currentOrganizationId,
-      };
-      localStorage.setItem("zeppelin_user", JSON.stringify(nextUser));
-      return nextUser;
-    });
-
-    updateAnalyticsFilters({
-      organizationId: currentOrganizationId,
-      questionnaireId: "",
-    });
+    syncCurrentOrganization(currentOrganizationId);
   }
 
   // Cadastro fica fora do layout interno da plataforma.
@@ -597,8 +634,8 @@ export default function App() {
         onNavigate={goToScreen}
         onLogout={logout}
         organizationOptions={user.organizations || []}
-        selectedOrganizationId={analyticsFilters.organizationId}
-        onOrganizationChange={(value) => updateAnalyticsFilters({ organizationId: value, questionnaireId: "" })}
+        selectedOrganizationId={user?.currentOrganizationId || analyticsFilters.organizationId}
+        onOrganizationChange={(value) => syncCurrentOrganization(value, { persistCurrentOrganization: true })}
         cycleOptions={analytics.meta.cycleOptions}
         selectedCycleId={analyticsFilters.questionnaireId}
         onCycleChange={(value) => updateAnalyticsFilters({ questionnaireId: value })}
@@ -638,10 +675,7 @@ export default function App() {
           const initialOrganizationId = loggedUser?.current_organization_id
             ? String(loggedUser.current_organization_id)
             : String(loggedUser.organizations[0].id);
-          updateAnalyticsFilters({ 
-            organizationId: initialOrganizationId,
-            questionnaireId: "" // Reseta o ciclo para garantir que não use lixo de sessões anteriores.
-          });
+          syncCurrentOrganization(initialOrganizationId);
         }
 
         goToDashboard();

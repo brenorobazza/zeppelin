@@ -157,6 +157,9 @@ export function OrganizationOverviewCard({
                       if (typeof onSelectOrganization === "function") {
                         onSelectOrganization(optionId);
                       }
+                      if (typeof onSetCurrentOrganization === "function") {
+                        onSetCurrentOrganization(item);
+                      }
                     }}
                   >
                     <div className="settings-organization-option__left">
