@@ -33,7 +33,7 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*", cast=str).split(",")
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://143.106.73.11:3000",
+    "http://143.106.73.11:3001",
     "http://143.106.73.11:8080",
 ]
 
