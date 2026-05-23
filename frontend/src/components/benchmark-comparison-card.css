@@ -790,6 +790,29 @@
   text-transform: uppercase;
 }
 
+.benchmark-comparison-card__score-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.benchmark-comparison-card__score-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+.benchmark-comparison-card__score-indicator--current {
+  background: #4ade80;
+}
+
+.benchmark-comparison-card__score-indicator--reference {
+  background: #60a5fa;
+}
+
 .benchmark-comparison-card__reference-score-card strong,
 .benchmark-comparison-card__score-card strong {
   display: block;

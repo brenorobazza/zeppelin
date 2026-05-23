@@ -58,7 +58,7 @@ const BRAZIL_STATES = [
   "Tocantins"
 ];
 
-const TYPE_OPTIONS = ["Private", "Public", "Startup", "Scale-up", "Hybrid"];
+const TYPE_OPTIONS = ["Private", "Public", "Startup", "Software House", "IT Organization", "Hybrid"];
 const SECTOR_OPTIONS = ["Finance", "Healthcare", "Retail", "Industry", "Education", "Technology"];
 const AUDIENCE_OPTIONS = ["B2B", "B2C", "B2G", "Internal", "Mixed"];
 
