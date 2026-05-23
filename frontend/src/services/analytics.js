@@ -85,11 +85,9 @@ async function fetchAnalyticsSection(section, filters) {
 
 async function fetchComparisonAnalytics(filters) {
   const query = buildComparisonQuery(filters);
-  console.log('query', query);
   const response = await fetch(`${API_BASE}/api/questionnaire/analytics/comparison/${query}`, {
     credentials: "include"
   });
-  console.log('response', response);
 
   return parseResponse(response, "Failed to load comparison analytics.");
 }
@@ -480,70 +478,44 @@ function normalizeHistory(payload) {
     (item) => item.id != null && item.label !== "Aggregated snapshot"
   );
 
-  const historySeries = historyCycles.map((item, index) => {
-    const stageScores = item.stage_scores.map(mapStageScore);
-    const stages = buildHistoryStageValues(stageScores);
-    const agile = findHistoryStageScore(stages, "agile");
-    const ci = findHistoryStageScore(stages, "ci");
-    const cd = findHistoryStageScore(stages, "cd");
-    const experimentation = findHistoryStageScore(stages, "experimentation");
+  const mapCyclesToSeries = (cycles = []) => {
+    return cycles.map((item, index) => {
+      const stageScores = item.stage_scores.map(mapStageScore);
+      const stages = buildHistoryStageValues(stageScores);
+      const agile = findHistoryStageScore(stages, "agile");
+      const ci = findHistoryStageScore(stages, "ci");
+      const cd = findHistoryStageScore(stages, "cd");
+      const experimentation = findHistoryStageScore(stages, "experimentation");
 
-    return {
-      id: item.id ? String(item.id) : "",
-      cycle: `Cycle ${index + 1}`,
-      period: item.label,
-      overall: item.overall_score,
-      overallLevel: item.overall_level,
-      agile,
-      ci,
-      cd,
-      experimentation,
-      stages,
-      recommendationCount: item.recommendation_count,
-      delta: index === 0 ? null : item.overall_score - historyCycles[index - 1].overall_score,
-      adoptionLevels: {
-        notAdopted: getHistoryCount(item, "not-adopted"),
-        abandoned: getHistoryCount(item, "abandoned"),
-        project: getHistoryCount(item, "project"),
-        process: getHistoryCount(item, "process"),
-        institutionalized: getHistoryCount(item, "institutionalized")
-      }
-    };
-  });
+      return {
+        id: item.id ? String(item.id) : "",
+        cycle: `Cycle ${index + 1}`,
+        period: item.label,
+        overall: item.overall_score,
+        overallLevel: item.overall_level,
+        complete: Boolean(item.complete),
+        agile,
+        ci,
+        cd,
+        experimentation,
+        stages,
+        recommendationCount: item.recommendation_count,
+        delta: index === 0 ? null : item.overall_score - cycles[index - 1].overall_score,
+        adoptionLevels: {
+          notAdopted: getHistoryCount(item, "not-adopted"),
+          abandoned: getHistoryCount(item, "abandoned"),
+          project: getHistoryCount(item, "project"),
+          process: getHistoryCount(item, "process"),
+          institutionalized: getHistoryCount(item, "institutionalized")
+        }
+      };
+    });
+  };
 
-  const historySeries = mapCyclesToSeries(payload.cycles || []);
-  const completeHistorySeries = mapCyclesToSeries(payload.complete_cycles || []);
-
-  const baselineSeries = completeHistorySeries.length > 0 ? completeHistorySeries : historySeries;
-  const first = baselineSeries[0];
-  const last = baselineSeries[baselineSeries.length - 1];
+  const historySeries = mapCyclesToSeries(historyCycles);
 
   return {
-    selectedCycleEmpty: payload.selected_cycle_empty || false,
-    selectedCycleLabel: payload.cycle?.label || "",
-    summary: {
-      overallDelta: last && first ? last.overall - first.overall : 0,
-      agileDelta:
-        last && first && last.agile != null && first.agile != null
-          ? last.agile - first.agile
-          : null,
-      ciDelta:
-        last && first && last.ci != null && first.ci != null ? last.ci - first.ci : null,
-      cdDelta:
-        last && first && last.cd != null && first.cd != null ? last.cd - first.cd : null,
-      experimentationDelta:
-        last && first && last.experimentation != null && first.experimentation != null
-          ? last.experimentation - first.experimentation
-          : null,
-      recommendationReduction:
-        last && first ? first.recommendationCount - last.recommendationCount : 0,
-      institutionalizedGrowth: last
-        ? last.adoptionLevels.institutionalized - first.adoptionLevels.institutionalized
-        : 0
-    },
-    completeCycleCount: completeHistorySeries.length,
-    insufficientData: completeHistorySeries.length < 2,
-    completeHistorySeries,
+    insufficientData: historySeries.length < 2,
     historySeries
   };
 }

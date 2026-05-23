@@ -759,6 +759,14 @@ class QuestionnaireAnalyticsService:
 
     # Numero minimo de empresas para formar um benchmark significativo.
     BENCHMARK_MIN_COMPANY_THRESHOLD = 5
+    BENCHMARK_SIZE_BUCKETS = {
+        "1-10": (1, 10),
+        "11-50": (11, 50),
+        "51-200": (51, 200),
+        "201-500": (201, 500),
+        "501-1000": (501, 1000),
+        "1000+": (1000, None),
+    }
 
     # Carrega os níveis de adoção uma única vez para reutilização ao longo dos cálculos.
     def __init__(self):
@@ -992,15 +1000,6 @@ class QuestionnaireAnalyticsService:
             context.get("expected_statement_count"),
         )
 
-        # Also expose only-complete cycles for UI components that must ignore
-        # incomplete snapshots (e.g., radar/comparison visuals).
-        complete_cycles = self._build_history_cycles(
-            context["all_answers"],
-            context["organization"],
-            context.get("expected_statement_count"),
-            filter_incomplete=True,
-        )
-
         if len(cycles) >= 2:
             baseline = cycles[0]
             current = cycles[-1]
@@ -1026,15 +1025,21 @@ class QuestionnaireAnalyticsService:
                 "recommendation_reduction": recommendation_reduction,
             },
             "cycles": cycles,
-            "complete_cycles": complete_cycles,
         }
 
     # Monta a resposta agregada de comparacao para o card de benchmark.
     def get_comparison_payload(self, request):
         context = self._resolve_context(request)
         organization = context["organization"]
-        current_answers = context["current_answers"]
         all_answers = context["all_answers"]
+        selected_questionnaire = context["questionnaire"]
+        grouped_answers = self._group_answers_by_questionnaire(all_answers)
+        all_cycles = self._build_history_cycles(
+            all_answers,
+            organization,
+            context.get("expected_statement_count"),
+            filter_incomplete=False,
+        )
 
         reference_mode = request.query_params.get("reference_mode", "first-submission")
         reference_questionnaire_id = request.query_params.get(
@@ -1051,7 +1056,53 @@ class QuestionnaireAnalyticsService:
             reference_questionnaire,
             reference_answers,
         )
-        current_cycle = reference_cycle  # verificar se isso da certo
+
+        current_cycle, current_answers = self._resolve_comparison_current_cycle(
+            all_cycles,
+            grouped_answers,
+            selected_questionnaire,
+            reference_cycle_id=reference_cycle.get("id"),
+        )
+
+        if current_cycle is None:
+            base_payload = {
+                "organization": self._serialize_organization(organization),
+                "scope": context["stage_scope"],
+                "selection": {
+                    "reference_mode": reference_mode,
+                    "current_cycle": None,
+                    "reference_cycle": reference_cycle,
+                    "available_cycles": self._build_history_cycles(
+                        all_answers,
+                        None,
+                        context.get("expected_statement_count"),
+                        filter_incomplete=True,
+                    ),
+                },
+                "summary": {
+                    "current_score": 0,
+                    "reference_score": self._score_for_answers(
+                        reference_answers,
+                        organization=organization,
+                    ),
+                    "delta": 0,
+                    "current_answered_practices": 0,
+                    "reference_answered_practices": len(reference_answers),
+                },
+                "lenses": {},
+                "benchmark_state": {
+                    "code": "insufficient_data",
+                    "title": "Insufficient comparison data",
+                    "message": (
+                        "At least one complete cycle different from the reference is required to compare."
+                    ),
+                    "error_code": "insufficient_data",
+                    "min_company_threshold": 2,
+                    "company_count": len(all_cycles),
+                    "snapshot_count": len(all_cycles),
+                },
+            }
+            return base_payload
 
         current_overall_score = self._score_for_answers(
             current_answers,
@@ -1174,7 +1225,11 @@ class QuestionnaireAnalyticsService:
             "lenses": {},
         }
 
-        cohort_orgs = list(self._resolve_benchmark_cohort_organizations(request))
+        cohort_orgs = [
+            org
+            for org in self._resolve_benchmark_cohort_organizations(request)
+            if org.id != context["organization"].id
+        ]
         company_count = 0
         reference_answers = []
         snapshot_ids = set()
@@ -1390,7 +1445,9 @@ class QuestionnaireAnalyticsService:
         )
 
     def _resolve_benchmark_cohort_organizations(self, request):
-        qs = Organization.objects.all()
+        qs = Organization.objects.select_related(
+            "organization_size", "organization_type"
+        )
         category = request.query_params.get("organization_category")
         size = request.query_params.get("organization_size")
         org_type = request.query_params.get("organization_type")
@@ -1407,13 +1464,92 @@ class QuestionnaireAnalyticsService:
         if target:
             qs = qs.filter(target_audience__icontains=target)
 
+        if size:
+            return [
+                organization
+                for organization in qs
+                if self._organization_size_matches_filter(
+                    getattr(organization.organization_size, "name", ""),
+                    size,
+                )
+            ]
+
         return qs
+
+    def _organization_size_matches_filter(self, organization_size_name, selected_size):
+        normalized_selected_size = (selected_size or "").strip().lower()
+        normalized_organization_size = (organization_size_name or "").strip().lower()
+
+        if not normalized_selected_size:
+            return True
+
+        if normalized_organization_size == normalized_selected_size:
+            return True
+
+        bucket = self.BENCHMARK_SIZE_BUCKETS.get(selected_size)
+        if bucket is None:
+            return normalized_organization_size == normalized_selected_size
+
+        if not normalized_organization_size.isdigit():
+            return False
+
+        size_value = int(normalized_organization_size)
+        lower_bound, upper_bound = bucket
+
+        if upper_bound is None:
+            return size_value >= lower_bound
+
+        return lower_bound <= size_value <= upper_bound
 
     def _group_answers_by_questionnaire(self, answers):
         grouped = defaultdict(list)
         for answer in answers:
             grouped[answer.questionnaire_answer_id].append(answer)
         return grouped
+
+    def _cycle_sort_key(self, cycle):
+        applied_date = cycle.get("applied_date")
+        return (
+            applied_date.isoformat() if applied_date is not None else "9999-12-30",
+            cycle.get("id") or 999999,
+        )
+
+    def _resolve_comparison_current_cycle(
+        self,
+        cycles,
+        grouped_answers,
+        selected_questionnaire,
+        reference_cycle_id=None,
+    ):
+        if not cycles:
+            return None, []
+
+        selected_sort_key = (
+            self._questionnaire_sort_key(selected_questionnaire)
+            if selected_questionnaire is not None
+            else None
+        )
+
+        start_index = len(cycles) - 1 if selected_sort_key is None else -1
+        if selected_sort_key is not None:
+            for index, cycle in enumerate(cycles):
+                if self._cycle_sort_key(cycle) <= selected_sort_key:
+                    start_index = index
+                else:
+                    break
+
+        for index in range(start_index, -1, -1):
+            cycle = cycles[index]
+            if not cycle.get("complete"):
+                continue
+            if reference_cycle_id is not None and cycle.get("id") == reference_cycle_id:
+                continue
+
+            current_answers = grouped_answers.get(cycle.get("id"), [])
+            if current_answers:
+                return cycle, current_answers
+
+        return None, []
 
     def _questionnaire_sort_key(self, questionnaire):
         if questionnaire is None:
@@ -2555,15 +2691,12 @@ class QuestionnaireAnalyticsService:
         questionnaires = {}
 
         for answer in answers:
-            key = (
-                answer.questionnaire_answer_id
-                or f"aggregate-{answer.organization_answer_id}"
-            )
+            if answer.questionnaire_answer_id is None:
+                continue
+
+            key = answer.questionnaire_answer_id
             grouped[key].append(answer)
-            if answer.questionnaire_answer_id is not None:
-                questionnaires[
-                    answer.questionnaire_answer_id
-                ] = answer.questionnaire_answer
+            questionnaires[answer.questionnaire_answer_id] = answer.questionnaire_answer
 
         if organization:
             org_questionnaires = Questionnaire.objects.filter(
