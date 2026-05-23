@@ -148,26 +148,14 @@ export const fallbackHistoryData = {
       historySeries[historySeries.length - 1].adoptionLevels.institutionalized -
       historySeries[0].adoptionLevels.institutionalized
   },
-  completeCycleCount: historySeries.length,
-  insufficientData: false,
-  completeHistorySeries: historySeries.map((item, index) => ({
-    id: "",
-    cycle: item.cycle,
-    period: item.period,
-    overall: item.overall,
-    overallLevel: resolveLevelFromScore(item.overall),
-    ci: item.ci,
-    cd: item.cd,
-    recommendationCount: item.recommendationCount,
-    delta: index === 0 ? null : item.overall - historySeries[index - 1].overall,
-    adoptionLevels: item.adoptionLevels
-  })),
+  insufficientData: historySeries.length < 2,
   historySeries: historySeries.map((item, index) => ({
     id: "",
     cycle: item.cycle,
     period: item.period,
     overall: item.overall,
     overallLevel: resolveLevelFromScore(item.overall),
+    complete: true,
     agile: item.agile,
     ci: item.ci,
     cd: item.cd,

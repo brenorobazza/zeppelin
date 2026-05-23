@@ -33,7 +33,8 @@ const TYPE_OPTIONS = [
   { value: "Private", label: "Private" },
   { value: "Public", label: "Public" },
   { value: "Startup", label: "Startup" },
-  { value: "Scale-up", label: "Scale-up" },
+  { value: "Software House", label: "Software House" },
+  { value: "IT Organization", label: "IT Organization" },
   { value: "Hybrid", label: "Hybrid" }
 ];
 

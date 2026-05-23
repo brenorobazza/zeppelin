@@ -518,16 +518,69 @@ def _resolve_or_create_organization(
         raise ValueError("state is required when organization_country is Brazil")
 
     organization = _find_organization_by_normalized_name(org_name, organization_country)
-    if organization and org_description and not organization.description:
-        organization.description = org_description
-        organization.save(update_fields=["description"])
-        return organization
-
-    if organization and organization_country and not organization.organization_country:
-        organization.organization_country = organization_country
-        organization.save(update_fields=["organization_country"])
-
     if organization:
+        fields_to_update = []
+
+        if org_description and not organization.description:
+            organization.description = org_description
+            fields_to_update.append("description")
+
+        if organization_country and not organization.organization_country:
+            organization.organization_country = organization_country
+            fields_to_update.append("organization_country")
+
+        if years:
+            organization.years_experience_range = years
+            organization.age = _resolve_age_from_years(years)
+            fields_to_update.extend(["years_experience_range", "age"])
+
+        if organization_country.lower() == "brazil" and state_name:
+            state, _ = State.objects.get_or_create(name=state_name)
+            organization.location = state
+            fields_to_update.append("location")
+
+        if organization_size_name:
+            size, _ = Size.objects.get_or_create(name=organization_size_name)
+            organization.organization_size = size
+            fields_to_update.append("organization_size")
+
+        if organization_type_name:
+            category = None
+            if organization_sector:
+                category, _ = OrganizationCategory.objects.get_or_create(
+                    name=organization_sector
+                )
+
+            defaults = {
+                "description": organization_type_name,
+                "category_organization_type": category,
+            }
+            organization_type, _ = OrganizationType.objects.get_or_create(
+                name=organization_type_name,
+                defaults=defaults,
+            )
+
+            if (
+                category
+                and organization_type.category_organization_type_id != category.id
+            ):
+                organization_type.category_organization_type = category
+                organization_type.save(update_fields=["category_organization_type"])
+
+            organization.organization_type = organization_type
+            fields_to_update.append("organization_type")
+
+        if organization_sector:
+            organization.organization_sector = organization_sector
+            fields_to_update.append("organization_sector")
+
+        if target_audience:
+            organization.target_audience = target_audience
+            fields_to_update.append("target_audience")
+
+        if fields_to_update:
+            organization.save(update_fields=fields_to_update)
+
         return organization
 
     organization = Organization.objects.create(

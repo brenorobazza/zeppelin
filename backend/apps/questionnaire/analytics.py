@@ -992,15 +992,6 @@ class QuestionnaireAnalyticsService:
             context.get("expected_statement_count"),
         )
 
-        # Also expose only-complete cycles for UI components that must ignore
-        # incomplete snapshots (e.g., radar/comparison visuals).
-        complete_cycles = self._build_history_cycles(
-            context["all_answers"],
-            context["organization"],
-            context.get("expected_statement_count"),
-            filter_incomplete=True,
-        )
-
         if len(cycles) >= 2:
             baseline = cycles[0]
             current = cycles[-1]
@@ -1026,7 +1017,6 @@ class QuestionnaireAnalyticsService:
                 "recommendation_reduction": recommendation_reduction,
             },
             "cycles": cycles,
-            "complete_cycles": complete_cycles,
         }
 
     # Monta a resposta agregada de comparacao para o card de benchmark.
@@ -1138,10 +1128,59 @@ class QuestionnaireAnalyticsService:
             complete_groups.sort(key=lambda item: self._questionnaire_sort_key(item[0]))
             return complete_groups[-1]
 
+        def summarize_snapshot(answer_rows, snapshot_organization):
+            return {
+                "overall_score": self._score_for_answers(
+                    answer_rows,
+                    organization=snapshot_organization,
+                ),
+                "dimension_items": self._build_dimension_results(
+                    answer_rows,
+                    organization=snapshot_organization,
+                ),
+                "stage_items": [
+                    item
+                    for item in self._build_stage_scores(
+                        answer_rows,
+                        organization=snapshot_organization,
+                    )
+                    if item["short_name"] != "Traditional"
+                ],
+                "answered_practices": len(answer_rows),
+            }
+
+        def aggregate_snapshot_items(snapshot_items, item_key, item_value):
+            grouped_values = defaultdict(list)
+            templates = {}
+
+            for items in snapshot_items:
+                for item in items:
+                    key = item.get(item_key)
+                    if key is None:
+                        continue
+
+                    templates.setdefault(key, item)
+                    value = item.get(item_value)
+                    if value is not None:
+                        grouped_values[key].append(value)
+
+            aggregated_items = []
+            for key, values in grouped_values.items():
+                aggregated_items.append(
+                    {
+                        item_key: key,
+                        item_value: round(median(values)) if values else 0,
+                    }
+                )
+
+            return aggregated_items
+
         # Current organization must have at least one complete snapshot.
         current_questionnaire, current_answers = pick_latest_complete_cycle(
             context["all_answers"]
         )
+
+        current_snapshot = summarize_snapshot(current_answers, organization)
 
         available_cycles = self._build_history_cycles(
             context["all_answers"],
@@ -1155,12 +1194,10 @@ class QuestionnaireAnalyticsService:
             "scope": stage_scope,
             "selection": {
                 "reference_mode": "cohort-aggregate",
-                "current_cycle": {
-                    "id": None,
-                    "label": "Aggregated organization snapshot",
-                    "applied_date": None,
-                    "answered_practices": 0,
-                },
+                "current_cycle": self._serialize_cycle(
+                    current_questionnaire,
+                    current_answers,
+                ),
                 "reference_cycle": None,
                 "available_cycles": available_cycles,
             },
@@ -1176,8 +1213,11 @@ class QuestionnaireAnalyticsService:
 
         cohort_orgs = list(self._resolve_benchmark_cohort_organizations(request))
         company_count = 0
-        reference_answers = []
+        reference_overall_scores = []
+        reference_dimension_snapshots = []
+        reference_stage_snapshots = []
         snapshot_ids = set()
+        reference_answered_practices = 0
 
         for org in cohort_orgs:
             org_answers = list(self._base_answers_queryset(org.id, stage_scope))
@@ -1186,15 +1226,34 @@ class QuestionnaireAnalyticsService:
             )
             if org_questionnaire is None:
                 continue
+
+            snapshot_summary = summarize_snapshot(org_complete_answers, org)
             company_count += 1
             snapshot_ids.add(org_questionnaire.id)
-            reference_answers.extend(org_complete_answers)
+            reference_answered_practices += snapshot_summary["answered_practices"]
+            reference_overall_scores.append(snapshot_summary["overall_score"])
+            reference_dimension_snapshots.append(snapshot_summary["dimension_items"])
+            reference_stage_snapshots.append(snapshot_summary["stage_items"])
 
         snapshot_count = len(snapshot_ids)
+        reference_overall_score = (
+            round(median(reference_overall_scores)) if reference_overall_scores else 0
+        )
+        reference_dimension_items = aggregate_snapshot_items(
+            reference_dimension_snapshots,
+            "name",
+            "score",
+        )
+        reference_stage_items = aggregate_snapshot_items(
+            reference_stage_snapshots,
+            "short_name",
+            "score",
+        )
 
         base_payload["selection"]["reference_context"] = {
             "company_count": company_count,
             "snapshot_count": snapshot_count,
+            "label": "Comparison group",
             "filters": {
                 "organization_category": request.query_params.get(
                     "organization_category"
@@ -1220,11 +1279,6 @@ class QuestionnaireAnalyticsService:
             }
             return base_payload
 
-        base_payload["selection"]["current_cycle"] = self._serialize_cycle(
-            current_questionnaire,
-            current_answers,
-        )
-
         if company_count < self.BENCHMARK_MIN_COMPANY_THRESHOLD:
             base_payload["benchmark_state"] = {
                 "code": "insufficient_data",
@@ -1239,42 +1293,23 @@ class QuestionnaireAnalyticsService:
             }
             return base_payload
 
-        reference_overall_score = self._score_for_answers(
-            reference_answers,
-            organization=organization,
-        )
-        reference_cycle = self._serialize_cycle(None, reference_answers)
-        current_overall_score = self._score_for_answers(
-            current_answers,
-            organization=organization,
-        )
+        current_overall_score = current_snapshot["overall_score"]
 
-        base_payload["selection"]["reference_cycle"] = reference_cycle
         base_payload["summary"] = {
             "current_score": current_overall_score,
             "reference_score": reference_overall_score,
             "delta": current_overall_score - reference_overall_score,
             "current_answered_practices": len(current_answers),
-            "reference_answered_practices": len(reference_answers),
+            "reference_answered_practices": reference_answered_practices,
         }
 
-        eye_current = self._build_dimension_results(current_answers)
-        eye_reference = self._build_dimension_results(reference_answers)
-        sth_current = [
-            item
-            for item in self._build_stage_scores(current_answers)
-            if item["short_name"] != "Traditional"
-        ]
-        sth_reference = [
-            item
-            for item in self._build_stage_scores(reference_answers)
-            if item["short_name"] != "Traditional"
-        ]
+        eye_current = current_snapshot["dimension_items"]
+        sth_current = current_snapshot["stage_items"]
 
         base_payload["lenses"]["eye"] = self._build_comparison_lens_payload(
             lens_key="eye",
             current_items=eye_current,
-            reference_items=eye_reference,
+            reference_items=reference_dimension_items,
             current_overall_score=current_overall_score,
             reference_overall_score=reference_overall_score,
         )
@@ -1282,7 +1317,7 @@ class QuestionnaireAnalyticsService:
         base_payload["lenses"]["sth"] = self._build_comparison_lens_payload(
             lens_key="sth",
             current_items=sth_current,
-            reference_items=sth_reference,
+            reference_items=reference_stage_items,
             current_overall_score=current_overall_score,
             reference_overall_score=reference_overall_score,
         )
@@ -2555,15 +2590,12 @@ class QuestionnaireAnalyticsService:
         questionnaires = {}
 
         for answer in answers:
-            key = (
-                answer.questionnaire_answer_id
-                or f"aggregate-{answer.organization_answer_id}"
-            )
+            if answer.questionnaire_answer_id is None:
+                continue
+
+            key = answer.questionnaire_answer_id
             grouped[key].append(answer)
-            if answer.questionnaire_answer_id is not None:
-                questionnaires[
-                    answer.questionnaire_answer_id
-                ] = answer.questionnaire_answer
+            questionnaires[answer.questionnaire_answer_id] = answer.questionnaire_answer
 
         if organization:
             org_questionnaires = Questionnaire.objects.filter(

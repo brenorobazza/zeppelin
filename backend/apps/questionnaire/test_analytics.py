@@ -207,7 +207,36 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
     ):
         score = self.service._score_for_answers(self.current_answers, expected_total=4)
 
-        self.assertEqual(score, 28)
+        # Median aggregation with zero-imputation for missing answers.
+        # current_answers use the default software-house scale -> weights [100, 10]
+        # with expected_total=4 -> [100,10,0,0]
+        # median([0,0,10,100]) == 5 (rounded)
+        self.assertEqual(score, 5)
+
+    def test_score_for_answers_accepts_organization_type_aliases(self):
+        process_answer = [
+            make_answer(
+                101,
+                "CI.101",
+                "A process-level practice.",
+                "Continuous Integration",
+                "Integration practices",
+                self.service.adopted_levels[3],
+                self.current_cycle,
+            )
+        ]
+
+        software_alias_score = self.service._score_for_answers(
+            process_answer,
+            organization=make_organization("Software"),
+        )
+        it_department_alias_score = self.service._score_for_answers(
+            process_answer,
+            organization=make_organization("Organization with TI Department"),
+        )
+
+        self.assertEqual(software_alias_score, 60)
+        self.assertEqual(it_department_alias_score, 68)
 
     def test_questionnaire_status_returns_incomplete_when_answers_are_missing(self):
         status = self.service._questionnaire_status(answered_count=2, expected_total=4)
@@ -330,6 +359,54 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
             "Aggregated snapshot",
             [cycle["label"] for cycle in cycles],
         )
+
+    def test_organization_size_matches_filter_uses_numeric_buckets(self):
+        class FakeQuerySet(list):
+            def filter(self, **kwargs):
+                size = kwargs.get("organization_size__name__iexact")
+                if size is None:
+                    return FakeQuerySet(self)
+
+                return FakeQuerySet(
+                    [
+                        item
+                        for item in self
+                        if getattr(
+                            getattr(item, "organization_size", None), "name", ""
+                        ).lower()
+                        == size.lower()
+                    ]
+                )
+
+        organizations = FakeQuerySet(
+            [
+                SimpleNamespace(
+                    id=1,
+                    name="Small exact match",
+                    organization_size=SimpleNamespace(name="1-10"),
+                ),
+                SimpleNamespace(
+                    id=2,
+                    name="Large exact match",
+                    organization_size=SimpleNamespace(name="1000+"),
+                ),
+                SimpleNamespace(
+                    id=3,
+                    name="Numeric size",
+                    organization_size=SimpleNamespace(name="7"),
+                ),
+            ]
+        )
+
+        request = SimpleNamespace(query_params={"organization_size": "1-10"})
+
+        with patch(
+            "apps.questionnaire.analytics.Organization.objects.all",
+            return_value=organizations,
+        ):
+            filtered = self.service._resolve_benchmark_cohort_organizations(request)
+
+        self.assertEqual([org.name for org in filtered], ["Small exact match"])
 
     def test_resolve_dimension_name_uses_instrument_catalog_for_ci_cd_questions(self):
         dimension_name = self.service._resolve_dimension_name(self.old_answers[0])
@@ -519,11 +596,13 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
 
         self.assertEqual(payload["organization"]["name"], "Zeppelin Labs")
         self.assertEqual(payload["cycle"]["id"], self.current_cycle.id)
-        self.assertEqual(payload["snapshot"]["overall_score"], 29)
-        self.assertEqual(
-            payload["snapshot"]["overall_level"],
-            "Realized at project/product level",
-        )
+        # With organization type 'Startup' the instrument weights map 10->17.
+        # Dashboard snapshot uses expected_total=4 so missing answers are imputed as zeros.
+        # Weights -> [100,17,0,0] -> median = 8.5 -> round to 8
+        self.assertEqual(payload["snapshot"]["overall_score"], 8)
+        # With the new median + zero-imputation scoring the overall score is 8,
+        # which maps to the closest adopted level of 0 -> 'Not adopted'.
+        self.assertEqual(payload["snapshot"]["overall_level"], "Not adopted")
         self.assertEqual(payload["snapshot"]["answered_practices"], 2)
         self.assertEqual(
             payload["snapshot"]["questionnaire_status"], "Under Assessment"

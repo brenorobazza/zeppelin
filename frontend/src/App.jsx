@@ -624,6 +624,8 @@ export default function App() {
 
   if (user && pageMap[screen]) {
     const page = pageMap[screen];
+    const hideCycleSelector = screen === "assessment" || 
+      screen === "benchmark" || screen === "settings";
     return (
         <PlatformLayout
         activePage={screen}
@@ -643,7 +645,7 @@ export default function App() {
         analyticsError={analytics.error}
         analyticsLoading={analytics.loading}
         disableGlobalSelectors={disableGlobalSelectors}
-        hideCycleSelector={screen === "assessment"}
+        hideCycleSelector = {hideCycleSelector}
       >
         {page.component}
       </PlatformLayout>
