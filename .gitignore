@@ -205,3 +205,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Local documentation
+docs/local/
+
+# AI config
+.github/agents/
+.github/prompts/
+.github/README.md
+.github/global-instructions.md

@@ -83,7 +83,15 @@ function renderRadarAxisTick({ x, y, payload, textAnchor }) {
   );
 }
 
-function RadarPlot({ title, axes, currentValues, referenceValues, currentLabel, referenceLabel }) {
+function RadarPlot({
+  title,
+  axes,
+  currentValues,
+  referenceValues,
+  currentLabel,
+  referenceLabel,
+  legendReferenceLabel = "Reference"
+}) {
   const chartData = useMemo(
     () =>
       axes.map((axis, index) => ({
@@ -143,7 +151,7 @@ function RadarPlot({ title, axes, currentValues, referenceValues, currentLabel, 
         </span>
         <span className="benchmark-comparison-card__legend-item">
           <i className="benchmark-comparison-card__legend-dot benchmark-comparison-card__legend-dot--reference" />
-          Reference
+          {legendReferenceLabel}
         </span>
       </div>
     </div>
@@ -425,6 +433,8 @@ export function BenchmarkComparisonCard({
   // Delta value and class for score styling: negative -> red, zero -> neutral (black), positive -> green
   const scoreDelta = comparisonData?.summary?.delta ?? 0;
   const scoreDeltaClass = scoreDelta < 0 ? "is-negative" : scoreDelta > 0 ? "is-positive" : "is-neutral";
+  const currentScoreLabel = isBenchmarkComparison ? "Current score" : "General Score";
+  const referenceScoreLabel = isBenchmarkComparison ? "Cohort score" : "Reference score";
 
   const activeLens = comparisonData?.lenses?.[lensKey] || comparisonData?.lenses?.eye;
   const selectedAxes = normalizeAxisValues(activeLens?.axes || []);
@@ -616,12 +626,16 @@ export function BenchmarkComparisonCard({
             referenceValues={selectedAxes.map((axis) => axis.reference ?? 0)}
             currentLabel={currentCycleLabel}
             referenceLabel={isBenchmarkComparison ? benchmarkReferenceLabel : referenceCycleLabel}
+            legendReferenceLabel={isBenchmarkComparison ? "Cohort" : "Reference"}
           />
         </div>
 
         <aside className="benchmark-comparison-card__summary">
           <article className="benchmark-comparison-card__score-card">
-            <span>General Score</span>
+            <span className="benchmark-comparison-card__score-heading">
+              <i className="benchmark-comparison-card__score-indicator benchmark-comparison-card__score-indicator--current" />
+              {currentScoreLabel}
+            </span>
             <strong>{comparisonData.summary.currentScore}/100</strong>
             <small>
               <span className={scoreDeltaClass}>
@@ -632,7 +646,10 @@ export function BenchmarkComparisonCard({
           </article>
 
           <article className="benchmark-comparison-card__reference-score-card benchmark-comparison-card__score-card--soft">
-            <span>{isBenchmarkComparison ? "Cohort score" : "Reference score"}</span>
+            <span className="benchmark-comparison-card__score-heading">
+              <i className="benchmark-comparison-card__score-indicator benchmark-comparison-card__score-indicator--reference" />
+              {referenceScoreLabel}
+            </span>
             <strong>{comparisonData.summary.referenceScore}/100</strong>
             <small>{isBenchmarkComparison ? benchmarkReferenceLabel : referenceCycleLabel}</small>
           </article>
