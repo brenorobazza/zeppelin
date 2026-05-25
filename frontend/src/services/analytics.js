@@ -55,6 +55,24 @@ function buildQuery(filters = {}) {
   return query ? `?${query}` : "";
 }
 
+function buildComparisonQuery(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.organizationId) params.set("organization_id", filters.organizationId);
+  if (filters.questionnaireId) params.set("questionnaire_id", filters.questionnaireId);
+  if (filters.category) params.set("organization_category", filters.category);
+  if (filters.size) params.set("organization_size", filters.size);
+  if (filters.type) params.set("organization_type", filters.type);
+  if (filters.targetAudience) params.set("target_audience", filters.targetAudience);
+  if (filters.referenceMode) params.set("reference_mode", filters.referenceMode);
+  if (filters.referenceQuestionnaireId) {
+    params.set("reference_questionnaire_id", filters.referenceQuestionnaireId);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
 // Busca uma seção específica da camada analítica.
 async function fetchAnalyticsSection(section, filters) {
   const query = buildQuery(filters);
@@ -63,6 +81,24 @@ async function fetchAnalyticsSection(section, filters) {
   });
 
   return parseResponse(response, `Failed to load ${section} analytics.`);
+}
+
+async function fetchComparisonAnalytics(filters) {
+  const query = buildComparisonQuery(filters);
+  const response = await fetch(`${API_BASE}/api/questionnaire/analytics/comparison/${query}`, {
+    credentials: "include"
+  });
+
+  return parseResponse(response, "Failed to load comparison analytics.");
+}
+
+async function fetchBenchmarkAnalytics(filters) {
+  const query = buildComparisonQuery(filters);
+  const response = await fetch(`${API_BASE}/api/questionnaire/analytics/benchmark/${query}`, {
+    credentials: "include"
+  });
+
+  return parseResponse(response, "Failed to load benchmark analytics.");
 }
 
 // Busca o score de um estágio específico pelo nome curto.
@@ -357,7 +393,8 @@ function normalizeRecommendations(payload) {
 
 // Resolve pequenas variações de nome nas chaves de histórico.
 function getHistoryCount(cycle, key) {
-  if (cycle.adoption_levels[key] != null) return cycle.adoption_levels[key];
+  const adoptionLevels = cycle?.adoption_levels || {};
+  if (adoptionLevels[key] != null) return adoptionLevels[key];
 
   const aliases = {
     "not-adopted": ["nao-adotada", "not-adopted"],
@@ -376,10 +413,10 @@ function getHistoryCount(cycle, key) {
   };
 
   const candidates = aliases[key] || [key];
-  const matchedKey = Object.keys(cycle.adoption_levels || {}).find((itemKey) =>
+  const matchedKey = Object.keys(adoptionLevels).find((itemKey) =>
     candidates.includes(itemKey)
   );
-  return matchedKey ? cycle.adoption_levels[matchedKey] : 0;
+  return matchedKey ? adoptionLevels[matchedKey] : 0;
 }
 
 const HISTORY_STAGE_DEFINITIONS = [
@@ -441,64 +478,142 @@ function normalizeHistory(payload) {
     (item) => item.id != null && item.label !== "Aggregated snapshot"
   );
 
-  const historySeries = historyCycles.map((item, index) => {
-    const stageScores = item.stage_scores.map(mapStageScore);
-    const stages = buildHistoryStageValues(stageScores);
-    const agile = findHistoryStageScore(stages, "agile");
-    const ci = findHistoryStageScore(stages, "ci");
-    const cd = findHistoryStageScore(stages, "cd");
-    const experimentation = findHistoryStageScore(stages, "experimentation");
+  const mapCyclesToSeries = (cycles = []) => {
+    return cycles.map((item, index) => {
+      const stageScores = item.stage_scores.map(mapStageScore);
+      const stages = buildHistoryStageValues(stageScores);
+      const agile = findHistoryStageScore(stages, "agile");
+      const ci = findHistoryStageScore(stages, "ci");
+      const cd = findHistoryStageScore(stages, "cd");
+      const experimentation = findHistoryStageScore(stages, "experimentation");
 
-    return {
-      id: item.id ? String(item.id) : "",
-      cycle: `Cycle ${index + 1}`,
-      period: item.label,
-      overall: item.overall_score,
-      overallLevel: item.overall_level,
-      agile,
-      ci,
-      cd,
-      experimentation,
-      stages,
-      recommendationCount: item.recommendation_count,
-      delta: index === 0 ? null : item.overall_score - historyCycles[index - 1].overall_score,
-      adoptionLevels: {
-        notAdopted: getHistoryCount(item, "not-adopted"),
-        abandoned: getHistoryCount(item, "abandoned"),
-        project: getHistoryCount(item, "project"),
-        process: getHistoryCount(item, "process"),
-        institutionalized: getHistoryCount(item, "institutionalized")
-      }
-    };
-  });
+      return {
+        id: item.id ? String(item.id) : "",
+        cycle: `Cycle ${index + 1}`,
+        period: item.label,
+        overall: item.overall_score,
+        overallLevel: item.overall_level,
+        complete: Boolean(item.complete),
+        agile,
+        ci,
+        cd,
+        experimentation,
+        stages,
+        recommendationCount: item.recommendation_count,
+        delta: index === 0 ? null : item.overall_score - cycles[index - 1].overall_score,
+        adoptionLevels: {
+          notAdopted: getHistoryCount(item, "not-adopted"),
+          abandoned: getHistoryCount(item, "abandoned"),
+          project: getHistoryCount(item, "project"),
+          process: getHistoryCount(item, "process"),
+          institutionalized: getHistoryCount(item, "institutionalized")
+        }
+      };
+    });
+  };
 
-  const first = historySeries[0];
-  const last = historySeries[historySeries.length - 1];
+  const historySeries = mapCyclesToSeries(historyCycles);
 
   return {
-    selectedCycleEmpty: payload.selected_cycle_empty || false,
-    selectedCycleLabel: payload.cycle?.label || "",
-    summary: {
-      overallDelta: last && first ? last.overall - first.overall : 0,
-      agileDelta:
-        last && first && last.agile != null && first.agile != null
-          ? last.agile - first.agile
-          : null,
-      ciDelta:
-        last && first && last.ci != null && first.ci != null ? last.ci - first.ci : null,
-      cdDelta:
-        last && first && last.cd != null && first.cd != null ? last.cd - first.cd : null,
-      experimentationDelta:
-        last && first && last.experimentation != null && first.experimentation != null
-          ? last.experimentation - first.experimentation
-          : null,
-      recommendationReduction:
-        last && first ? first.recommendationCount - last.recommendationCount : 0,
-      institutionalizedGrowth: last
-        ? last.adoptionLevels.institutionalized - first.adoptionLevels.institutionalized
-        : 0
-    },
+    insufficientData: historySeries.length < 2,
     historySeries
+  };
+}
+
+function normalizeComparison(payload) {
+  function formatCycleLabel(index, label) {
+    const baseLabel = label || "Cycle";
+    return `Cycle ${index + 1} - ${baseLabel}`;
+  }
+
+  const availableCycles = (payload.selection?.available_cycles || []).map((cycle, index) => ({
+    id: cycle.id != null ? String(cycle.id) : "",
+    label: cycle.label,
+    displayLabel: formatCycleLabel(index, cycle.label),
+    appliedDate: cycle.applied_date || null,
+    answeredPractices: cycle.answered_practices || 0
+  }));
+
+  const currentCycleId = payload.selection?.current_cycle?.id ? String(payload.selection.current_cycle.id) : "";
+  const referenceCycleId = payload.selection?.reference_cycle?.id ? String(payload.selection.reference_cycle.id) : "";
+
+  const lensEntries = Object.entries(payload.lenses || {}).map(([key, lens]) => ({
+    key,
+    title: lens.title,
+    subtitle: lens.subtitle,
+    currentScore: lens.current_score,
+    referenceScore: lens.reference_score,
+    delta: lens.delta,
+    axes: (lens.axes || []).map((axis) => ({
+      key: axis.key,
+      label: axis.label,
+      current: axis.current,
+      reference: axis.reference,
+      delta: axis.delta
+    }))
+  }));
+
+  const normalizedBenchmarkState = {
+    code: payload.benchmark_state?.code || payload.selection?.benchmark_state?.code || "ready",
+    title: payload.benchmark_state?.title || payload.selection?.benchmark_state?.title || "",
+    message: payload.benchmark_state?.message || payload.selection?.benchmark_state?.message || "",
+    errorCode:
+      payload.benchmark_state?.error_code || payload.selection?.benchmark_state?.error_code || "",
+    minCompanyThreshold:
+      payload.benchmark_state?.min_company_threshold ||
+      payload.selection?.benchmark_state?.min_company_threshold ||
+      5,
+    companyCount:
+      payload.benchmark_state?.company_count ||
+      payload.selection?.benchmark_state?.company_count ||
+      payload.selection?.reference_context?.company_count ||
+      0,
+    snapshotCount:
+      payload.benchmark_state?.snapshot_count ||
+      payload.selection?.benchmark_state?.snapshot_count ||
+      payload.selection?.reference_context?.snapshot_count ||
+      0
+  };
+
+  return {
+    organization: payload.organization,
+    scope: payload.scope,
+    benchmarkState: normalizedBenchmarkState,
+    selection: {
+      referenceMode: payload.selection?.reference_mode || "first-submission",
+      referenceContext: payload.selection?.reference_context || null,
+      currentCycle: {
+        id: currentCycleId,
+        label:
+          availableCycles.find((cycle) => cycle.id === currentCycleId)?.displayLabel ||
+          payload.selection?.current_cycle?.label ||
+          "",
+        appliedDate: payload.selection?.current_cycle?.applied_date || null,
+        answeredPractices: payload.selection?.current_cycle?.answered_practices || 0
+      },
+      referenceCycle: {
+        id: referenceCycleId,
+        label:
+          availableCycles.find((cycle) => cycle.id === referenceCycleId)?.displayLabel ||
+          payload.selection?.reference_cycle?.label ||
+          "",
+        appliedDate: payload.selection?.reference_cycle?.applied_date || null,
+        answeredPractices: payload.selection?.reference_cycle?.answered_practices || 0
+      },
+      availableCycles
+    },
+    summary: {
+      currentScore: payload.summary?.current_score ?? 0,
+      referenceScore: payload.summary?.reference_score ?? 0,
+      delta: payload.summary?.delta ?? 0,
+      currentAnsweredPractices: payload.summary?.current_answered_practices ?? 0,
+      referenceAnsweredPractices: payload.summary?.reference_answered_practices ?? 0
+    },
+    lenses: lensEntries.reduce((accumulator, item) => {
+      accumulator[item.key] = item;
+      return accumulator;
+    }, {}),
+    lensOptions: lensEntries
   };
 }
 
@@ -536,6 +651,18 @@ export async function loadAnalyticsBundle(filters = {}) {
     recommendations: normalizeRecommendations(recommendationsPayload),
     history: normalizeHistory(historyPayload)
   };
+}
+
+// Carrega a comparação agregada usada pelo card de benchmark.
+export async function loadComparisonAnalytics(filters = {}) {
+  const payload = await fetchComparisonAnalytics(filters);
+  return normalizeComparison(payload);
+}
+
+// Carrega a comparação de benchmark real usada pelo BenchmarkPage.
+export async function loadBenchmarkAnalytics(filters = {}) {
+  const payload = await fetchBenchmarkAnalytics(filters);
+  return normalizeComparison(payload);
 }
 
 // Entrega um conjunto de dados de demonstração quando o backend não estiver disponível.

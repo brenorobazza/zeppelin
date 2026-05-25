@@ -71,6 +71,17 @@ const navItems = [
     ),
   },
   {
+    key: "benchmark",
+    label: "Benchmark",
+    icon: (
+      <NavIcon>
+        <path d="M3 5.5v13c0 .8.7 1.5 1.5 1.5h15c.8 0 1.5-.7 1.5-1.5v-13" />
+        <path d="M5.5 10l4-4 3 3 3.5-3.5" />
+        <path d="M3 19.5h18" />
+      </NavIcon>
+    ),
+  },
+  {
     key: "settings",
     label: "Settings",
     icon: (
@@ -97,6 +108,7 @@ export function PlatformLayout({
   onCycleChange,
   usingMockData = false,
   analyticsError = "",
+  analyticsLoading = false,
   disableGlobalSelectors = false,
   hideCycleSelector = false,
   children
@@ -186,10 +198,10 @@ export function PlatformLayout({
           </div>
         </header>
 
-        {analyticsError && usingMockData ? (
+        {analyticsError && usingMockData && !analyticsLoading && activePage !== "benchmark" ? (
           // Se a API falhar, deixamos claro para o usuario o motivo da troca para dados demo.
           <div className="platform-banner">
-            Showing fallback data because analytics could not be loaded from backend: {analyticsError}
+            Using fallback analytics bundle; some widgets may still load live data. Error: {analyticsError}
           </div>
         ) : null}
 

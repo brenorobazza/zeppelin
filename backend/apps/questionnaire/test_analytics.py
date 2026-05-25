@@ -9,6 +9,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from apps.questionnaire.analytics import QuestionnaireAnalyticsService
 from apps.questionnaire.api_views import (
+    QuestionnaireComparisonAnalyticsView,
     QuestionnaireDashboardAnalyticsView,
     QuestionnaireHistoryAnalyticsView,
     QuestionnaireRecommendationsAnalyticsView,
@@ -206,7 +207,10 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
     ):
         score = self.service._score_for_answers(self.current_answers, expected_total=4)
 
-        self.assertEqual(score, 28)
+        # Median aggregation with zero-imputation for missing answers.
+        # current_answers have weights [100, 10] -> with expected_total=4 -> [100,10,0,0]
+        # median([0,0,10,100]) == 5 (rounded)
+        self.assertEqual(score, 5)
 
     def test_questionnaire_status_returns_incomplete_when_answers_are_missing(self):
         status = self.service._questionnaire_status(answered_count=2, expected_total=4)
@@ -329,6 +333,75 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
             "Aggregated snapshot",
             [cycle["label"] for cycle in cycles],
         )
+
+    def test_organization_size_matches_filter_uses_numeric_buckets(self):
+        self.assertTrue(self.service._organization_size_matches_filter("7", "1-10"))
+        self.assertFalse(self.service._organization_size_matches_filter("12", "1-10"))
+        self.assertTrue(self.service._organization_size_matches_filter("1-10", "1-10"))
+        self.assertTrue(self.service._organization_size_matches_filter("1200", "1000+"))
+        self.assertFalse(self.service._organization_size_matches_filter("999", "1000+"))
+
+    def test_resolve_comparison_current_cycle_uses_previous_complete_cycle(self):
+        cycles = [
+            {
+                "id": self.old_cycle.id,
+                "label": "Old cycle",
+                "applied_date": self.old_cycle.applied_date,
+                "complete": True,
+            },
+            {
+                "id": self.current_cycle.id,
+                "label": "Current cycle",
+                "applied_date": self.current_cycle.applied_date,
+                "complete": False,
+            },
+        ]
+        grouped_answers = {
+            self.old_cycle.id: self.old_answers,
+            self.current_cycle.id: self.current_answers,
+        }
+
+        current_cycle, current_answers = self.service._resolve_comparison_current_cycle(
+            cycles,
+            grouped_answers,
+            self.current_cycle,
+            reference_cycle_id=None,
+        )
+
+        self.assertEqual(current_cycle["id"], self.old_cycle.id)
+        self.assertEqual(current_answers, self.old_answers)
+
+    def test_resolve_comparison_current_cycle_returns_none_when_only_reference_exists(
+        self,
+    ):
+        cycles = [
+            {
+                "id": self.old_cycle.id,
+                "label": "Old cycle",
+                "applied_date": self.old_cycle.applied_date,
+                "complete": True,
+            },
+            {
+                "id": self.current_cycle.id,
+                "label": "Current cycle",
+                "applied_date": self.current_cycle.applied_date,
+                "complete": False,
+            },
+        ]
+        grouped_answers = {
+            self.old_cycle.id: self.old_answers,
+            self.current_cycle.id: self.current_answers,
+        }
+
+        current_cycle, current_answers = self.service._resolve_comparison_current_cycle(
+            cycles,
+            grouped_answers,
+            self.current_cycle,
+            reference_cycle_id=self.old_cycle.id,
+        )
+
+        self.assertIsNone(current_cycle)
+        self.assertEqual(current_answers, [])
 
     def test_resolve_dimension_name_uses_instrument_catalog_for_ci_cd_questions(self):
         dimension_name = self.service._resolve_dimension_name(self.old_answers[0])
@@ -518,11 +591,13 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
 
         self.assertEqual(payload["organization"]["name"], "Zeppelin Labs")
         self.assertEqual(payload["cycle"]["id"], self.current_cycle.id)
-        self.assertEqual(payload["snapshot"]["overall_score"], 29)
-        self.assertEqual(
-            payload["snapshot"]["overall_level"],
-            "Realized at project/product level",
-        )
+        # With organization type 'Startup' the instrument weights map 10->17.
+        # Dashboard snapshot uses expected_total=4 so missing answers are imputed as zeros.
+        # Weights -> [100,17,0,0] -> median = 8.5 -> round to 8
+        self.assertEqual(payload["snapshot"]["overall_score"], 8)
+        # With the new median + zero-imputation scoring the overall score is 8,
+        # which maps to the closest adopted level of 0 -> 'Not adopted'.
+        self.assertEqual(payload["snapshot"]["overall_level"], "Not adopted")
         self.assertEqual(payload["snapshot"]["answered_practices"], 2)
         self.assertEqual(
             payload["snapshot"]["questionnaire_status"], "Under Assessment"
@@ -765,6 +840,17 @@ class QuestionnaireAnalyticsApiTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["summary"]["cycle_count"], 2)
+
+    def test_comparison_endpoint_returns_payload(self):
+        response = self._dispatch(
+            QuestionnaireComparisonAnalyticsView,
+            "/questionnaire/analytics/comparison/",
+            "get_comparison_payload",
+            {"summary": {"delta": 10}, "lenses": {}},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["summary"]["delta"], 10)
 
     def test_dashboard_endpoint_returns_400_for_validation_error(self):
         request = self.factory.get("/questionnaire/analytics/dashboard/")

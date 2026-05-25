@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { BenchmarkComparisonCard } from "../components/BenchmarkComparisonCard";
+import { BenchmarkStatePanel } from "../components/BenchmarkStatePanel";
+import { Lock } from "lucide-react";
 import { fallbackHistoryData } from "../mock/analyticsFallback";
 
 const HISTORY_STAGE_METRICS = [
@@ -40,61 +42,39 @@ function formatScore(value) {
 }
 
 function buildComparison(baselineCycle, currentCycle) {
-  const stageDeltas = HISTORY_STAGE_METRICS.reduce((acc, stage) => {
-    const baselineScore = getCycleStageScore(baselineCycle, stage.key);
-    const currentScore = getCycleStageScore(currentCycle, stage.key);
-
-    acc[stage.key] =
-      baselineScore != null && currentScore != null ? currentScore - baselineScore : null;
-    return acc;
-  }, {});
-
   return {
-    overallDelta:
-      baselineCycle && currentCycle ? currentCycle.overall - baselineCycle.overall : null,
-    recommendationReduction:
-      baselineCycle && currentCycle
-        ? baselineCycle.recommendationCount - currentCycle.recommendationCount
-        : null,
+    stageDeltas: HISTORY_STAGE_METRICS.reduce((acc, stage) => {
+      const baselineScore = getCycleStageScore(baselineCycle, stage.key);
+      const currentScore = getCycleStageScore(currentCycle, stage.key);
+
+      acc[stage.key] =
+        baselineScore != null && currentScore != null ? currentScore - baselineScore : null;
+      return acc;
+    }, {}),
     institutionalizedGrowth:
       baselineCycle && currentCycle
-        ? currentCycle.adoptionLevels.institutionalized -
-          baselineCycle.adoptionLevels.institutionalized
-        : null,
-    stageDeltas
+        ? currentCycle.adoptionLevels.institutionalized - baselineCycle.adoptionLevels.institutionalized
+        : null
   };
 }
 
-export function HistoryPage({ data, loading }) {
+export function HistoryPage({ data, loading, filters }) {
   // O historico compara ciclos para mostrar progressao real de maturidade ao longo do tempo.
   const view = data || fallbackHistoryData;
   const historySeries = view.historySeries || [];
-  const [baselineIndex, setBaselineIndex] = useState("0");
-  const [comparisonIndex, setComparisonIndex] = useState("");
-  const lastCycleIndex = Math.max(historySeries.length - 1, 0);
-  const baselineOptions =
-    historySeries.length > 1 ? historySeries.slice(0, -1) : historySeries;
-  const safeBaselineIndex = Math.min(
-    Math.max(Number(baselineIndex) || 0, 0),
-    Math.max(baselineOptions.length - 1, 0)
-  );
-  const comparisonOptions = historySeries
-    .map((item, index) => ({ item, index }))
-    .filter(({ index }) => index > safeBaselineIndex);
-  const requestedComparisonIndex = comparisonIndex === "" ? null : Number(comparisonIndex);
-  const safeComparisonIndex = comparisonOptions.some(
-    ({ index }) => index === requestedComparisonIndex
-  )
-    ? requestedComparisonIndex
-    : comparisonOptions[comparisonOptions.length - 1]?.index ?? lastCycleIndex;
-  const baselineCycle = baselineOptions[safeBaselineIndex] || historySeries[0];
-  const currentCycle =
-    historySeries[safeComparisonIndex] || historySeries[lastCycleIndex] || baselineCycle;
-  const comparison = useMemo(
-    () => buildComparison(baselineCycle, currentCycle),
-    [baselineCycle, currentCycle]
-  );
+  const completeHistorySeries = historySeries.filter((item) => item.complete);
+  const hasHistory = Array.isArray(view.historySeries) && view.historySeries.length > 0;
+  const hasEnoughCompleteCycles = completeHistorySeries.length >= 2;
 
+  // Use `historySeries` as the single source of truth for baseline and comparison.
+  const baselineCycle = completeHistorySeries[0] || historySeries[0] || null;
+  const currentCycle =
+    completeHistorySeries[completeHistorySeries.length - 1] ||
+    historySeries[historySeries.length - 1] ||
+    null;
+  const safeBaselineIndex = 0;
+  const safeComparisonIndex = Math.max(historySeries.length - 1, 0);
+  const comparison = buildComparison(baselineCycle, currentCycle);
   if (loading && !data) {
     return <section className="panel">Loading historical progression from backend...</section>;
   }
@@ -112,66 +92,33 @@ export function HistoryPage({ data, loading }) {
     );
   }
 
+  if (!hasHistory) {
+    return (
+      <section className="panel">
+        <p className="eyebrow">History</p>
+        <h3>No historical data available</h3>
+        <p>
+          The selected organization does not have a fully submitted assessment snapshot yet, so
+          historical trends and benchmark comparisons cannot be shown.
+        </p>
+      </section>
+    );
+  }
+
   return (
     <>
-      {/* Resumo rapido da evolucao desde o ciclo base. */}
-      <section className="panel">
-        <div className="roadmap-toolbar">
-          <div className="roadmap-filters roadmap-filters--two">
-            <label className="roadmap-filter-field">
-              <span>Baseline cycle</span>
-              <select
-                value={String(safeBaselineIndex)}
-                onChange={(event) => setBaselineIndex(event.target.value)}
-              >
-                {baselineOptions.map((item, index) => (
-                  <option key={`${item.cycle}-${item.period}`} value={String(index)}>
-                    {item.cycle} - {item.period}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="roadmap-filter-field">
-              <span>Comparison cycle</span>
-              <select
-                value={String(safeComparisonIndex)}
-                onChange={(event) => setComparisonIndex(event.target.value)}
-              >
-                {comparisonOptions.map(({ item, index }) => (
-                  <option key={`${item.cycle}-${item.period}`} value={String(index)}>
-                    {item.cycle} - {item.period}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid-3">
-        <article className="metric-card">
-          <p>Overall evolution</p>
-          <h2>{formatDelta(comparison.overallDelta)}</h2>
-          <small>
-            {baselineCycle?.cycle || "Baseline"} to {currentCycle?.cycle || "comparison cycle"}
-          </small>
-        </article>
-
-        {HISTORY_STAGE_METRICS.map((stage) => (
-          <article key={stage.key} className="metric-card">
-            <p>{stage.title}</p>
-            <h2>{formatDelta(comparison.stageDeltas[stage.key])}</h2>
-            <small>{stage.label}</small>
-          </article>
-        ))}
-
-        <article className="metric-card">
-          <p>Recommendations reduced</p>
-          <h2>{formatDelta(comparison.recommendationReduction)}</h2>
-          <small>Fewer low-maturity practices needing intervention</small>
-        </article>
-      </section>
+      {hasEnoughCompleteCycles ? (
+        <BenchmarkComparisonCard filters={filters} />
+      ) : (
+        <BenchmarkStatePanel
+          tone="warning"
+          badge="Insufficient Data"
+          icon={<Lock size={24} strokeWidth={2.2} />}
+          title="At least two complete cycles are required for comparison"
+          message="The comparative radar chart will be enabled once at least two complete cycles are available."
+          details="Minimum required: 2 complete cycles"
+        />
+      )}
 
       {/* Cards comparativos por ciclo. */}
       <section className="panel">
