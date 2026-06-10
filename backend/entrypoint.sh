@@ -8,9 +8,6 @@ done
 echo "PostgreSQL está pronto!"
 
 
-echo "Executando make migrations..."
-python manage.py makemigrations
-
 echo "Executando migrations..."
 python manage.py migrate
 
