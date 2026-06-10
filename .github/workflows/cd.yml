@@ -20,6 +20,7 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
+        script_stop: true
         script: |
-          chmod +x /home/ubuntu/zeppelin/scripts/deploy.sh
-          /home/ubuntu/zeppelin/scripts/deploy.sh
+          chmod +x $HOME/zeppelin/scripts/deploy.sh
+          $HOME/zeppelin/scripts/deploy.sh

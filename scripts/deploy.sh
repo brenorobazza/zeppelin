@@ -2,7 +2,8 @@
 # deploy.sh - Script de deploy automatizado para ambiente de producao
 set -e
 
-PROJECT_DIR="/home/ubuntu/zeppelin"
+# Define o diretorio do projeto baseado no home do usuario atual
+PROJECT_DIR="$HOME/zeppelin"
 COMPOSE_FILE="docker-compose.prod.yml"
 
 echo "[INFO] Iniciando processo de deploy..."
