@@ -97,6 +97,31 @@ Follow these steps to get the entire Zeppelin stack (Backend + Frontend) running
 
 ---
 
+## Production Deployment
+
+The production environment runs on an Ubuntu VM (IC Unicamp) accessible via port 3022, orchestrated with `docker-compose.prod.yml`.
+
+### How it works
+
+Deployments are triggered automatically by GitHub Actions (CD pipeline) on every push to `main` that passes CI. The pipeline SSHs into the VM and runs `scripts/deploy.sh`, which:
+
+1. Pulls the latest code (`git pull origin main`)
+2. Tears down the running stack (`docker-compose down --remove-orphans`)
+3. Rebuilds and starts all containers (`docker-compose up -d --build`)
+4. Runs `migrate` and `load_initial_questionnaire_data` automatically via `entrypoint.sh`
+
+### Important rules
+
+- **Always commit migration files.** The `backend/.dockerignore` is intentionally configured to include them. Removing or re-ignoring migrations will break the production database schema.
+- **The seed runs automatically on startup.** There is no need to run `make seed-db` manually in production — `entrypoint.sh` calls `load_initial_questionnaire_data` on every container start (it is idempotent).
+- **To reset the production database** (destroys all data):
+  ```bash
+  docker-compose -f docker-compose.prod.yml down -v
+  docker-compose -f docker-compose.prod.yml up -d --build
+  ```
+
+---
+
 ## API and Integration
 
 The project uses OAuth2 for secure API communication. To test the API endpoints manually:
