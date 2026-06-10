@@ -11,6 +11,11 @@ echo "[INFO] Iniciando processo de deploy..."
 cd "$PROJECT_DIR"
 
 echo "[INFO] Atualizando código fonte..."
+# Força o Git a usar a chave de deploy específica se ela existir, senao usa a padrao
+if [ -f "$HOME/.ssh/id_ed25519_deploy" ]; then
+    export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_ed25519_deploy -o IdentitiesOnly=yes"
+fi
+
 git pull origin main
 
 echo "[INFO] Reconstruindo imagens e reiniciando containers..."
