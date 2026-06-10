@@ -19,13 +19,25 @@ fi
 git pull origin main
 
 echo "[INFO] Reconstruindo imagens e reiniciando containers..."
-docker-compose -f "$COMPOSE_FILE" up -d --build --remove-orphans
+# Detecta se deve usar 'docker compose' (V2) ou 'docker-compose' (V1)
+DOCKER_CMD="docker-compose"
+if docker compose version >/dev/null 2>&1; then
+    DOCKER_CMD="docker compose"
+fi
+
+echo "[INFO] Utilizando comando: $DOCKER_CMD"
+
+# Para evitar o erro 'KeyError: ContainerConfig', primeiro derrubamos o ambiente
+$DOCKER_CMD -f "$COMPOSE_FILE" down --remove-orphans
+
+# Sobe novamente com build
+$DOCKER_CMD -f "$COMPOSE_FILE" up -d --build
 
 echo "[INFO] Executando migrações de banco de dados..."
-docker-compose -f "$COMPOSE_FILE" exec -T app python manage.py migrate --noinput
+$DOCKER_CMD -f "$COMPOSE_FILE" exec -T app python manage.py migrate --noinput
 
 echo "[INFO] Coletando arquivos estáticos..."
-docker-compose -f "$COMPOSE_FILE" exec -T app python manage.py collectstatic --noinput
+$DOCKER_CMD -f "$COMPOSE_FILE" exec -T app python manage.py collectstatic --noinput
 
 echo "[INFO] Limpando recursos de container não utilizados..."
 docker system prune -f
