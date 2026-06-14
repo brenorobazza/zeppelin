@@ -149,7 +149,7 @@ function splitRadarLabel(label, maxChars = 16) {
 
 function DimensionRadar({ dimensions }) {
   if (!dimensions.length) {
-    return <div className="empty-state">No dimension comparison is available for this cycle.</div>;
+    return <div className="empty-state">No dimension adoption data is available for this cycle.</div>;
   }
 
   const size = 560;
@@ -692,6 +692,10 @@ export function ResultsPage({ data, overview, loading }) {
       group.name !== "Agile Development" &&
       group.name !== "Continuous Experimentation"
   );
+  const dimensionScoreOverview = view.dimensionScoreOverview || {
+    dimensions: [],
+    summary: {}
+  };
   const dimensionOverview = view.dimensionOverview || { dimensions: [], summary: {} };
   const processOverview = view.processOverview || { rows: [], summary: {} };
   const elementOverview = view.elementOverview || { rows: [], summary: {} };
@@ -781,11 +785,18 @@ export function ResultsPage({ data, overview, loading }) {
     selectedGroupDimensions.includes(group.name)
   );
   const practiceGroupSummary = `${practiceGroups.length} of ${dimensionGroupsSource.length} dimensions shown.`;
-  const dimensionRadarData = (dimensionOverview.dimensions || []).map((item) => ({
+  const dimensionScoreLookup = new Map(
+    (dimensionScoreOverview.dimensions || []).map((item) => [
+      item.name,
+      item.organizationScore
+    ])
+  );
+  const dimensionRadarSource = (dimensionOverview.dimensions || []).length
+    ? dimensionOverview.dimensions
+    : dimensionScoreOverview.dimensions || [];
+  const dimensionRadarData = dimensionRadarSource.map((item) => ({
     ...item,
-    organizationScore: dimensionOverview.summary.statementCount
-      ? Math.round((item.practiceCount / dimensionOverview.summary.statementCount) * 100)
-      : 0
+    organizationScore: dimensionScoreLookup.get(item.name) ?? item.organizationScore ?? 0
   }));
 
   const diagnosticFacts = [
@@ -1098,7 +1109,7 @@ export function ResultsPage({ data, overview, loading }) {
           </article>
 
           <article className="panel support-panel">
-            <h3>Dimension distribution radar</h3>
+            <h3>Dimension adoption radar</h3>
             <DimensionRadar dimensions={dimensionRadarData} />
           </article>
         </div>

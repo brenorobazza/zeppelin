@@ -335,6 +335,26 @@ class QuestionnaireAnalyticsServiceTests(SimpleTestCase):
         self.assertEqual(cycles[0]["recommendation_count"], 2)
         self.assertEqual(cycles[1]["recommendation_count"], 1)
 
+    def test_build_history_cycles_deduplicates_answers_within_same_cycle(self):
+        duplicate_current_answer = make_answer(
+            99,
+            "CD.02",
+            "Production deployments are repeatable and observable.",
+            "Continuous Deployment",
+            "Delivery practices",
+            self.service.adopted_levels[4],
+            self.current_cycle,
+            "Latest answer should replace the earlier duplicate.",
+        )
+
+        cycles = self.service._build_history_cycles(
+            self.all_answers + [duplicate_current_answer]
+        )
+
+        current_cycle = cycles[1]
+        self.assertEqual(current_cycle["answered_practices"], 2)
+        self.assertEqual(current_cycle["recommendation_count"], 0)
+
     def test_build_history_cycles_skips_aggregated_snapshot_without_questionnaire(
         self,
     ):
