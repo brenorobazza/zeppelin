@@ -17,6 +17,10 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow-y: auto;
 }
 
 .platform-logo img {
@@ -2280,6 +2284,9 @@
   .platform-sidebar {
     border-right: 0;
     border-bottom: 1px solid #d9e3f0;
+    position: static;
+    height: auto;
+    overflow-y: visible;
   }
 
   .platform-sidebar nav {
