@@ -1108,7 +1108,7 @@ export function ResultsPage({ data, overview, loading }) {
           </article>
 
           <article className="panel support-panel">
-            <h3>Dimension adoption radar</h3>
+            {/* <h3>Dimension adoption radar</h3> */}
             <DimensionRadar dimensions={dimensionRadarData} />
           </article>
         </div>
