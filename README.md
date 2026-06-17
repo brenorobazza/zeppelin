@@ -1,6 +1,6 @@
 # ZEPPELIN: A DIAGNOSTIC INSTRUMENT FOR Continuous Software Engineering
 
-Zeppelin is a web platform designed to help organizations identify their degree of adoption of Continuous Software Engineering (CSE) practices. Using the Stairway to Heaven (StH) model and the Eye of CSE as frameworks, the tool provides a panoramic view of an organization's evolutionary path.
+Zeppelin is a web platform designed to help organizations identify their degree of adoption of Continuous Software Engineering (CSE) practices. Using the Stairway to Heaven (StH) model, the Eye of CSE, and the Continuous Star framework, the tool provides a panoramic view of an organization's evolutionary path.
 
 This repository contains the complete web application, transitioning the diagnostic tool from its original spreadsheet/form formats into a robust, multi-tenant platform where users can manage their organizations, answer the assessment, and visualize their maturity through interactive charts and tailored recommendations.
 
@@ -21,7 +21,7 @@ This repository contains the complete web application, transitioning the diagnos
 1. ARAUJO, Alline Dias de. "Diagnosis and Recommendations for CI/CD Practices based on the Zeppelin Instrument". 2025. Dissertation (Master in Computer Science) – University of Campinas (UNICAMP), Institute of Computing.
 2. DOS SANTOS JÚNIOR, Paulo Sérgio; PERINI BARCELLOS, Monalessa; BORGES RUY, Fabiano. "Tell me: Am I going to Heaven? A Diagnosis Instrument of Continuous Software Engineering Practices Adoption". In: Proceedings of the 25th International Conference on Evaluation and Assessment in Software Engineering (EASE '21). 2021. DOI: https://doi.org/10.1145/3463274.3463324.
 3. BARCELLOS, Monalessa Perini. "Towards a Framework for Continuous Software Engineering". In: Proceedings of the 34th Brazilian Symposium on Software Engineering. 2020.
-4. FITZGERALD, Brian; STOL, Klaas-Jan. "Continuous software engineering: A roadmap and agenda". 2017.
+4. FITZGERALD, Brian; STOL, Klaas-Jan. "Continuous software engineering: A roadmap and agenda". Journal of Systems and Software, Volume 123, 2017, Pages 176-189. DOI: https://doi.org/10.1016/j.jss.2015.06.063.
 5. OLSSON, Helena Holmström; ALAHYARI, Hiva; BOSCH, Jan. "Climbing the 'Stairway to Heaven'". 2012.
 6. JOHANSSEN, Jan Ole et al. "Continuous software engineering and its support by usage and decision knowledge: An interview study with practitioners". 2019.
 
