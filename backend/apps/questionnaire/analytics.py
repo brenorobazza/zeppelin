@@ -891,6 +891,10 @@ class QuestionnaireAnalyticsService:
             "dimensions": self._build_dimension_results(
                 answers, organization=organization
             ),
+            "dimension_score_overview": self._build_dimension_stage_overview(
+                answers,
+                organization=organization,
+            ),
             "dimension_overview": self._build_dimension_stage_matrix(
                 stage_scope=context["stage_scope"],
             ),
@@ -1337,7 +1341,10 @@ class QuestionnaireAnalyticsService:
     def _resolve_context(self, request):
         organization = self._resolve_organization(request)
         stage_scope = request.query_params.get("stage_scope", "all")
-        all_answers = list(self._base_answers_queryset(organization.id, stage_scope))
+        all_answers = self._deduplicate_answers(
+            list(self._base_answers_queryset(organization.id, stage_scope)),
+            per_questionnaire=True,
+        )
         questionnaire = self._resolve_questionnaire(
             request,
             organization.id,
@@ -1444,7 +1451,47 @@ class QuestionnaireAnalyticsService:
 
         return qs
 
+    def _statement_identity(self, answer):
+        statement_id = getattr(answer, "statement_answer_id", None)
+        if statement_id is not None:
+            return statement_id
+
+        statement = getattr(answer, "statement_answer", None)
+        if statement is not None:
+            statement_id = getattr(statement, "id", None)
+            if statement_id is not None:
+                return statement_id
+
+            statement_code = getattr(statement, "code", None)
+            if statement_code:
+                return statement_code
+
+        answer_id = getattr(answer, "id", None)
+        if answer_id is not None:
+            return f"answer:{answer_id}"
+
+        return id(answer)
+
+    def _deduplicate_answers(self, answers, per_questionnaire=False):
+        latest_by_key = {}
+        ordered_keys = []
+
+        for answer in answers:
+            statement_key = self._statement_identity(answer)
+            key = (
+                (getattr(answer, "questionnaire_answer_id", None), statement_key)
+                if per_questionnaire
+                else statement_key
+            )
+
+            if key not in latest_by_key:
+                ordered_keys.append(key)
+            latest_by_key[key] = answer
+
+        return [latest_by_key[key] for key in ordered_keys]
+
     def _group_answers_by_questionnaire(self, answers):
+        answers = self._deduplicate_answers(answers, per_questionnaire=True)
         grouped = defaultdict(list)
         for answer in answers:
             grouped[answer.questionnaire_answer_id].append(answer)
@@ -2586,6 +2633,7 @@ class QuestionnaireAnalyticsService:
     def _build_history_cycles(
         self, answers, organization=None, expected_total=None, filter_incomplete=False
     ):
+        answers = self._deduplicate_answers(answers, per_questionnaire=True)
         grouped = defaultdict(list)
         questionnaires = {}
 

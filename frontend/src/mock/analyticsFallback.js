@@ -56,6 +56,33 @@ function mapRecommendation(item) {
   };
 }
 
+function buildFallbackDimensionScoreOverview() {
+  const dimensions = dimensionOverview.dimensions.map((item) => {
+    const matchingTheme = practiceThemes.find((theme) => theme.name === item.name);
+    return {
+      key: item.key,
+      name: item.name,
+      organizationScore: matchingTheme?.score ?? 0,
+      practiceCount: item.practiceCount ?? 0
+    };
+  });
+
+  const scoredDimensions = dimensions.filter((item) => item.organizationScore > 0);
+  const organizationScore = scoredDimensions.length
+    ? Math.round(
+        scoredDimensions.reduce((total, item) => total + item.organizationScore, 0) /
+          scoredDimensions.length
+      )
+    : 0;
+
+  return {
+    dimensions,
+    summary: {
+      organizationScore
+    }
+  };
+}
+
 // Dashboard em modo demonstracao.
 export const fallbackDashboardData = {
   maturitySnapshot: {
@@ -84,6 +111,7 @@ export const fallbackResultsData = {
   adoptionLevelStageOverview,
   stageScores,
   practiceThemes,
+  dimensionScoreOverview: buildFallbackDimensionScoreOverview(),
   dimensionOverview,
   processOverview,
   elementOverview,

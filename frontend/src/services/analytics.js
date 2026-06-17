@@ -251,6 +251,31 @@ function normalizeResults(payload) {
       }
     },
     stageScores: payload.stage_scores.map(mapStageScore),
+    dimensionScoreOverview: {
+      dimensions: (payload.dimension_score_overview?.dimensions || []).map((item) => ({
+        key: item.key,
+        name: item.name,
+        agileScore: item.agile_score ?? null,
+        ciScore: item.ci_score ?? null,
+        cdScore: item.cd_score ?? null,
+        experimentationScore: item.experimentation_score ?? null,
+        organizationScore: item.organization_score ?? 0,
+        agilePracticeCount: item.agile_practice_count ?? 0,
+        ciPracticeCount: item.ci_practice_count ?? 0,
+        cdPracticeCount: item.cd_practice_count ?? 0,
+        experimentationPracticeCount: item.experimentation_practice_count ?? 0,
+        practiceCount: item.practice_count ?? 0
+      })),
+      summary: {
+        agileScore: payload.dimension_score_overview?.summary?.agile_score ?? null,
+        ciScore: payload.dimension_score_overview?.summary?.ci_score ?? null,
+        cdScore: payload.dimension_score_overview?.summary?.cd_score ?? null,
+        experimentationScore:
+          payload.dimension_score_overview?.summary?.experimentation_score ?? null,
+        organizationScore:
+          payload.dimension_score_overview?.summary?.organization_score ?? null
+      }
+    },
     dimensionOverview: {
       dimensions: (payload.dimension_overview?.dimensions || []).map((item) => ({
         key: item.key,
