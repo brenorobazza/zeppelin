@@ -22,5 +22,6 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script_stop: true
         script: |
+          cd $HOME/zeppelin && git reset --hard HEAD && git pull origin main
           chmod +x $HOME/zeppelin/scripts/deploy.sh
           $HOME/zeppelin/scripts/deploy.sh
