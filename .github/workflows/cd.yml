@@ -22,6 +22,9 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script_stop: true
         script: |
+          if [ -f "$HOME/.ssh/id_ed25519_deploy" ]; then
+            export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_ed25519_deploy -o IdentitiesOnly=yes"
+          fi
           cd $HOME/zeppelin && git reset --hard HEAD && git pull origin main
           chmod +x $HOME/zeppelin/scripts/deploy.sh
           $HOME/zeppelin/scripts/deploy.sh
