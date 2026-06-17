@@ -849,7 +849,7 @@ export function ResultsPage({ data, overview, loading }) {
       </section>
 
       <section className="panel support-panel">
-        <h3>Adoption level distribution across assessed statements</h3>
+        <h3>Adoption level across assessment items</h3>
 
         {adoptionLevels.length ? (
           <table className="table">
