@@ -130,8 +130,7 @@ export function RecommendationsPage({ data, loading }) {
   if (!view.summary.isQuestionnaireComplete) {
     return (
       <section className="panel">
-        <p className="eyebrow">Recommendations</p>
-        <h3>Recommended actions for the current cycle</h3>
+        <h3>Recommendations</h3>
 
         <div className="assessment-context-grid assessment-context-grid--dashboard">
           {assessmentContext.map((item) => (

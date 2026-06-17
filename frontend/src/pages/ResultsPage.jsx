@@ -827,10 +827,9 @@ export function ResultsPage({ data, overview, loading }) {
   return (
     <>
       <section className="panel">
-        <p className="eyebrow">Diagnostic detail</p>
         <div className="section-head">
           <div>
-            <h3>Detailed diagnostic interpretation</h3>
+            <h3>Diagnostic detail</h3>
           </div>
         </div>
 

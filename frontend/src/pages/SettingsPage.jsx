@@ -349,8 +349,8 @@ export function SettingsPage({
       <section className="panel">
         <div className="section-head">
           <div>
-            <p className="eyebrow">Your membership</p>
-            <h3>Current user</h3>
+            {/* <p className="eyebrow">Your membership</p> */}
+            <h3>Personal Information</h3>
             <p>This section identifies the account linked to the current session and lets you update your displayed name.</p>
           </div>
         </div>
@@ -416,63 +416,6 @@ export function SettingsPage({
         </form>
       </section>
 
-      <section className="panel">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow">Organization members</p>
-            <h3>Member access</h3>
-            <p>
-              Remove memberships directly from this list. Buttons are enabled only when the current
-              rule allows the action.
-            </p>
-          </div>
-        </div>
-
-        <div className="settings-member-list">
-          {members.map((member) => (
-            <article key={member.id} className="settings-member-card">
-              <div className="settings-member-card__head">
-                <div>
-                  <h4>{member.name}</h4>
-                  <p>{member.email || "Email not available"}</p>
-                </div>
-                <div className="btn-row">
-                  {member.is_current_user ? <span className="tag">You</span> : null}
-                  {member.role ? <span className="tag">{member.role}</span> : null}
-                </div>
-              </div>
-
-              <div className="settings-member-card__meta">
-                <div>
-                  <span>Removal permission</span>
-                  <strong>
-                    {member.can_delete
-                      ? member.is_current_user
-                        ? "You can remove this membership"
-                        : "Admin removal allowed"
-                      : "Admin privileges required"}
-                  </strong>
-                </div>
-
-                <button
-                  className="btn-secondary-ui"
-                  type="button"
-                  disabled={!member.can_delete || deletingId === member.id}
-                  onClick={() => handleDeleteMember(member)}
-                >
-                  {deletingId === member.id
-                    ? "Removing..."
-                    : member.is_current_user
-                      ? "Remove me"
-                      : member.can_delete
-                        ? "Remove member"
-                        : "Admin only"}
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
     </>
   );
 }
