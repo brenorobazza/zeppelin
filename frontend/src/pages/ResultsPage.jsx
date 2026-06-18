@@ -886,13 +886,16 @@ export function ResultsPage({ data, overview, loading }) {
           </div>
         </div>
 
-        <div className="two-column-grid dimension-overview-grid">
-          <article className="panel dimension-overview-panel">
+        <div className="two-column-grid dimension-overview-grid dimension-overview-grid--adoption">
+          <article className="panel dimension-overview-panel dimension-overview-panel--adoption">
             {adoptionLevelStageOverview.levels.length ? (
               <div className="results-adoption-breakdown">
-                <div className="results-adoption-breakdown__section">
-                  <small className="eyebrow">Distribution table</small>
-                  <table className="table table--stage-distribution">
+                <small className="eyebrow">Distribution table</small>
+                <div className="results-adoption-breakdown__table-frame">
+                  <table
+                    className="table table--stage-distribution table--stage-distribution--adoption"
+                    style={{ "--stage-row-count": adoptionLevelStageOverview.levels.length }}
+                  >
                     <colgroup>
                       <col className="table--stage-distribution__col-label" />
                       <col className="table--stage-distribution__col-stage" />
@@ -943,66 +946,13 @@ export function ResultsPage({ data, overview, loading }) {
                     </tbody>
                   </table>
                 </div>
-
-                <div className="results-adoption-breakdown__section">
-                  <small className="eyebrow">Summary results</small>
-                  <div className="results-adoption-summary">
-                    <article className="results-adoption-summary__card">
-                      <span>Total CSE practices</span>
-                      <dl className="results-adoption-summary__list">
-                        <div className="results-adoption-summary__row">
-                          <dt>Agile R&amp;D</dt>
-                          <dd>{adoptionLevelStageOverview.totals.agileCount}</dd>
-                        </div>
-                        <div className="results-adoption-summary__row">
-                          <dt>CI</dt>
-                          <dd>{adoptionLevelStageOverview.totals.ciCount}</dd>
-                        </div>
-                        <div className="results-adoption-summary__row">
-                          <dt>CD</dt>
-                          <dd>{adoptionLevelStageOverview.totals.cdCount}</dd>
-                        </div>
-                        <div className="results-adoption-summary__row">
-                          <dt>Experiment system</dt>
-                          <dd>{adoptionLevelStageOverview.totals.experimentationCount}</dd>
-                        </div>
-                      </dl>
-                    </article>
-
-                    <article className="results-adoption-summary__card results-adoption-summary__card--highlight">
-                      <span>Degree of adoption</span>
-                      <dl className="results-adoption-summary__list">
-                        <div className="results-adoption-summary__row">
-                          <dt>Agile R&amp;D</dt>
-                          <dd>{formatDimensionValue(adoptionLevelStageOverview.degreeOfAdoption.agileScore)}</dd>
-                        </div>
-                        <div className="results-adoption-summary__row">
-                          <dt>CI</dt>
-                          <dd>{formatDimensionValue(adoptionLevelStageOverview.degreeOfAdoption.ciScore)}</dd>
-                        </div>
-                        <div className="results-adoption-summary__row">
-                          <dt>CD</dt>
-                          <dd>{formatDimensionValue(adoptionLevelStageOverview.degreeOfAdoption.cdScore)}</dd>
-                        </div>
-                        <div className="results-adoption-summary__row">
-                          <dt>Experiment system</dt>
-                          <dd>
-                            {formatDimensionValue(
-                              adoptionLevelStageOverview.degreeOfAdoption.experimentationScore
-                            )}
-                          </dd>
-                        </div>
-                      </dl>
-                    </article>
-                  </div>
-                </div>
               </div>
             ) : (
               <p className="empty-state">No stage adoption breakdown is available for this cycle.</p>
             )}
           </article>
 
-          <article className="panel support-panel">
+          <article className="panel support-panel support-panel--adoption">
             <h3>Practices adopted by level and stage</h3>
             <p>
               The chart highlights how the current answered practices are distributed across the

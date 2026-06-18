@@ -41,23 +41,6 @@ function formatScore(value) {
   return value == null ? "-" : value;
 }
 
-function buildComparison(baselineCycle, currentCycle) {
-  return {
-    stageDeltas: HISTORY_STAGE_METRICS.reduce((acc, stage) => {
-      const baselineScore = getCycleStageScore(baselineCycle, stage.key);
-      const currentScore = getCycleStageScore(currentCycle, stage.key);
-
-      acc[stage.key] =
-        baselineScore != null && currentScore != null ? currentScore - baselineScore : null;
-      return acc;
-    }, {}),
-    institutionalizedGrowth:
-      baselineCycle && currentCycle
-        ? currentCycle.adoptionLevels.institutionalized - baselineCycle.adoptionLevels.institutionalized
-        : null
-  };
-}
-
 export function HistoryPage({ data, loading, filters }) {
   // O historico compara ciclos para mostrar progressao real de maturidade ao longo do tempo.
   const view = data || fallbackHistoryData;
@@ -70,13 +53,8 @@ export function HistoryPage({ data, loading, filters }) {
 
   // Use `historySeries` as the single source of truth for baseline and comparison.
   const baselineCycle = displayHistorySeries[0] || historySeries[0] || null;
-  const currentCycle =
-    displayHistorySeries[displayHistorySeries.length - 1] ||
-    historySeries[historySeries.length - 1] ||
-    null;
   const safeBaselineIndex = 0;
   const safeComparisonIndex = Math.max(displayHistorySeries.length - 1, 0);
-  const comparison = buildComparison(baselineCycle, currentCycle);
   if (loading && !data) {
     return <section className="panel">Loading historical progression from backend...</section>;
   }
@@ -192,7 +170,12 @@ export function HistoryPage({ data, loading, filters }) {
 
       {/* Tabela que explicita a migracao das praticas entre niveis de adocao. */}
       <section className="panel">
-        <h3>Adoption-level shift across cycles</h3>
+        <div className="section-head">
+          <div>
+            <h3>Adoption levels across cycles</h3>
+            <p>Shows how practices moved between adoption levels in each cycle.</p>
+          </div>
+        </div>
 
         <table className="table">
           <thead>
@@ -221,43 +204,6 @@ export function HistoryPage({ data, loading, filters }) {
             ))}
           </tbody>
         </table>
-      </section>
-
-      {/* Interpretacao final em linguagem mais humana para apresentacao do TCC. */}
-      <section className="history-insight-grid">
-        <article className="panel">
-          <h3>Main improvements</h3>
-          <ul className="insight-list">
-            <li className="insight-item">
-              <small>Stage evolution</small>
-              <h4>Continuous Integration changed {formatDelta(comparison.stageDeltas.ci)} points</h4>
-              <p>
-                CI moved faster than CD across the tracked cycles, reinforcing the thesis finding
-                that stronger integration foundations tend to emerge before more advanced delivery capability.
-              </p>
-            </li>
-            <li className="insight-item">
-              <small>Adoption profile</small>
-              <h4>Institutionalized practices changed by {formatDelta(comparison.institutionalizedGrowth)}</h4>
-              <p>Mature practices now represent the largest share of the assessed CI/CD subset.</p>
-            </li>
-          </ul>
-        </article>
-
-        <article className="panel">
-          <h3>Persistent friction points</h3>
-          <ul className="insight-list">
-            <li className="insight-item">
-              <small>Continuous Deployment</small>
-              <h4>Release automation still advances more slowly</h4>
-              <p>
-                CD improved, but still lags behind CI because it depends on stronger feedback loops,
-                coordination across areas and higher release confidence.
-              </p>
-            </li>
-          </ul>
-        </article>
-
       </section>
     </>
   );

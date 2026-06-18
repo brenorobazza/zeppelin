@@ -439,77 +439,15 @@
 .results-adoption-breakdown {
   display: grid;
   gap: 1rem;
+  align-content: start;
+  height: 100%;
 }
 
-.results-adoption-breakdown__section {
-  display: grid;
-  gap: 0.6rem;
-}
-
-.results-adoption-summary {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.results-adoption-summary__card {
-  border: 1px solid #dce6f3;
-  border-radius: 14px;
-  background: #f8fbff;
-  padding: 0.85rem 0.95rem;
-}
-
-.results-adoption-summary__card--highlight {
-  background: linear-gradient(180deg, #f7fbff, #edf5ff);
-  border-color: #cfe0f8;
-}
-
-.results-adoption-summary__card span {
-  display: block;
-  margin-bottom: 0.55rem;
-  color: #6f8099;
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.results-adoption-summary__values {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.results-adoption-summary__values strong {
-  color: #123764;
-  font-size: 0.94rem;
-}
-
-.results-adoption-summary__list {
-  display: grid;
-  gap: 0.45rem;
-  margin: 0;
-}
-
-.results-adoption-summary__row {
+.results-adoption-breakdown__table-frame {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.75rem;
-}
-
-.results-adoption-summary__row dt {
-  margin: 0;
-  color: #5f6f8a;
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
-.results-adoption-summary__row dd {
-  margin: 0;
-  color: #123764;
-  font-size: 0.98rem;
-  font-weight: 800;
-  text-align: right;
+  flex: 1;
+  align-items: flex-start;
+  min-height: 0;
 }
 
 .results-filter-dropdown {
@@ -659,6 +597,10 @@
   table-layout: fixed;
 }
 
+.table--stage-distribution--adoption {
+  width: 100%;
+}
+
 .table--stage-distribution__col-label {
   width: 46%;
 }
@@ -675,6 +617,12 @@
 .table--stage-distribution .table-stage-head {
   justify-items: center;
   text-align: center;
+}
+
+.table--stage-distribution--adoption th,
+.table--stage-distribution--adoption td {
+  padding-block: 0.85rem;
+  vertical-align: middle;
 }
 
 .table-stage-head strong span {
@@ -1270,9 +1218,38 @@
   grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
 }
 
+.dimension-overview-grid--adoption {
+  align-items: stretch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .dimension-overview-grid--matrix {
   align-items: stretch;
   grid-template-columns: minmax(0, 1.5fr) minmax(380px, 0.9fr);
+}
+
+.dimension-overview-grid--adoption > .support-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dimension-overview-grid--adoption > .dimension-overview-panel {
+  display: flex;
+  min-height: 100%;
+}
+
+.dimension-overview-grid--adoption > .dimension-overview-panel--adoption {
+  border: 1px solid #d9e2ef;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 1rem;
+}
+
+.dimension-overview-grid--adoption .adoption-stage-chart {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 
 .dimension-overview-grid--matrix > .support-panel {
@@ -2337,10 +2314,6 @@
   }
 
   .level-row {
-    grid-template-columns: 1fr;
-  }
-
-  .results-adoption-summary {
     grid-template-columns: 1fr;
   }
 

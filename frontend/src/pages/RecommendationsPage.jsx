@@ -30,48 +30,8 @@ function buildAnswerProgress(answered, total) {
   return `${answered || 0}/${total || 0} statements answered`;
 }
 
-function normalizeCurrentLevel(level) {
-  const value = (level || "").trim().toLowerCase();
-
-  if (value === "not adopted" || value === "nao adotado" || value === "não adotado") {
-    return "Not adopted";
-  }
-
-  if (value === "abandoned" || value === "abandonado") {
-    return "Abandoned";
-  }
-
-  if (
-    value === "realized at project/product level" ||
-    value === "project/product level" ||
-    value === "realizado ao nivel de projeto/produto" ||
-    value === "realizado ao nível de projeto/produto"
-  ) {
-    return "Project/Product level";
-  }
-
-  if (
-    value === "between project/product and process level" ||
-    value === "entre nivel de projeto/produto e processo" ||
-    value === "entre nível de projeto/produto e processo"
-  ) {
-    return "Between project/product and process level";
-  }
-
-  if (
-    value === "realized at process level" ||
-    value === "process level" ||
-    value === "realizado ao nivel de processo" ||
-    value === "realizado ao nível de processo"
-  ) {
-    return "Process level";
-  }
-
-  if (value === "institutionalized" || value === "institucionalizado") {
-    return "Institutionalized";
-  }
-
-  return level || "Not informed";
+function getRecommendationBody(item) {
+  return item.catalogRecommendation || item.recommendation || "";
 }
 
 export function RecommendationsPage({ data, loading }) {
@@ -202,40 +162,34 @@ export function RecommendationsPage({ data, loading }) {
             {lane.items.length === 0 ? (
               <div className="empty-state">No recommendations match the selected filters.</div>
             ) : (
-              lane.items.map((item) => (
-                <div key={item.id} className="roadmap-card">
-                  <div className="roadmap-card__meta">
-                    <span className="tag">{item.questionId}</span>
-                    <strong className="roadmap-card__question">
-                      {buildRecommendationTitle(item)}
-                    </strong>
-                  </div>
+              lane.items.map((item) => {
+                const recommendationBody = getRecommendationBody(item);
 
-                  <dl className="roadmap-card__details">
-                    <div>
-                      <dt>Current adoption level</dt>
-                      <dd>{normalizeCurrentLevel(item.currentLevel)}</dd>
+                return (
+                  <div key={item.id} className="roadmap-card">
+                    <div className="roadmap-card__meta">
+                      <span className="tag">{item.questionId}</span>
+                      <strong className="roadmap-card__question">
+                        {buildRecommendationTitle(item)}
+                      </strong>
                     </div>
-                  </dl>
 
-                  {item.catalogRecommendation ? (
-                    <details className="roadmap-reference">
-                      <summary>Recommendations</summary>
-                      <div className="roadmap-card__details roadmap-card__details--compact">
-                        <div>
-                          <dt>Practice group</dt>
-                          <dd>{item.dimensionName || "Not available"}</dd>
-                        </div>
-                        <div>
-                          <dt>Element</dt>
-                          <dd>{item.elementName || "Not available"}</dd>
-                        </div>
+                    <dl className="roadmap-card__details">
+                      <div>
+                        <dt>Dimension group</dt>
+                        <dd>{item.dimensionName || "Not available"}</dd>
                       </div>
-                      <p>{item.catalogRecommendation}</p>
-                    </details>
-                  ) : null}
-                </div>
-              ))
+                    </dl>
+
+                    {recommendationBody ? (
+                      <details className="roadmap-reference">
+                        <summary>Recommendations</summary>
+                        <p>{recommendationBody}</p>
+                      </details>
+                    ) : null}
+                  </div>
+                );
+              })
             )}
           </article>
         ))}
@@ -243,4 +197,3 @@ export function RecommendationsPage({ data, loading }) {
     </>
   );
 }
-
