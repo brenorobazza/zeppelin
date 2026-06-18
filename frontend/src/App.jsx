@@ -616,6 +616,7 @@ export default function App() {
           onOrganizationQuit={handleOrganizationQuit}
           onOrganizationJoined={handleOrganizationJoined}
           onCurrentOrganizationChanged={handleCurrentOrganizationChanged}
+          canQuitOrganization={(analytics.history?.historySeries || []).length === 0}
           onCreateOrganization={() =>
             goToOrganizationRegistration({
               mode: "add-organization",
