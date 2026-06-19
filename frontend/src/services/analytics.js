@@ -34,13 +34,13 @@ function isQuestionnaireComplete(status) {
 }
 
 function buildCoverageHeadline(representedStages, totalStages) {
-  return `${representedStages || 0}/${totalStages || 0} stages represented`;
+  return `${representedStages || 0}/${totalStages || 0} stages`;
 }
 
 function buildCoverageDetail(missingStages = []) {
   return missingStages.length
-    ? `Missing evidence in: ${missingStages.join(", ")}`
-    : "All stages contain at least one answered statement in this cycle.";
+    ? `Missing: ${missingStages.join(", ")}`
+    : "All stages represented.";
 }
 
 // Converte os filtros da interface para query string.

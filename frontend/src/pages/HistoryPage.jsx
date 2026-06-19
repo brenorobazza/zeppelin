@@ -47,7 +47,7 @@ export function HistoryPage({ data, loading, filters }) {
   const displayHistorySeries = completeHistorySeries;
 
   if (loading && !data) {
-    return <section className="panel">Loading historical progression from backend...</section>;
+    return <section className="panel">Loading history...</section>;
   }
 
   if (view.selectedCycleEmpty) {
@@ -55,10 +55,7 @@ export function HistoryPage({ data, loading, filters }) {
       <section className="panel">
         <p className="eyebrow">History</p>
         <h3>No submitted answers for this cycle</h3>
-        <p>
-          The selected assessment cycle does not contain submitted answers yet. Historical
-          comparisons will be available after the cycle receives recorded answers.
-        </p>
+        <p>No answers submitted yet.</p>
       </section>
     );
   }
@@ -68,10 +65,7 @@ export function HistoryPage({ data, loading, filters }) {
       <section className="panel">
         <p className="eyebrow">History</p>
         <h3>No historical data available</h3>
-        <p>
-          The selected organization does not have a fully submitted assessment snapshot yet, so
-          historical trends and benchmark comparisons cannot be shown.
-        </p>
+        <p>No historical data.</p>
       </section>
     );
   }
@@ -81,10 +75,7 @@ export function HistoryPage({ data, loading, filters }) {
       <section className="panel">
         <p className="eyebrow">History</p>
         <h3>No complete historical cycles available</h3>
-        <p>
-          The selected organization still has only incomplete assessment cycles, so historical
-          cards and comparisons stay hidden until at least one cycle is fully submitted.
-        </p>
+        <p>No complete cycles yet.</p>
       </section>
     );
   }
@@ -98,8 +89,8 @@ export function HistoryPage({ data, loading, filters }) {
           tone="warning"
           badge="Insufficient Data"
           icon={<Lock size={24} strokeWidth={2.2} />}
-          title="At least two complete cycles are required for comparison"
-          message="The comparative radar chart will be enabled once at least two complete cycles are available."
+          title="Two complete cycles required"
+          message="Comparison needs two complete cycles."
           details="Minimum required: 2 complete cycles"
         />
       )}
@@ -123,7 +114,7 @@ export function HistoryPage({ data, loading, filters }) {
               </div>
 
               <div className="history-cycle-card__score">
-                <span>Overall Zeppelin score</span>
+                <span>Overall score</span>
                 <strong>{item.overall}</strong>
               </div>
 
@@ -149,7 +140,7 @@ export function HistoryPage({ data, loading, filters }) {
         <div className="section-head">
           <div>
             <h3>Adoption levels across cycles</h3>
-            <p>Shows how practices moved between adoption levels in each cycle.</p>
+            <p>Adoption levels by cycle.</p>
           </div>
         </div>
 

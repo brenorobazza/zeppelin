@@ -122,7 +122,7 @@ function StageMaturityScale({ score, currentLevel, available }) {
   if (!available) {
     return (
       <div className="maturity-scale maturity-scale--missing maturity-scale--compact">
-        <p>No scale is available because this stage is not represented in the current payload.</p>
+        <p>Stage not available.</p>
       </div>
     );
   }
@@ -177,11 +177,15 @@ function StageMaturityScale({ score, currentLevel, available }) {
 
 function buildStageProgressReading(stage) {
   if (!stage.available) {
-    return "This stage is not represented in the current analytics payload.";
+    return "Stage not available.";
   }
 
   const answered = stage.answeredPractices || 0;
   const total = stage.totalPractices || answered;
+  return `${answered}/${total} statements answered`;
+}
+
+function buildOverallProgressReading(answered, total) {
   return `${answered}/${total} statements answered`;
 }
 
@@ -258,7 +262,7 @@ function splitRadarLabel(label, maxChars = 16) {
 
 function DimensionRadar({ dimensions }) {
   if (!dimensions.length) {
-    return <div className="empty-state">No dimension adoption data is available for this cycle.</div>;
+    return <div className="empty-state">No dimension data.</div>;
   }
 
   const size = 560;
@@ -354,10 +358,10 @@ function formatStageSpread(leadingStage, constrainingStage) {
 
 function buildAnalyticalNarrative(leadingStage, constrainingStage) {
   if (!leadingStage || !constrainingStage) {
-    return "This page examines the diagnostic evidence available in the current assessment payload by combining the stage interpretation with the analysis of related practice groups.";
+    return "Stage and group analysis.";
   }
 
-  return `The current diagnosis is more strongly supported in ${leadingStage.name}, while ${constrainingStage.name} concentrates the main restrictions that still limit a more balanced progression across the CSE stages.`;
+  return `${leadingStage.name} leads. ${constrainingStage.name} limits progress.`;
 }
 
 function normalizeLevel(level = "") {
@@ -404,14 +408,14 @@ function buildInsightTitle(item, variant) {
 
 function buildInsightDescription(item, variant) {
   if (variant === "strengths") {
-    return `${item.questionId} currently operates at ${normalizeLevel(item.currentLevel).toLowerCase()} in ${item.stage} and reinforces the current diagnostic position.`;
+    return `${item.questionId} is a strength in ${item.stage}.`;
   }
 
   if (variant === "bottlenecks") {
-    return `${item.questionId} currently operates at ${normalizeLevel(item.currentLevel).toLowerCase()} in ${item.stage} and still constrains progression to the next stage.`;
+    return `${item.questionId} limits progress in ${item.stage}.`;
   }
 
-  return item.expectedImpact || "This recommended action strengthens the current diagnostic response.";
+  return item.expectedImpact || "Improves the result.";
 }
 
 function buildPracticeGroupSignal(group, variant) {
@@ -419,22 +423,22 @@ function buildPracticeGroupSignal(group, variant) {
 
   if (!insight?.questionId) {
     if (variant === "strength") {
-      return "The strongest supporting signal in this practice group is not explicitly available in the current payload.";
+      return "Main strength not available.";
     }
 
-    return "The main constraining signal in this practice group is not explicitly available in the current payload.";
+    return "Main constraint not available.";
   }
 
   if (variant === "strength") {
-    return `${insight.questionId} currently provides the strongest supporting signal in this practice group.`;
+    return `${insight.questionId} is the main strength.`;
   }
 
-  return `${insight.questionId} currently represents the main constraining signal in this practice group.`;
+  return `${insight.questionId} is the main constraint.`;
 }
 
 function renderInsightList(items, variant) {
   if (!items.length) {
-    return <p className="empty-state">No diagnostic evidence is available for this section.</p>;
+    return <p className="empty-state">No data for this section.</p>;
   }
 
   return (
@@ -710,7 +714,7 @@ function buildStageAdoptionColumns(overview) {
 
 function AdoptionLevelStageChart({ overview }) {
   if (!overview.levels?.length) {
-    return <div className="empty-state">No stage adoption breakdown is available for this cycle.</div>;
+    return <div className="empty-state">No stage breakdown.</div>;
   }
 
   const columns = buildStageAdoptionColumns(overview);
@@ -787,6 +791,7 @@ function AdoptionLevelStageChart({ overview }) {
 
 export function ResultsPage({ data, overview, loading }) {
   // A Tela 2 funciona como aprofundamento analitico do diagnostico, sem repetir o resumo inicial.
+  const [scoreCardView, setScoreCardView] = useState("stages");
   const [selectedDimensions, setSelectedDimensions] = useState([]);
   const [selectedElements, setSelectedElements] = useState([]);
   const [selectedGroupDimensions, setSelectedGroupDimensions] = useState([]);
@@ -893,6 +898,26 @@ export function ResultsPage({ data, overview, loading }) {
     selectedGroupDimensions.includes(group.name)
   );
   const practiceGroupSummary = `${practiceGroups.length} of ${dimensionGroupsSource.length} dimensions shown.`;
+  const scoreCardViewOptions = [
+    { value: "overall", label: "Overall" },
+    { value: "stages", label: "Stages" },
+    { value: "groups", label: "Dimension groups" }
+  ];
+  const overallAnsweredPractices = view.summary.answeredPractices || 0;
+  const overallTotalPractices = stages.reduce(
+    (total, stage) => total + (stage.totalPractices || stage.answeredPractices || 0),
+    0
+  );
+  const overallScore = view.summary.overallScore;
+  const overallCard = {
+    key: "overall",
+    name: "Overall score",
+    available: typeof overallScore === "number",
+    score: overallScore,
+    currentLevel: view.summary.overallLevel || "Not available",
+    answeredPractices: overallAnsweredPractices,
+    totalPractices: overallTotalPractices || overallAnsweredPractices
+  };
   const dimensionScoreLookup = new Map(
     (dimensionScoreOverview.dimensions || []).map((item) => [
       item.name,
@@ -909,14 +934,14 @@ export function ResultsPage({ data, overview, loading }) {
 
   const diagnosticFacts = [
     {
-      label: "Questionnaire status",
+      label: "Status",
       value: view.summary.questionnaireStatus || "Under Assessment"
     },
-    { label: "Spread across stages", value: formatStageSpread(leadingStage, constrainingStage) }
+    { label: "Stage spread", value: formatStageSpread(leadingStage, constrainingStage) }
   ];
 
   if (loading && !data) {
-    return <section className="panel">Loading diagnostic detail...</section>;
+    return <section className="panel">Loading results...</section>;
   }
 
   if (view.selectedCycleEmpty) {
@@ -924,10 +949,7 @@ export function ResultsPage({ data, overview, loading }) {
       <section className="panel">
         <p className="eyebrow">Diagnostic detail</p>
         <h3>No submitted answers for this cycle</h3>
-        <p>
-          The selected assessment cycle does not contain submitted answers yet. Detailed
-          interpretation becomes available after the cycle receives recorded answers.
-        </p>
+        <p>No answers submitted yet.</p>
       </section>
     );
   }
@@ -942,7 +964,7 @@ export function ResultsPage({ data, overview, loading }) {
         </div>
 
         <article className="insight-item">
-          <h4>How to interpret the current diagnosis</h4>
+          <h4>Diagnosis summary</h4>
           <p>{analyticalNarrative}</p>
         </article>
 
@@ -959,117 +981,155 @@ export function ResultsPage({ data, overview, loading }) {
       <section className="panel">
         <div className="section-head">
           <div>
-            <h3>Stage-level diagnostic overview</h3>
+            <h3>Score analysis</h3>
           </div>
         </div>
 
-        {stages.length ? (
-          <>
-            <div className="journey-grid">
-              {stages.map((stage) => (
-                <article
-                  key={stage.key}
-                  className={`stage-card stage-card--journey ${stage.available ? "" : "stage-card--missing"}`.trim()}
-                >
-                  <div className="stage-card__head">
-                    <div>
-                      <h4>{stage.name}</h4>
-                    </div>
-                    <strong>{stage.available ? stage.score : "N/A"}</strong>
-                  </div>
+        <div className="roadmap-toolbar">
+          <div className="roadmap-filters roadmap-filters--two">
+            <label className="roadmap-filter-field">
+              <span>Score type</span>
+              <select value={scoreCardView} onChange={(event) => setScoreCardView(event.target.value)}>
+                {scoreCardViewOptions.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-                  <StageMaturityScale
-                    score={stage.score}
-                    currentLevel={stage.currentLevel}
-                    available={stage.available}
-                  />
-
-                  <p>{buildStageProgressReading(stage)}</p>
-                </article>
-              ))}
+            <div
+              className={`roadmap-filter-field ${
+                scoreCardView === "groups" ? "" : "roadmap-filter-field--hidden"
+              }`.trim()}
+              aria-hidden={scoreCardView !== "groups"}
+            >
+              <span>Filter dimensions</span>
+              <FilterDropdown
+                label="Dimensions"
+                summary={buildMultiSelectSummary(
+                  selectedGroupDimensions,
+                  groupDimensionFilterOptions,
+                  "dimension",
+                  "dimensions"
+                )}
+                options={groupDimensionFilterOptions}
+                selectedValues={selectedGroupDimensions}
+                onToggle={(value) => toggleMultiSelectValue(value, setSelectedGroupDimensions)}
+                onSelectAll={() =>
+                  setSelectedGroupDimensions(groupDimensionFilterOptions.map((item) => item.value))
+                }
+                onClearAll={() => setSelectedGroupDimensions([])}
+              />
             </div>
+          </div>
 
-            <p className="support-copy">Unanswered statements count as zero in this summary.</p>
-          </>
-        ) : (
-          <p className="empty-state">No stage-level diagnostic evidence is available for this cycle.</p>
-        )}
-      </section>
-
-      <section className="panel">
-        <div className="section-head">
-          <div>
-            <h3>Dimension-group analysis</h3>
+          <div className="roadmap-toolbar__meta">
+            <p className="roadmap-summary">
+              {scoreCardView === "groups"
+                ? practiceGroupSummary
+                : scoreCardView === "overall"
+                  ? "1 score shown."
+                  : `${stages.filter((stage) => stage.available).length} stages shown.`}
+            </p>
           </div>
         </div>
 
-        {dimensionGroupsSource.length ? (
-          <>
-            <div className="roadmap-toolbar">
-              <div className="roadmap-filters roadmap-filters--one">
-                <div className="roadmap-filter-field">
-                  <span>Filter dimensions</span>
-                  <FilterDropdown
-                    label="Dimensions"
-                    summary={buildMultiSelectSummary(
-                      selectedGroupDimensions,
-                      groupDimensionFilterOptions,
-                      "dimension",
-                      "dimensions"
-                    )}
-                    options={groupDimensionFilterOptions}
-                    selectedValues={selectedGroupDimensions}
-                    onToggle={(value) => toggleMultiSelectValue(value, setSelectedGroupDimensions)}
-                    onSelectAll={() =>
-                      setSelectedGroupDimensions(groupDimensionFilterOptions.map((item) => item.value))
-                    }
-                    onClearAll={() => setSelectedGroupDimensions([])}
-                  />
+        {scoreCardView === "overall" ? (
+          <div className="journey-grid">
+            <article
+              className={`stage-card stage-card--journey ${overallCard.available ? "" : "stage-card--missing"}`.trim()}
+            >
+              <div className="stage-card__head">
+                <div>
+                  <h4>{overallCard.name}</h4>
                 </div>
+                <strong>{overallCard.available ? overallCard.score : "N/A"}</strong>
               </div>
 
-              <div className="roadmap-toolbar__meta">
-                <p className="roadmap-summary">{practiceGroupSummary}</p>
-              </div>
-            </div>
+              <StageMaturityScale
+                score={overallCard.score}
+                currentLevel={overallCard.currentLevel}
+                available={overallCard.available}
+              />
 
-            {practiceGroups.length ? (
-              <div className="dimension-grid">
-                {practiceGroups.map((item) => (
-                  <article key={item.key} className="dimension-card dimension-card--detailed">
-                    <div className="dimension-card__head">
+              <p>
+                {buildOverallProgressReading(
+                  overallCard.answeredPractices,
+                  overallCard.totalPractices
+                )}
+              </p>
+            </article>
+          </div>
+        ) : scoreCardView === "stages" ? (
+          stages.length ? (
+            <>
+              <div className="journey-grid">
+                {stages.map((stage) => (
+                  <article
+                    key={stage.key}
+                    className={`stage-card stage-card--journey ${stage.available ? "" : "stage-card--missing"}`.trim()}
+                  >
+                    <div className="stage-card__head">
                       <div>
-                        <h4>{item.name}</h4>
-                        {item.focus ? <span>{item.focus}</span> : null}
+                        <h4>{stage.name}</h4>
                       </div>
-                      <strong>{item.score}</strong>
+                      <strong>{stage.available ? stage.score : "N/A"}</strong>
                     </div>
 
-                    <PercentageScale
-                      score={item.score}
-                      showMarker
-                      className="dimension-card__scale"
+                    <StageMaturityScale
+                      score={stage.score}
+                      currentLevel={stage.currentLevel}
+                      available={stage.available}
                     />
 
-                    <div className="dimension-card__evidence">
-                      <div>
-                        <span>What supports this group</span>
-                        <strong>{buildPracticeGroupSignal(item, "strength")}</strong>
-                      </div>
-                      <div>
-                        <span>What constrains this group</span>
-                        <strong>{buildPracticeGroupSignal(item, "bottleneck")}</strong>
-                      </div>
-                    </div>
+                    <p>{buildStageProgressReading(stage)}</p>
                   </article>
                 ))}
               </div>
-            ) : (
-              <p className="empty-state">No dimensions match the selected filter.</p>
-            )}
-          </>
+
+              <p className="support-copy">Unanswered items count as zero.</p>
+            </>
+          ) : (
+            <p className="empty-state">No stage data.</p>
+          )
+        ) : dimensionGroupsSource.length ? (
+          practiceGroups.length ? (
+            <div className="dimension-grid">
+              {practiceGroups.map((item) => (
+                <article key={item.key} className="dimension-card dimension-card--detailed">
+                  <div className="dimension-card__head">
+                    <div>
+                      <h4>{item.name}</h4>
+                      {item.focus ? <span>{item.focus}</span> : null}
+                    </div>
+                    <strong>{item.score}</strong>
+                  </div>
+
+                  <PercentageScale
+                    score={item.score}
+                    showMarker
+                    className="dimension-card__scale"
+                  />
+
+                  <div className="dimension-card__evidence">
+                    <div>
+                      <span>Main strength</span>
+                      <strong>{buildPracticeGroupSignal(item, "strength")}</strong>
+                    </div>
+                    <div>
+                      <span>Main constraint</span>
+                      <strong>{buildPracticeGroupSignal(item, "bottleneck")}</strong>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="empty-state">No matching dimensions.</p>
+          )
         ) : (
-          <p className="empty-state">No dimension-group evidence is available in the current payload.</p>
+          <p className="empty-state">No group data.</p>
         )}
       </section>
 
@@ -1098,9 +1158,7 @@ export function ResultsPage({ data, overview, loading }) {
             </tbody>
           </table>
         ) : (
-          <p className="empty-state">
-            No adoption-level distribution is available for this cycle.
-          </p>
+          <p className="empty-state">No adoption-level data.</p>
         )}
       </section>
 
@@ -1131,7 +1189,7 @@ export function ResultsPage({ data, overview, loading }) {
                     <thead>
                       <tr>
                         <th rowSpan="2">Adoption level</th>
-                        <th colSpan="4">Number of CSE practices</th>
+                        <th colSpan="4">Number of practices</th>
                       </tr>
                       <tr>
                         <th>
@@ -1168,21 +1226,27 @@ export function ResultsPage({ data, overview, loading }) {
                           <td>{level.experimentationCount}</td>
                         </tr>
                       ))}
+                      <tr className="table-summary-row table-summary-row--final">
+                        <td>
+                          <strong>Total responses</strong>
+                        </td>
+                        <td>{adoptionLevelStageOverview.totals.agileCount}</td>
+                        <td>{adoptionLevelStageOverview.totals.ciCount}</td>
+                        <td>{adoptionLevelStageOverview.totals.cdCount}</td>
+                        <td>{adoptionLevelStageOverview.totals.experimentationCount}</td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
               </div>
             ) : (
-              <p className="empty-state">No stage adoption breakdown is available for this cycle.</p>
+              <p className="empty-state">No stage breakdown.</p>
             )}
           </article>
 
           <article className="panel support-panel support-panel--adoption">
             <h3>Practices adopted by level and stage</h3>
-            <p>
-              The chart highlights how the current answered practices are distributed across the
-              adoption levels in each assessed CSE stage.
-            </p>
+            <p>Practice distribution by stage.</p>
             <AdoptionLevelStageChart overview={adoptionLevelStageOverview} />
           </article>
         </div>
@@ -1214,7 +1278,7 @@ export function ResultsPage({ data, overview, loading }) {
                     <div className="table-stage-head">
                       <strong>
                         <span>Number of</span>
-                        <span>CSE practices</span>
+                        <span>practices</span>
                       </strong>
                     </div>
                   </th>
@@ -1378,7 +1442,7 @@ export function ResultsPage({ data, overview, loading }) {
             </tbody>
           </table>
         ) : (
-          <p className="empty-state">No process-level adoption evidence is available.</p>
+          <p className="empty-state">No process data.</p>
         )}
       </section>
 
@@ -1538,13 +1602,11 @@ export function ResultsPage({ data, overview, loading }) {
                 </tbody>
               </table>
             ) : (
-              <p className="empty-state">
-                No elements match the selected dimensions and elements.
-              </p>
+              <p className="empty-state">No matching elements.</p>
             )}
           </>
         ) : (
-          <p className="empty-state">No element-level evidence is available for this cycle.</p>
+          <p className="empty-state">No element data.</p>
         )}
       </section>
 

@@ -15,7 +15,7 @@ import "./benchmark-comparison-card.css";
 const LENS_OPTIONS = [
   {
     key: "eye",
-    label: "Eye of CSE",
+    label: "Eye",
     description: "7 dimensions"
   },
   {

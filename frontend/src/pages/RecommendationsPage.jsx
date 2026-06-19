@@ -71,7 +71,7 @@ export function RecommendationsPage({ data, loading }) {
   ];
 
   if (loading && !data) {
-    return <section className="panel">Loading the improvement roadmap...</section>;
+    return <section className="panel">Loading recommendations...</section>;
   }
 
   if (view.selectedCycleEmpty) {
@@ -79,10 +79,7 @@ export function RecommendationsPage({ data, loading }) {
       <section className="panel">
         <p className="eyebrow">Recommendations</p>
         <h3>No submitted answers for this cycle</h3>
-        <p>
-          The selected assessment cycle does not contain submitted answers yet. Recommendations
-          will be generated after the cycle receives recorded answers.
-        </p>
+        <p>No answers submitted yet.</p>
       </section>
     );
   }
@@ -108,7 +105,7 @@ export function RecommendationsPage({ data, loading }) {
         </div>
 
         <p className="support-copy">
-          Recommendations become available only after the selected assessment cycle is completed.
+          Complete the cycle to view recommendations.
         </p>
       </section>
     );
@@ -119,7 +116,7 @@ export function RecommendationsPage({ data, loading }) {
       {/* Resumo executivo das recomendacoes geradas para o ciclo atual. */}
       <section className="grid-3">
         <article className="metric-card">
-          <p>Recommendations generated</p>
+          <p>Generated recommendations</p>
           <h2>{view.summary.triggeredRecommendations}</h2>
         </article>
 
@@ -160,7 +157,7 @@ export function RecommendationsPage({ data, loading }) {
             </div>
 
             {lane.items.length === 0 ? (
-              <div className="empty-state">No recommendations match the selected filters.</div>
+              <div className="empty-state">No matching recommendations.</div>
             ) : (
               lane.items.map((item) => {
                 const recommendationBody = getRecommendationBody(item);

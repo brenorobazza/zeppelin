@@ -16,7 +16,7 @@ export function AssessmentWelcome({ handleStartNew }) {
       </div>
       <h3 style={{ marginBottom: "1rem", fontSize: "1.5rem" }}>Welcome to Zeppelin!</h3>
       <p style={{ color: "#666", marginBottom: "2rem", maxWidth: "400px", margin: "0 auto 2rem" }}>
-        To understand your CSE maturity, start your first diagnostic
+        To understand your maturity, start your first diagnostic
       </p>
       <button className="btn-primary-ui" onClick={handleStartNew}>
         Start assessment

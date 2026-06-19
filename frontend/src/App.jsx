@@ -529,7 +529,7 @@ export default function App() {
     },
     assessment: {
       title: "Assessment Questionnaire",
-      subtitle: "Evaluate CSE practices using a standardized maturity scale.",
+      subtitle: "Evaluate practices using a standardized maturity scale.",
       component: (
         <AssessmentPage
           organizationId={analyticsFilters.organizationId}
@@ -567,7 +567,8 @@ export default function App() {
     },
     recommendations: {
       title: "Recommendations",
-      subtitle: "",
+      subtitle:
+        "CI/CD practices below 60% become recommendations. `Adopt now` covers not adopted or abandoned practices. `Consolidate` covers project/product-level practices not yet established.",
       component: (
         <RecommendationsPage
           data={analytics.recommendations}

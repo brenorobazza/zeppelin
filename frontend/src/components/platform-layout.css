@@ -1636,6 +1636,11 @@
   gap: 0.35rem;
 }
 
+.roadmap-filter-field--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .roadmap-filter-field span {
   color: #60708a;
   font-size: 0.76rem;

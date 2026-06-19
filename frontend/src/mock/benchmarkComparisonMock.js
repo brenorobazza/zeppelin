@@ -263,7 +263,7 @@ export function loadComparisonMock(filters = {}) {
     lenses: {
       eye: {
         key: "eye",
-        title: "Eye of CSE",
+        title: "Eye",
         subtitle: `Peer benchmark against a cohort of organizations matched by the active filters. ${filterSummary}.`,
         ...profile.lenses.eye
       },

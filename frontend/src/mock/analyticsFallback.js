@@ -137,11 +137,13 @@ export const fallbackRecommendationsData = {
     missingStages: stageScores
       .filter((item) => (item.answeredPractices || 0) === 0)
       .map((item) => item.shortName),
-    coverageHeadline: `${stageScores.filter((item) => (item.answeredPractices || 0) > 0).length}/${stageScores.length} stages represented`,
-    coverageDetail: `Missing evidence in: ${stageScores
-      .filter((item) => (item.answeredPractices || 0) === 0)
-      .map((item) => item.shortName)
-      .join(", ")}`,
+    coverageHeadline: `${stageScores.filter((item) => (item.answeredPractices || 0) > 0).length}/${stageScores.length} stages`,
+    coverageDetail: stageScores.some((item) => (item.answeredPractices || 0) === 0)
+      ? `Missing: ${stageScores
+          .filter((item) => (item.answeredPractices || 0) === 0)
+          .map((item) => item.shortName)
+          .join(", ")}`
+      : "All stages represented.",
     questionnaireStatus: "Under Assessment",
     isQuestionnaireComplete: false
   },

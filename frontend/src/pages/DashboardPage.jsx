@@ -1,120 +1,22 @@
 import { fallbackDashboardData } from "../mock/analyticsFallback";
 import { mapStagesToJourney } from "./stairwayStages";
 
-const MATURITY_SCALE = [
-  { value: 0, label: "Not adopted" },
-  { value: 10, label: "Abandoned" },
-  { value: 30, label: "Project/Product" },
-  { value: 60, label: "Process" },
-  { value: 100, label: "Institutionalized" }
-];
-
-function buildStageInterpretation(stage) {
-  if (!stage.available) {
-    return "This stage is not represented in the current analytics payload.";
-  }
-
-  const answered = stage.answeredPractices || 0;
-  const total = stage.totalPractices || answered;
-
-  return `${answered}/${total} statements answered`;
-}
-
 function buildAnswerProgress(answered, total) {
   return `${answered || 0}/${total || 0} statements answered`;
 }
 
-function renderScaleLabel(label) {
-  return label.replace("/", "/\u2009");
+function buildStageAnswerValue(stage) {
+  const answered = stage.answeredPractices || 0;
+  const total = stage.totalPractices || answered;
+  return `${answered}/${total}`;
 }
 
-function getScaleLabelStyle(value) {
-  if (value === 0) {
-    return { left: "0%", transform: "translateX(0)" };
-  }
-
-  if (value === 100) {
-    return { left: "100%", transform: "translateX(-100%)" };
-  }
-
-  return { left: `${value}%`, transform: "translateX(-50%)" };
+function buildStageScoreValue(stage) {
+  return stage.available ? `${stage.score}/100` : "N/A";
 }
 
-function getScaleLabelClass(value, safeScore) {
-  const edgeClass =
-    value === 0
-      ? "maturity-scale__label--start"
-      : value === 100
-        ? "maturity-scale__label--end"
-        : "maturity-scale__label--center";
-
-  return [
-    "maturity-scale__label",
-    edgeClass,
-    `maturity-scale__label--value-${value}`,
-    safeScore >= value ? "is-reached" : ""
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
-
-function MaturityScale({ score, currentLevel, available, compact = false }) {
-  if (!available) {
-    return (
-      <div
-        className={`maturity-scale maturity-scale--missing ${compact ? "maturity-scale--compact" : ""}`.trim()}
-      >
-        <p>No scale is available because this stage is not represented in the current payload.</p>
-      </div>
-    );
-  }
-
-  const safeScore = Math.max(0, Math.min(100, score || 0));
-
-  return (
-    <div
-      className={`maturity-scale ${compact ? "maturity-scale--compact" : ""}`.trim()}
-      aria-label={`Maturity scale for score ${safeScore}`}
-    >
-      <div className="maturity-scale__header">
-        <span>Maturity scale</span>
-        <strong>{safeScore}/100</strong>
-      </div>
-
-      <div className="maturity-scale__track" aria-hidden="true">
-        <div className="maturity-scale__line" />
-        {MATURITY_SCALE.map((item) => (
-          <span
-            key={item.value}
-            className="maturity-scale__tick"
-            style={{ left: `${item.value}%` }}
-          />
-        ))}
-        <span
-          className="maturity-scale__marker"
-          style={{ left: `${safeScore}%` }}
-          title={`Score ${safeScore}`}
-        />
-      </div>
-
-      <div className="maturity-scale__labels">
-        {MATURITY_SCALE.map((item) => (
-          <div
-            key={item.value}
-            className={getScaleLabelClass(item.value, safeScore)}
-            style={getScaleLabelStyle(item.value)}
-          >
-            <strong>{item.value}</strong>
-            {!compact ? <span>{renderScaleLabel(item.label)}</span> : null}
-          </div>
-        ))}
-      </div>
-
-      <p className="maturity-scale__reading">
-        Current position: <strong>{currentLevel}</strong>
-      </p>
-    </div>
-  );
+function buildStageLevelValue(stage) {
+  return stage.available ? stage.currentLevel : "Not available";
 }
 
 function buildCoverageSummary(stages) {
@@ -128,8 +30,8 @@ function buildCoverageSummary(stages) {
   return {
     headline: `${represented.length}/${stages.length} stages represented`,
     detail: missing.length
-      ? `Missing evidence in: ${missing.map((stage) => stage.shortName).join(", ")}`
-      : "All stages contain at least one answered statement in this cycle."
+      ? `Missing: ${missing.map((stage) => stage.shortName).join(", ")}`
+      : "All stages represented."
   };
 }
 
@@ -142,6 +44,20 @@ export function DashboardPage({ data, loading }) {
     (total, stage) => total + (stage.totalPractices || stage.answeredPractices || 0),
     0
   );
+  const stageSummaryRows = stages.map((stage) => ({
+    key: stage.key,
+    name: stage.name,
+    score: buildStageScoreValue(stage),
+    level: buildStageLevelValue(stage),
+    answers: buildStageAnswerValue(stage)
+  }));
+  const overallSummaryRow = {
+    key: "overall",
+    name: "Overall",
+    score: `${view.maturitySnapshot.overallScore || 0}/100`,
+    level: view.maturitySnapshot.overallLevel || "Not available",
+    answers: `${view.maturitySnapshot.answeredPractices || 0}/${totalStatements}`
+  };
   const isQuestionnaireUnderAssessment =
     !view.maturitySnapshot.isQuestionnaireComplete;
 
@@ -158,7 +74,7 @@ export function DashboardPage({ data, loading }) {
   ];
 
   if (loading && !data) {
-    return <section className="panel">Loading diagnostic summary...</section>;
+    return <section className="panel">Loading summary...</section>;
   }
 
   if (view.selectedCycleEmpty) {
@@ -166,10 +82,7 @@ export function DashboardPage({ data, loading }) {
       <section className="panel">
         <p className="eyebrow">Diagnostic summary</p>
         <h3>No submitted answers for this cycle</h3>
-        <p>
-          The selected assessment cycle does not contain submitted answers yet. The diagnostic
-          summary will become available after at least one response is recorded for this cycle.
-        </p>
+        <p>No answers submitted yet.</p>
       </section>
     );
   }
@@ -200,11 +113,8 @@ export function DashboardPage({ data, loading }) {
         <section className="panel">
           <div className="section-head">
             <div>
-              <h3>Stage-level diagnostic overview</h3>
-              <p>
-                The stage-level reading becomes available only after the selected assessment cycle
-                is completed.
-              </p>
+              <h3>Stage summary</h3>
+              <p>Complete the cycle to view scores.</p>
             </div>
           </div>
         </section>
@@ -212,36 +122,42 @@ export function DashboardPage({ data, loading }) {
         <section className="panel">
           <div className="section-head">
             <div>
-              <h3>Stage-level diagnostic overview</h3>
+              <h3>Stage summary</h3>
             </div>
           </div>
 
-          <div className="journey-grid">
-            {stages.map((stage) => (
-              <article
-                key={stage.key}
-                className={`stage-card stage-card--journey ${stage.available ? "" : "stage-card--missing"}`.trim()}
-              >
-                <div className="stage-card__head">
-                  <div>
-                    <h4>{stage.name}</h4>
-                  </div>
-                  <strong>{stage.available ? stage.score : "N/A"}</strong>
-                </div>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Score</th>
+                <th>Level</th>
+                <th>Answers</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stageSummaryRows.map((row) => (
+                <tr key={row.key}>
+                  <td>
+                    <strong>{row.name}</strong>
+                  </td>
+                  <td>{row.score}</td>
+                  <td>{row.level}</td>
+                  <td>{row.answers}</td>
+                </tr>
+              ))}
+              <tr>
+                <td>
+                  <strong>{overallSummaryRow.name}</strong>
+                </td>
+                <td>{overallSummaryRow.score}</td>
+                <td>{overallSummaryRow.level}</td>
+                <td>{overallSummaryRow.answers}</td>
+              </tr>
+            </tbody>
+          </table>
 
-                <MaturityScale
-                  score={stage.score}
-                  currentLevel={stage.currentLevel}
-                  available={stage.available}
-                  compact
-                />
-
-                <p>{buildStageInterpretation(stage)}</p>
-              </article>
-            ))}
-          </div>
-
-          <p className="support-copy">Unanswered statements count as zero in this summary.</p>
+          <p className="support-copy">See Results for the full analysis.</p>
         </section>
       )}
     </>
