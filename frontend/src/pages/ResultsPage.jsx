@@ -76,6 +76,115 @@ function PercentageScale({
   );
 }
 
+const RESULTS_STAGE_SCALE = [
+  { value: 0, label: "Not adopted" },
+  { value: 10, label: "Abandoned" },
+  { value: 30, label: "Project/Product" },
+  { value: 60, label: "Process" },
+  { value: 100, label: "Institutionalized" }
+];
+
+function renderStageScaleLabel(label) {
+  return label.replace("/", "/\u2009");
+}
+
+function getStageScaleLabelStyle(value) {
+  if (value === 0) {
+    return { left: "0%", transform: "translateX(0)" };
+  }
+
+  if (value === 100) {
+    return { left: "100%", transform: "translateX(-100%)" };
+  }
+
+  return { left: `${value}%`, transform: "translateX(-50%)" };
+}
+
+function getStageScaleLabelClass(value, safeScore) {
+  const edgeClass =
+    value === 0
+      ? "maturity-scale__label--start"
+      : value === 100
+        ? "maturity-scale__label--end"
+        : "maturity-scale__label--center";
+
+  return [
+    "maturity-scale__label",
+    edgeClass,
+    `maturity-scale__label--value-${value}`,
+    safeScore >= value ? "is-reached" : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function StageMaturityScale({ score, currentLevel, available }) {
+  if (!available) {
+    return (
+      <div className="maturity-scale maturity-scale--missing maturity-scale--compact">
+        <p>No scale is available because this stage is not represented in the current payload.</p>
+      </div>
+    );
+  }
+
+  const safeScore = Math.max(0, Math.min(100, score || 0));
+
+  return (
+    <div
+      className="maturity-scale maturity-scale--compact"
+      aria-label={`Maturity scale for score ${safeScore}`}
+    >
+      <div className="maturity-scale__header">
+        <span>Maturity scale</span>
+        <strong>{safeScore}/100</strong>
+      </div>
+
+      <div className="maturity-scale__track" aria-hidden="true">
+        <div className="maturity-scale__line" />
+        {RESULTS_STAGE_SCALE.map((item) => (
+          <span
+            key={item.value}
+            className="maturity-scale__tick"
+            style={{ left: `${item.value}%` }}
+          />
+        ))}
+        <span
+          className="maturity-scale__marker"
+          style={{ left: `${safeScore}%` }}
+          title={`Score ${safeScore}`}
+        />
+      </div>
+
+      <div className="maturity-scale__labels">
+        {RESULTS_STAGE_SCALE.map((item) => (
+          <div
+            key={item.value}
+            className={getStageScaleLabelClass(item.value, safeScore)}
+            style={getStageScaleLabelStyle(item.value)}
+          >
+            <strong>{item.value}</strong>
+            <span>{renderStageScaleLabel(item.label)}</span>
+          </div>
+        ))}
+      </div>
+
+      <p className="maturity-scale__reading">
+        Current position: <strong>{currentLevel}</strong>
+      </p>
+    </div>
+  );
+}
+
+function buildStageProgressReading(stage) {
+  if (!stage.available) {
+    return "This stage is not represented in the current analytics payload.";
+  }
+
+  const answered = stage.answeredPractices || 0;
+  const total = stage.totalPractices || answered;
+  return `${answered}/${total} statements answered`;
+}
+
 function buildRadarPoints(dimensions, radius, center) {
   if (!dimensions.length) return "";
 
@@ -767,7 +876,6 @@ export function ResultsPage({ data, overview, loading }) {
   const groupDimensionFilterKey = groupDimensionFilterOptions
     .map((item) => item.value)
     .join("|");
-
   useEffect(() => {
     const availableGroupDimensions = new Set(
       groupDimensionFilterOptions.map((item) => item.value)
@@ -846,6 +954,123 @@ export function ResultsPage({ data, overview, loading }) {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h3>Stage-level diagnostic overview</h3>
+          </div>
+        </div>
+
+        {stages.length ? (
+          <>
+            <div className="journey-grid">
+              {stages.map((stage) => (
+                <article
+                  key={stage.key}
+                  className={`stage-card stage-card--journey ${stage.available ? "" : "stage-card--missing"}`.trim()}
+                >
+                  <div className="stage-card__head">
+                    <div>
+                      <h4>{stage.name}</h4>
+                    </div>
+                    <strong>{stage.available ? stage.score : "N/A"}</strong>
+                  </div>
+
+                  <StageMaturityScale
+                    score={stage.score}
+                    currentLevel={stage.currentLevel}
+                    available={stage.available}
+                  />
+
+                  <p>{buildStageProgressReading(stage)}</p>
+                </article>
+              ))}
+            </div>
+
+            <p className="support-copy">Unanswered statements count as zero in this summary.</p>
+          </>
+        ) : (
+          <p className="empty-state">No stage-level diagnostic evidence is available for this cycle.</p>
+        )}
+      </section>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h3>Dimension-group analysis</h3>
+          </div>
+        </div>
+
+        {dimensionGroupsSource.length ? (
+          <>
+            <div className="roadmap-toolbar">
+              <div className="roadmap-filters roadmap-filters--one">
+                <div className="roadmap-filter-field">
+                  <span>Filter dimensions</span>
+                  <FilterDropdown
+                    label="Dimensions"
+                    summary={buildMultiSelectSummary(
+                      selectedGroupDimensions,
+                      groupDimensionFilterOptions,
+                      "dimension",
+                      "dimensions"
+                    )}
+                    options={groupDimensionFilterOptions}
+                    selectedValues={selectedGroupDimensions}
+                    onToggle={(value) => toggleMultiSelectValue(value, setSelectedGroupDimensions)}
+                    onSelectAll={() =>
+                      setSelectedGroupDimensions(groupDimensionFilterOptions.map((item) => item.value))
+                    }
+                    onClearAll={() => setSelectedGroupDimensions([])}
+                  />
+                </div>
+              </div>
+
+              <div className="roadmap-toolbar__meta">
+                <p className="roadmap-summary">{practiceGroupSummary}</p>
+              </div>
+            </div>
+
+            {practiceGroups.length ? (
+              <div className="dimension-grid">
+                {practiceGroups.map((item) => (
+                  <article key={item.key} className="dimension-card dimension-card--detailed">
+                    <div className="dimension-card__head">
+                      <div>
+                        <h4>{item.name}</h4>
+                        {item.focus ? <span>{item.focus}</span> : null}
+                      </div>
+                      <strong>{item.score}</strong>
+                    </div>
+
+                    <PercentageScale
+                      score={item.score}
+                      showMarker
+                      className="dimension-card__scale"
+                    />
+
+                    <div className="dimension-card__evidence">
+                      <div>
+                        <span>What supports this group</span>
+                        <strong>{buildPracticeGroupSignal(item, "strength")}</strong>
+                      </div>
+                      <div>
+                        <span>What constrains this group</span>
+                        <strong>{buildPracticeGroupSignal(item, "bottleneck")}</strong>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="empty-state">No dimensions match the selected filter.</p>
+            )}
+          </>
+        ) : (
+          <p className="empty-state">No dimension-group evidence is available in the current payload.</p>
+        )}
       </section>
 
       <section className="panel support-panel">
@@ -1323,82 +1548,6 @@ export function ResultsPage({ data, overview, loading }) {
         )}
       </section>
 
-      <section className="panel">
-        <div className="section-head">
-          <div>
-            <h3>Dimension-group analysis</h3>
-          </div>
-        </div>
-
-        {dimensionGroupsSource.length ? (
-          <>
-            <div className="roadmap-toolbar">
-              <div className="roadmap-filters roadmap-filters--one">
-                <div className="roadmap-filter-field">
-                  <span>Filter dimensions</span>
-                  <FilterDropdown
-                    label="Dimensions"
-                    summary={buildMultiSelectSummary(
-                      selectedGroupDimensions,
-                      groupDimensionFilterOptions,
-                      "dimension",
-                      "dimensions"
-                    )}
-                    options={groupDimensionFilterOptions}
-                    selectedValues={selectedGroupDimensions}
-                    onToggle={(value) => toggleMultiSelectValue(value, setSelectedGroupDimensions)}
-                    onSelectAll={() =>
-                      setSelectedGroupDimensions(groupDimensionFilterOptions.map((item) => item.value))
-                    }
-                    onClearAll={() => setSelectedGroupDimensions([])}
-                  />
-                </div>
-              </div>
-
-              <div className="roadmap-toolbar__meta">
-                <p className="roadmap-summary">{practiceGroupSummary}</p>
-              </div>
-            </div>
-
-            {practiceGroups.length ? (
-              <div className="dimension-grid">
-                {practiceGroups.map((item) => (
-                  <article key={item.key} className="dimension-card dimension-card--detailed">
-                    <div className="dimension-card__head">
-                      <div>
-                        <h4>{item.name}</h4>
-                        {item.focus ? <span>{item.focus}</span> : null}
-                      </div>
-                      <strong>{item.score}</strong>
-                    </div>
-
-                    <PercentageScale
-                      score={item.score}
-                      showMarker
-                      className="dimension-card__scale"
-                    />
-
-                    <div className="dimension-card__evidence">
-                      <div>
-                        <span>What supports this group</span>
-                        <strong>{buildPracticeGroupSignal(item, "strength")}</strong>
-                      </div>
-                      <div>
-                        <span>What constrains this group</span>
-                        <strong>{buildPracticeGroupSignal(item, "bottleneck")}</strong>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="empty-state">No dimensions match the selected filter.</p>
-            )}
-          </>
-        ) : (
-          <p className="empty-state">No dimension-group evidence is available in the current payload.</p>
-        )}
-      </section>
     </>
   );
 }

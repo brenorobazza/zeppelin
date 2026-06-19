@@ -32,11 +32,6 @@ function getCycleStageScore(cycle, stageKey) {
   return cycle.stages?.find((stage) => stage.key === stageKey)?.score ?? null;
 }
 
-function formatDelta(value) {
-  if (value == null) return "-";
-  return value >= 0 ? `+${value}` : `${value}`;
-}
-
 function formatScore(value) {
   return value == null ? "-" : value;
 }
@@ -51,10 +46,6 @@ export function HistoryPage({ data, loading, filters }) {
   const hasEnoughCompleteCycles = completeHistorySeries.length >= 2;
   const displayHistorySeries = completeHistorySeries;
 
-  // Use `historySeries` as the single source of truth for baseline and comparison.
-  const baselineCycle = displayHistorySeries[0] || historySeries[0] || null;
-  const safeBaselineIndex = 0;
-  const safeComparisonIndex = Math.max(displayHistorySeries.length - 1, 0);
   if (loading && !data) {
     return <section className="panel">Loading historical progression from backend...</section>;
   }
@@ -117,7 +108,7 @@ export function HistoryPage({ data, loading, filters }) {
       <section className="panel">
         <div className="section-head">
           <div>
-            <h3>What changed between cycles?</h3>
+            <h3>Scores for each cycle</h3>
           </div>
         </div>
 
@@ -129,17 +120,6 @@ export function HistoryPage({ data, loading, filters }) {
                   <h4>{item.cycle}</h4>
                   <p>{item.period}</p>
                 </div>
-                <span
-                  className={`history-cycle-card__delta ${
-                    item.overall - baselineCycle.overall < 0 ? "negative" : ""
-                  }`}
-                >
-                  {index === safeBaselineIndex
-                    ? "Baseline"
-                    : index === safeComparisonIndex
-                      ? `Target ${formatDelta(item.overall - baselineCycle.overall)}`
-                      : formatDelta(item.overall - baselineCycle.overall)}
-                </span>
               </div>
 
               <div className="history-cycle-card__score">
@@ -158,10 +138,6 @@ export function HistoryPage({ data, loading, filters }) {
                     <strong>{formatScore(getCycleStageScore(item, stage.key))}</strong>
                   </li>
                 ))}
-                <li>
-                  <span>Triggered recommendations</span>
-                  <strong>{item.recommendationCount}</strong>
-                </li>
               </ul>
             </article>
           ))}

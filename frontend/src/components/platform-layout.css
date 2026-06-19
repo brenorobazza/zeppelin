@@ -1842,15 +1842,6 @@
   margin: 0.2rem 0 0;
 }
 
-.history-cycle-card__delta {
-  color: #1e8449;
-  font-weight: 800;
-}
-
-.history-cycle-card__delta.negative {
-  color: #c0392b;
-}
-
 .history-cycle-card__score {
   display: flex;
   justify-content: space-between;
